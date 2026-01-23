@@ -1,0 +1,4 @@
+# To add new commercial photos, simply drop your images into this folder.
+# Supported formats: JPG, PNG, WebP
+# Recommended size: 1200x800 or similar aspect ratio
+# Then update the galleryImages array in src/app/gallery/page.tsx

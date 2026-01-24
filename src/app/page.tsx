@@ -62,50 +62,131 @@ const whyChooseUs = [
 
 const testimonials = [
   {
-    name: "Craig W",
-    content: "So professional, really nice people to speak too and rapid to getting a quote back and doing the job. I will be using them again to do my top windows in my house for sure.",
+    name: "Paul King",
+    content: "A huge thank you to Manx Tints for the fantastic job on my living room windows. The service was top-notch from start to finish. Axel was very polite and professional throughout the process. If you are looking for high-quality window tinting, I highly recommend Axel at Manx Tints.",
     rating: 5,
+    date: "January 2026",
   },
   {
-    name: "Ara H",
+    name: "Nina Marie Jensen",
+    content: "We received a brilliant service from Axel from start to finish. Really pleased with our windows! Thanks very much!",
+    rating: 5,
+    date: "December 2025",
+  },
+  {
+    name: "Tracey Brown",
+    content: "Axel came today and fitted our two front windows with the tint, absolutely brilliant job, he is quick, efficient, neat and tidy and totally prepared. Really decent guy and I highly recommend him. Delighted with the job done.",
+    rating: 5,
+    date: "November 2025",
+  },
+  {
+    name: "Ashlea Dentith",
+    content: "Manx tints - what a lovely guy! Fantastic service, really pleased. Axel went above and beyond and fitted us in ASAP due to side effects from radiotherapy in my eye. I needed the brightness of the house reducing, it allowed me to be in my home after 9 days of being in a dark room. As well as some privacy on our large glass windows! Super clean and quick. Thanks Axel - always recommending you.",
+    rating: 5,
+    date: "July 2025",
+  },
+  {
+    name: "Sue Perry",
+    content: "My windows look fab! Privacy restored.. great customer service too. Would highly recommend.",
+    rating: 5,
+    date: "May 2025",
+  },
+  {
+    name: "Kelly Dedman",
+    content: "Windows look great! Excellent service, and the guys were quick, efficient and tidy. Highly recommend.",
+    rating: 5,
+    date: "March 2025",
+  },
+  {
+    name: "Ara Hunter",
     content: "Axel from Manx Tints did a fantastic job at my home today. He was professional, quick, and precise with the window tinting. Very happy with the service!",
     rating: 5,
+    date: "October 2024",
   },
   {
-    name: "Brooke C",
+    name: "Moyra Kean",
+    content: "A great job and the customer service is the best. I highly recommend them for all your window tints.",
+    rating: 5,
+    date: "March 2024",
+  },
+  {
+    name: "Craig Walmsley",
+    content: "Absolutely awesome job and so happy with what they have done to my windows. So professional, really nice people to speak to and rapid to getting a quote back and doing the job. I will be using them again to do my top windows in my house for sure.",
+    rating: 5,
+    date: "March 2024",
+  },
+  {
+    name: "Becci Varey",
+    content: "Got my car tinted by ManxTints and love the result. Highly recommend!!",
+    rating: 5,
+    date: "January 2024",
+  },
+  {
+    name: "Brooke Cafearo",
     content: "I've had some privacy tint fitted on my lounge windows. I can see out but no one can see in! I'm SO impressed!!! Axe was efficient and professional! Would highly recommend!",
     rating: 5,
+    date: "January 2024",
   },
 ]
 
 const faqs = [
+  // New FAQs from screenshots - added at top
+  {
+    question: "What is window tinting, and why should I consider it?",
+    answer: "Window tinting involves applying a thin film to windows to enhance privacy, reduce glare, and block harmful UV rays. It adds a sleek aesthetic to your space and provides protection against sun damage.",
+  },
+  {
+    question: "Does the privacy effect reverse at night?",
+    answer: "No, unlike inferior window tint brands, our films use dual ceramic technology. They feature a reflective exterior layer for daytime privacy while maintaining a non-reflective interior layer, ensuring clear visibility from inside both day and night.",
+  },
+  {
+    question: "How long does the window tinting process take?",
+    answer: "The duration depends on the size and complexity of the project. Generally, for a standard installation, it can take a few hours. We'll provide you with a more accurate estimate during the consultation.",
+  },
+  {
+    question: "How much does window tinting cost?",
+    answer: "The pricing for our services is influenced by several factors, including the number of windows, accessibility, and the type of tint chosen. While the exact cost varies based on these considerations, a general estimate is around £60 per square meter.",
+  },
+  {
+    question: "Can I choose the level of darkness for my window tint?",
+    answer: "Absolutely! During the consultation, you can discuss your preferences, and we'll guide you through the available tinting options, including different levels of darkness and shades.",
+  },
+  {
+    question: "Does window tinting provide UV protection?",
+    answer: "Yes, our window tinting films are designed to block 99% of harmful UV rays, providing protection for your skin and preventing sun damage to your interiors.",
+  },
+  {
+    question: "Will window tinting affect the visibility from inside or outside?",
+    answer: "Our window tinting solutions are designed to maintain visibility from inside while enhancing privacy from the outside. We offer a range of tinting options to suit your preferences.",
+  },
+  {
+    question: "Can I remove the window tint if needed?",
+    answer: "Yes, our window tinting films can be safely removed free of charge. We use professional techniques to ensure a clean and residue-free removal process.",
+  },
+  {
+    question: "What sets ManxTints apart from other window tinting services?",
+    answer: "At ManxTints, we pride ourselves on delivering top-notch window tinting services with a focus on precision, customer satisfaction, and using high-quality materials. Our experienced team is dedicated to providing a seamless experience for our clients.",
+  },
+  {
+    question: "How do I schedule a consultation for window tinting services?",
+    answer: "It's easy! Simply contact us through our website, phone, or email to schedule a consultation. We'll discuss your needs, provide recommendations, and give you a detailed quote.",
+  },
+  {
+    question: "How long will the window tint last, and is there a Guarantee?",
+    answer: "Our high-quality window tinting films are durable and come with a 10 year guarantee. The lifespan may vary based on factors like sun exposure and maintenance, but you can expect long-lasting results.",
+  },
+  // Original FAQs
   {
     question: "What types of window tinting do you offer?",
     answer: "We offer three main types of window tinting services: Residential Tinting for homes (privacy, energy savings, UV protection), Commercial Tinting for businesses (professional appearance, energy efficiency, glare reduction), and Automotive Tinting for vehicles (UV protection, style, privacy). Each service uses premium films tailored to your specific needs.",
-  },
-  {
-    question: "How long does window tinting take?",
-    answer: "Installation time varies depending on the project. For vehicles, most jobs are completed within 2-4 hours. Residential and commercial projects typically take half a day to a full day, depending on the number of windows. We'll provide a time estimate when we give you your quote.",
   },
   {
     question: "Is window tinting legal on the Isle of Man?",
     answer: "Yes, window tinting is legal on the Isle of Man. For vehicles, front side windows must allow at least 70% light transmission, while rear windows can have any tint level. We ensure all our automotive installations comply with local regulations.",
   },
   {
-    question: "How long does window tint last?",
-    answer: "High-quality window tint, like the films we use, typically lasts 15-25 years with proper care. We use premium films from trusted manufacturers that resist fading, bubbling, and peeling. Our installations come with warranty protection for your peace of mind.",
-  },
-  {
     question: "Can I wash my windows after tinting?",
     answer: "We recommend waiting 3-5 days after installation before cleaning your newly tinted windows. This allows the film to fully cure. After that, use a soft cloth and ammonia-free cleaning products. Avoid abrasive materials that could scratch the film.",
-  },
-  {
-    question: "How do I get a quote?",
-    answer: "Getting a quote is easy! Simply click the 'Get Quote' button on our website and fill in your details, or email us at manxtints@gmail.com. We respond quickly and can arrange a free consultation to assess your needs and provide an accurate quote.",
-  },
-  {
-    question: "Do you offer any guarantees?",
-    answer: "Absolutely! We offer a satisfaction guarantee on all our work. Our professional installation ensures a perfect finish, and we use only premium films that come with manufacturer warranties. If you're not completely satisfied, we'll make it right.",
   },
   {
     question: "What areas do you cover?",
@@ -340,33 +421,74 @@ export default function Home() {
                 Here&apos;s What Our
                 <span className="text-gradient block">Customers Say</span>
               </h2>
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="flex gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-6 w-6 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <span className="text-xl font-semibold text-slate-800">100% Recommend</span>
+                <span className="text-slate-500">({testimonials.length} Reviews)</span>
+              </div>
+              <a 
+                href="https://www.facebook.com/manxtints/reviews" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
+                </svg>
+                View all reviews on Facebook
+                <ArrowRight className="h-4 w-4" />
+              </a>
             </div>
           </FadeIn>
 
-          <Stagger className="grid md:grid-cols-3 gap-8">
+          <Stagger className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {testimonials.map((testimonial, index) => (
               <StaggerItem key={testimonial.name}>
                 <Card className="bg-white border-slate-200 shadow-lg h-full card-hover">
-                  <CardContent className="p-8">
-                    <div className="flex gap-1 mb-4">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                      ))}
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex gap-0.5">
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        ))}
+                      </div>
+                      <span className="text-xs text-slate-400">{testimonial.date}</span>
                     </div>
-                    <p className="text-lg mb-6 text-slate-600 italic leading-relaxed">
+                    <p className="text-slate-600 italic leading-relaxed mb-4 line-clamp-4">
                       &ldquo;{testimonial.content}&rdquo;
                     </p>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-sky-500 flex items-center justify-center text-white font-semibold">
-                        {testimonial.name.charAt(0)}
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-sky-500 flex items-center justify-center text-white font-semibold text-sm">
+                        {testimonial.name.split(' ').map(n => n[0]).join('')}
                       </div>
-                      <p className="font-semibold text-slate-800">{testimonial.name}</p>
+                      <p className="font-semibold text-slate-800 text-sm">{testimonial.name}</p>
                     </div>
                   </CardContent>
                 </Card>
               </StaggerItem>
             ))}
           </Stagger>
+
+          <FadeIn delay={0.4}>
+            <div className="text-center mt-10">
+              <a 
+                href="https://www.facebook.com/manxtints/reviews" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
+                  </svg>
+                  Leave Us a Review on Facebook
+                </Button>
+              </a>
+            </div>
+          </FadeIn>
         </div>
       </section>
 

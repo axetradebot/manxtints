@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { motion } from "framer-motion"
 import { 
   Phone, 
@@ -42,14 +43,20 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-6">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-sky-500 flex items-center justify-center">
-                <div className="grid grid-cols-2 gap-0.5">
-                  <div className="w-2.5 h-2.5 bg-white/90 rounded-sm"></div>
-                  <div className="w-2.5 h-2.5 bg-white/90 rounded-sm"></div>
-                  <div className="w-2.5 h-2.5 bg-white/90 rounded-sm"></div>
-                  <div className="w-2.5 h-2.5 bg-white/90 rounded-sm"></div>
-                </div>
-              </div>
+              <motion.div 
+                whileHover={{ scale: 1.05, rotateY: 10 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                className="relative w-12 h-12 rounded-xl overflow-hidden shadow-lg shadow-blue-500/30 ring-1 ring-white/10"
+              >
+                {/* Gradient overlay for 3D depth */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 z-10 pointer-events-none" />
+                <Image
+                  src="/images/logo.png"
+                  alt="ManxTints Logo"
+                  fill
+                  className="object-contain p-0.5"
+                />
+              </motion.div>
               <div>
                 <span className="text-xl font-bold">
                   MANX<span className="text-blue-400">TINTS</span>

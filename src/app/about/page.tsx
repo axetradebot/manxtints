@@ -53,8 +53,8 @@ export default function AboutPage() {
       <section className="relative py-24 md:py-32 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image
-            src="https://images.unsplash.com/photo-1504222490345-c075b6008014?w=1920&q=80"
-            alt="Workshop"
+            src="/gallery/commercial/1000043384_1742199441.jpg"
+            alt="ManxTints commercial work"
             fill
             className="object-cover opacity-20"
           />
@@ -86,8 +86,8 @@ export default function AboutPage() {
                 className="relative rounded-2xl overflow-hidden aspect-square"
               >
                 <Image
-                  src="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=800&q=80"
-                  alt="Professional tinting work"
+                  src="/gallery/automotive/FB_IMG_1769248558394.jpg"
+                  alt="Professional automotive tinting work"
                   fill
                   className="object-cover"
                 />
@@ -139,7 +139,7 @@ export default function AboutPage() {
                     className="relative rounded-xl overflow-hidden aspect-[3/4]"
                   >
                     <Image
-                      src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=600&q=80"
+                      src="/gallery/automotive/FB_IMG_1769248570779.jpg"
                       alt="Tinted car"
                       fill
                       className="object-cover"
@@ -150,7 +150,7 @@ export default function AboutPage() {
                     className="relative rounded-xl overflow-hidden aspect-[3/4] mt-8"
                   >
                     <Image
-                      src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80"
+                      src="/gallery/residential/1000043385_1742199442.jpg"
                       alt="Tinted home"
                       fill
                       className="object-cover"

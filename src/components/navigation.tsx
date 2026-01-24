@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Menu, X, Phone, Mail } from "lucide-react"
@@ -81,23 +82,42 @@ export function Navigation() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 group">
               <motion.div
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ 
+                  scale: 1.05,
+                  rotateY: 10,
+                  rotateX: -5,
+                }}
                 whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 className="relative"
+                style={{ perspective: "1000px" }}
               >
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-blue-600 to-sky-500 flex items-center justify-center shadow-lg">
-                  <div className="grid grid-cols-2 gap-0.5">
-                    <div className="w-3 h-3 bg-white/90 rounded-sm"></div>
-                    <div className="w-3 h-3 bg-white/90 rounded-sm"></div>
-                    <div className="w-3 h-3 bg-white/90 rounded-sm"></div>
-                    <div className="w-3 h-3 bg-white/90 rounded-sm"></div>
-                  </div>
+                {/* 3D Shadow effect */}
+                <div className="absolute inset-0 bg-blue-600/20 rounded-xl blur-lg transform translate-y-2 group-hover:translate-y-3 group-hover:blur-xl transition-all duration-300" />
+                
+                {/* Logo container with 3D effect */}
+                <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-xl overflow-hidden shadow-lg shadow-blue-500/25 group-hover:shadow-xl group-hover:shadow-blue-500/40 transition-all duration-300 ring-1 ring-white/20">
+                  {/* Gradient overlay for 3D depth */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/10 z-10 pointer-events-none" />
+                  
+                  <Image
+                    src="/images/logo.png"
+                    alt="ManxTints Logo"
+                    fill
+                    className="object-contain p-0.5"
+                    priority
+                  />
                 </div>
               </motion.div>
+              
               <div className="flex flex-col">
-                <span className="text-xl md:text-2xl font-bold tracking-tight text-slate-800">
+                <motion.span 
+                  className="text-xl md:text-2xl font-bold tracking-tight text-slate-800"
+                  whileHover={{ x: 2 }}
+                  transition={{ type: "spring", stiffness: 400 }}
+                >
                   MANX<span className="text-blue-600">TINTS</span>
-                </span>
+                </motion.span>
                 <span className="text-[9px] md:text-[10px] text-slate-500 tracking-wider uppercase">
                   Shading Excellence
                 </span>

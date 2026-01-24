@@ -38,93 +38,57 @@ import { FadeIn, Stagger, StaggerItem } from "@/components/motion"
  */
 
 const galleryImages = [
-  // Automotive - Using placeholder images for now
-  {
-    src: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=1200&q=80",
-    category: "automotive",
-    title: "Porsche 911 Ceramic Tint",
-    description: "Full ceramic tint package",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1200&q=80",
-    category: "automotive",
-    title: "BMW M4 Competition",
-    description: "Privacy tint all round",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1542362567-b07e54358753?w=1200&q=80",
-    category: "automotive",
-    title: "Audi RS6 Avant",
-    description: "Carbon ceramic film",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=1200&q=80",
-    category: "automotive",
-    title: "Mercedes AMG GT",
-    description: "Premium ceramic package",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=1200&q=80",
-    category: "automotive",
-    title: "Range Rover Sport",
-    description: "Limo black rear windows",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=80",
-    category: "automotive",
-    title: "Volkswagen Golf R",
-    description: "Sports package tint",
-  },
-  // Residential
-  {
-    src: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80",
-    category: "residential",
-    title: "Modern Home - Douglas",
-    description: "Solar control film throughout",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80",
-    category: "residential",
-    title: "Conservatory - Onchan",
-    description: "Heat rejection film",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80",
-    category: "residential",
-    title: "Beachfront Property",
-    description: "UV protection film",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=80",
-    category: "residential",
-    title: "Contemporary Villa",
-    description: "Privacy and solar control",
-  },
-  // Commercial
-  {
-    src: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80",
-    category: "commercial",
-    title: "Office Tower - Douglas",
-    description: "Commercial solar film",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80",
-    category: "commercial",
-    title: "Retail Storefront",
-    description: "Security and branding film",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=1200&q=80",
-    category: "commercial",
-    title: "Corporate Office",
-    description: "Privacy partition film",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1200&q=80",
-    category: "commercial",
-    title: "Meeting Rooms",
-    description: "Frosted privacy film",
-  },
+  // =====================================================
+  // AUTOMOTIVE PROJECTS
+  // =====================================================
+  { src: "/gallery/automotive/1000006918_1705874620.jpg", category: "automotive", title: "Vehicle Tinting", description: "Professional automotive tint" },
+  { src: "/gallery/automotive/FB_IMG_1769248545189.jpg", category: "automotive", title: "Car Tint", description: "Premium ceramic film" },
+  { src: "/gallery/automotive/FB_IMG_1769248558394.jpg", category: "automotive", title: "Automotive Project", description: "UV protection & style" },
+  { src: "/gallery/automotive/FB_IMG_1769248565209.jpg", category: "automotive", title: "Vehicle Window Film", description: "Heat rejection" },
+  { src: "/gallery/automotive/FB_IMG_1769248570779.jpg", category: "automotive", title: "Car Tinting", description: "Privacy & protection" },
+  { src: "/gallery/automotive/FB_IMG_1769248575415.jpg", category: "automotive", title: "Auto Tint", description: "Sleek finish" },
+  // =====================================================
+  // RESIDENTIAL PROJECTS
+  // =====================================================
+  { src: "/gallery/residential/1000008571_1714036458.jpg", category: "residential", title: "Residential Tinting", description: "Home window film" },
+  { src: "/gallery/residential/1000017928_1714540796.jpg", category: "residential", title: "Home Project", description: "Privacy & solar control" },
+  { src: "/gallery/residential/1000034868_1730806667.jpg", category: "residential", title: "Residential Installation", description: "Heat rejection film" },
+  { src: "/gallery/residential/1000034872_1730806669.jpg", category: "residential", title: "Home Window Film", description: "UV protection" },
+  { src: "/gallery/residential/1000043384_1742199441.jpg", category: "residential", title: "Residential Project", description: "Quality installation" },
+  { src: "/gallery/residential/1000043385_1742199442.jpg", category: "residential", title: "Home Tinting", description: "Professional finish" },
+  { src: "/gallery/residential/1000043386_1742199441.jpg", category: "residential", title: "Residential Work", description: "Expert installation" },
+  { src: "/gallery/residential/1000043387_1742199441.jpg", category: "residential", title: "Home Project", description: "Privacy film" },
+  { src: "/gallery/residential/1000043388_1742199441.jpg", category: "residential", title: "Residential Tint", description: "Solar control" },
+  { src: "/gallery/residential/1000046789_1745171775.jpg", category: "residential", title: "Home Installation", description: "Heat rejection" },
+  { src: "/gallery/residential/1000046793_1745171773.jpg", category: "residential", title: "Residential Project", description: "UV blocking" },
+  { src: "/gallery/residential/1000046794_1745171774.jpg", category: "residential", title: "Home Tinting", description: "Energy savings" },
+  { src: "/gallery/residential/1000046795_1745171777.jpg", category: "residential", title: "Residential Work", description: "Professional service" },
+  { src: "/gallery/residential/1000046796_1745171777.jpg", category: "residential", title: "Home Project", description: "Quality film" },
+  { src: "/gallery/residential/1000046797_1745171776.jpg", category: "residential", title: "Residential Tint", description: "Expert finish" },
+  { src: "/gallery/residential/1000046798_1745171775.jpg", category: "residential", title: "Home Installation", description: "Privacy solution" },
+  { src: "/gallery/residential/1000046799_1745171774.jpg", category: "residential", title: "Residential Project", description: "Solar protection" },
+  { src: "/gallery/residential/1000046800_1745171775.jpg", category: "residential", title: "Home Tinting", description: "Heat control" },
+  { src: "/gallery/residential/1000046801_1745171775.jpg", category: "residential", title: "Residential Work", description: "UV protection" },
+  { src: "/gallery/residential/1000046802_1745171775.jpg", category: "residential", title: "Home Project", description: "Energy efficient" },
+  { src: "/gallery/residential/1000046803_1745171776.jpg", category: "residential", title: "Residential Tint", description: "Professional install" },
+  // =====================================================
+  // COMMERCIAL PROJECTS
+  // =====================================================
+  { src: "/gallery/commercial/1000016570_1714541017.jpg", category: "commercial", title: "Commercial Tinting", description: "Business window film" },
+  { src: "/gallery/commercial/1000034869_1730806668.jpg", category: "commercial", title: "Office Project", description: "Professional installation" },
+  { src: "/gallery/commercial/1000034871_1730806666.jpg", category: "commercial", title: "Commercial Work", description: "Heat rejection" },
+  { src: "/gallery/commercial/1000034874_1730806667.jpg", category: "commercial", title: "Business Tinting", description: "Solar control" },
+  { src: "/gallery/commercial/1000034875_1730806669.jpg", category: "commercial", title: "Commercial Project", description: "UV protection" },
+  { src: "/gallery/commercial/1000034876_1730806669.jpg", category: "commercial", title: "Office Installation", description: "Privacy film" },
+  { src: "/gallery/commercial/1000034877_1730806669.jpg", category: "commercial", title: "Commercial Tint", description: "Energy savings" },
+  { src: "/gallery/commercial/1000034878_1730806666.jpg", category: "commercial", title: "Business Project", description: "Professional finish" },
+  { src: "/gallery/commercial/1000043384_1742199441.jpg", category: "commercial", title: "Commercial Work", description: "Quality installation" },
+  { src: "/gallery/commercial/1000046789_1745171775.jpg", category: "commercial", title: "Office Tinting", description: "Heat control" },
+  { src: "/gallery/commercial/1000046790_1745171776.jpg", category: "commercial", title: "Commercial Project", description: "Solar protection" },
+  { src: "/gallery/commercial/1000046791_1745171776.jpg", category: "commercial", title: "Business Installation", description: "UV blocking" },
+  { src: "/gallery/commercial/1000046792_1745171775.jpg", category: "commercial", title: "Commercial Tint", description: "Privacy solution" },
+  { src: "/gallery/commercial/2025-04-20_19-04-28_1745172285.jpg", category: "commercial", title: "Office Project", description: "Expert installation" },
+  { src: "/gallery/commercial/PHOTO-2025-08-21-12-29-02.jpg", category: "commercial", title: "Commercial Work", description: "Professional tinting" },
 ]
 
 export default function GalleryPage() {
@@ -154,7 +118,7 @@ export default function GalleryPage() {
       <section className="relative py-24 md:py-32 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image
-            src="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=1920&q=80"
+            src="/images/hero.jpg"
             alt="Gallery"
             fill
             className="object-cover opacity-20"

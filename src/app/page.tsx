@@ -14,7 +14,7 @@ const services = [
   {
     title: "Residential Tinting",
     description: "Elevate your home's comfort and style with our residential window tinting solutions. Enjoy natural light while maintaining privacy.",
-    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
+    image: "/images/residential.jpg",
     href: "/services#residential",
     icon: HomeIcon,
     features: ["Natural Light", "Privacy", "Energy Savings"],
@@ -22,7 +22,7 @@ const services = [
   {
     title: "Commercial Tinting",
     description: "Create a professional and inviting atmosphere for your business with our commercial window tinting services. Enhance energy efficiency and reduce glare.",
-    image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80",
+    image: "/images/commercial.jpg",
     href: "/services#commercial",
     icon: Building2,
     features: ["Professional Look", "Energy Efficient", "Glare Reduction"],
@@ -30,7 +30,7 @@ const services = [
   {
     title: "Automotive Tinting",
     description: "Drive in style with our automotive window tinting. Experience superior UV protection, glare reduction, and a sleek look for your vehicle.",
-    image: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=80",
+    image: "/images/automotive.jpg",
     href: "/services#automotive",
     icon: Car,
     features: ["UV Protection", "Style Upgrade", "Sleek Look"],
@@ -193,7 +193,7 @@ export default function Home() {
                   className="relative rounded-2xl overflow-hidden shadow-2xl"
                 >
                   <Image
-                    src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80"
+                    src="/images/hero.jpg"
                     alt="Professional window tinting"
                     width={600}
                     height={500}

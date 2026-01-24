@@ -17,7 +17,7 @@ const services = [
     title: "Automotive Tinting",
     tagline: "Style, Privacy & Protection",
     description: "Transform your vehicle with our premium automotive window tinting. We use only the finest films that provide exceptional UV protection, heat rejection, and that sleek, mysterious look that turns heads wherever you go.",
-    image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1200&q=80",
+    image: "/images/automotive.jpg",
     features: [
       "Up to 99% UV ray protection",
       "Reduces interior heat by up to 60%",
@@ -38,7 +38,7 @@ const services = [
     title: "Residential Tinting",
     tagline: "Comfort, Efficiency & Privacy",
     description: "Protect your home and family while reducing energy costs. Our residential window films provide excellent UV protection, reduce glare, enhance privacy, and help maintain comfortable temperatures year-round.",
-    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80",
+    image: "/images/residential.jpg",
     features: [
       "Blocks up to 99% of UV rays",
       "Reduces energy costs significantly",
@@ -59,7 +59,7 @@ const services = [
     title: "Commercial Tinting",
     tagline: "Professional, Efficient & Secure",
     description: "Create a more comfortable and productive work environment. Our commercial window tinting solutions help reduce energy costs, improve privacy for sensitive areas, and give your building a modern, professional appearance.",
-    image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80",
+    image: "/images/commercial.jpg",
     features: [
       "Significant energy cost reduction",
       "GDPR-compliant privacy solutions",

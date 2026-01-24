@@ -112,11 +112,11 @@ export function Navigation() {
               
               <div className="flex flex-col">
                 <motion.span 
-                  className="text-xl md:text-2xl font-bold tracking-tight text-slate-800"
+                  className="text-xl md:text-2xl font-bold tracking-tight"
                   whileHover={{ x: 2 }}
                   transition={{ type: "spring", stiffness: 400 }}
                 >
-                  MANX<span className="text-blue-600">TINTS</span>
+                  <span className="text-sky-500">MANX</span><span className="text-[#1e3a5f]">TINTS</span>
                 </motion.span>
                 <span className="text-[9px] md:text-[10px] text-slate-500 tracking-wider uppercase">
                   Shading Excellence

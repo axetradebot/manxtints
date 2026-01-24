@@ -59,7 +59,7 @@ export function Footer() {
               </motion.div>
               <div>
                 <span className="text-xl font-bold">
-                  MANX<span className="text-blue-400">TINTS</span>
+                  <span className="text-sky-400">MANX</span><span className="text-slate-200">TINTS</span>
                 </span>
               </div>
             </Link>

@@ -39,7 +39,7 @@ import { FadeIn, Stagger, StaggerItem } from "@/components/motion"
 
 const galleryImages = [
   // =====================================================
-  // AUTOMOTIVE PROJECTS
+  // AUTOMOTIVE PROJECTS (6 photos)
   // =====================================================
   { src: "/gallery/automotive/1000006918_1705874620.jpg", category: "automotive", title: "Vehicle Tinting", description: "Professional automotive tint" },
   { src: "/gallery/automotive/FB_IMG_1769248545189.jpg", category: "automotive", title: "Car Tint", description: "Premium ceramic film" },
@@ -48,13 +48,11 @@ const galleryImages = [
   { src: "/gallery/automotive/FB_IMG_1769248570779.jpg", category: "automotive", title: "Car Tinting", description: "Privacy & protection" },
   { src: "/gallery/automotive/FB_IMG_1769248575415.jpg", category: "automotive", title: "Auto Tint", description: "Sleek finish" },
   // =====================================================
-  // RESIDENTIAL PROJECTS
+  // RESIDENTIAL PROJECTS (19 photos)
   // =====================================================
   { src: "/gallery/residential/1000008571_1714036458.jpg", category: "residential", title: "Residential Tinting", description: "Home window film" },
   { src: "/gallery/residential/1000017928_1714540796.jpg", category: "residential", title: "Home Project", description: "Privacy & solar control" },
   { src: "/gallery/residential/1000034868_1730806667.jpg", category: "residential", title: "Residential Installation", description: "Heat rejection film" },
-  { src: "/gallery/residential/1000034872_1730806669.jpg", category: "residential", title: "Home Window Film", description: "UV protection" },
-  { src: "/gallery/residential/1000043384_1742199441.jpg", category: "residential", title: "Residential Project", description: "Quality installation" },
   { src: "/gallery/residential/1000043385_1742199442.jpg", category: "residential", title: "Home Tinting", description: "Professional finish" },
   { src: "/gallery/residential/1000043386_1742199441.jpg", category: "residential", title: "Residential Work", description: "Expert installation" },
   { src: "/gallery/residential/1000043387_1742199441.jpg", category: "residential", title: "Home Project", description: "Privacy film" },
@@ -72,7 +70,7 @@ const galleryImages = [
   { src: "/gallery/residential/1000046802_1745171775.jpg", category: "residential", title: "Home Project", description: "Energy efficient" },
   { src: "/gallery/residential/1000046803_1745171776.jpg", category: "residential", title: "Residential Tint", description: "Professional install" },
   // =====================================================
-  // COMMERCIAL PROJECTS
+  // COMMERCIAL PROJECTS (15 photos)
   // =====================================================
   { src: "/gallery/commercial/1000016570_1714541017.jpg", category: "commercial", title: "Commercial Tinting", description: "Business window film" },
   { src: "/gallery/commercial/1000034869_1730806668.jpg", category: "commercial", title: "Office Project", description: "Professional installation" },

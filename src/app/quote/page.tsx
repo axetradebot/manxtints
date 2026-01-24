@@ -603,6 +603,12 @@ function DIYCalculator() {
         const areaSqM = (areaCm / 10000).toFixed(2)
         formData.append(`Window ${index + 1}`, `${window.name}: ${window.width}cm x ${window.height}cm = ${areaSqM}m²`)
       })
+      
+      // Add property address details
+      const houseName = formData.get('houseName')
+      const postcode = formData.get('postcode')
+      if (houseName) formData.append('House Name/Number', houseName.toString())
+      if (postcode) formData.append('Postcode', postcode.toString())
     }
     
     try {
@@ -1325,6 +1331,31 @@ function DIYCalculator() {
                         className="bg-background/50"
                       />
                     </div>
+
+                    {category === "property" && (
+                      <div className="grid sm:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="calcHouseName">House Name / Number *</Label>
+                          <Input
+                            id="calcHouseName"
+                            name="houseName"
+                            required
+                            placeholder="e.g. 12 or Rose Cottage"
+                            className="bg-background/50"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="calcPostcode">Postcode *</Label>
+                          <Input
+                            id="calcPostcode"
+                            name="postcode"
+                            required
+                            placeholder="e.g. IM2 1BB"
+                            className="bg-background/50"
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     <div className="space-y-2">
                       <Label htmlFor="calcMessage">Additional Information</Label>

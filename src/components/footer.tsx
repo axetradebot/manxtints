@@ -51,7 +51,7 @@ export function Footer() {
                 {/* Gradient overlay for 3D depth */}
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 z-10 pointer-events-none" />
                 <Image
-                  src="/images/logo.png"
+                  src="/images/logo3.png"
                   alt="ManxTints Logo"
                   fill
                   className="object-contain p-0.5"

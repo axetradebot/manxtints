@@ -101,7 +101,7 @@ export function Navigation() {
                   <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/10 z-10 pointer-events-none" />
                   
                   <Image
-                    src="/images/logo.png"
+                    src="/images/logo3.png"
                     alt="ManxTints Logo"
                     fill
                     className="object-contain p-0.5"

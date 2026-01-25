@@ -500,9 +500,9 @@ function DIYCalculator() {
 
   // Price per square meter for property types
   const propertyPrices: Record<string, number> = {
-    house: 60,        // Residential: £60 per m²
-    conservatory: 80, // Conservatory: £80 per m²
-    commercial: 55,   // Commercial: £55 per m²
+    house: 98,        // Residential: £98 per m²
+    conservatory: 130, // Conservatory: £130 per m²
+    commercial: 120,   // Commercial: £120 per m²
   }
 
   // Get vehicle price from selected options
@@ -1263,15 +1263,97 @@ function DIYCalculator() {
                     </div>
                   )}
 
-                  {/* Estimated Quote */}
-                  <div className="bg-gradient-to-r from-primary/20 to-cyan-400/20 rounded-xl p-6 text-center">
-                    <p className="text-muted-foreground mb-2">
-                      {category === "vehicle" ? "Your Quote" : "Estimated Quote"}
-                    </p>
-                    <p className="text-4xl font-bold text-gradient">
-                      £{totals.totalQuote}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">
+                  {/* Payment Options */}
+                  <div className="space-y-4">
+                    {/* Main Option: 4 Weekly Payments */}
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="relative overflow-hidden rounded-2xl border-2 border-primary bg-gradient-to-br from-primary/10 via-primary/5 to-cyan-400/10"
+                    >
+                      {/* Recommended badge */}
+                      <div className="absolute top-0 right-0">
+                        <div className="bg-gradient-to-r from-primary to-cyan-400 text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-bl-xl flex items-center gap-1.5">
+                          <Sparkles className="h-3.5 w-3.5" />
+                          RECOMMENDED
+                        </div>
+                      </div>
+                      
+                      <div className="p-6 pt-8 text-center">
+                        <p className="text-sm font-medium text-primary mb-3">Pay in 4 Easy Weekly Instalments</p>
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <span className="text-5xl font-bold text-gradient">
+                            £{(parseFloat(totals.totalQuote) / 4).toFixed(2)}
+                          </span>
+                          <span className="text-muted-foreground font-medium">/week</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Total: £{totals.totalQuote} over 4 weeks
+                        </p>
+                        <div className="mt-4 flex items-center justify-center gap-6 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1.5">
+                            <Check className="h-4 w-4 text-green-500" />
+                            No interest
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <Check className="h-4 w-4 text-green-500" />
+                            No credit check
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <Check className="h-4 w-4 text-green-500" />
+                            Flexible
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Alternative: Lump Sum with Discount */}
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="rounded-xl border border-border/50 bg-card/50 p-5"
+                    >
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="text-center sm:text-left">
+                          <p className="text-sm font-medium mb-1">Or pay in full & save 10%</p>
+                          <div className="flex items-center gap-2 justify-center sm:justify-start">
+                            <span className="text-2xl font-bold text-gradient">
+                              £{(parseFloat(totals.totalQuote) * 0.9).toFixed(2)}
+                            </span>
+                            <span className="text-sm text-muted-foreground line-through">
+                              £{totals.totalQuote}
+                            </span>
+                            <Badge variant="secondary" className="bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/30">
+                              SAVE £{(parseFloat(totals.totalQuote) * 0.1).toFixed(2)}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Custom Payment Message */}
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="relative rounded-xl bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-pink-500/10 border border-violet-500/20 p-4"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center flex-shrink-0">
+                          <Sparkles className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm mb-1">Need smaller weekly payments?</p>
+                          <p className="text-sm text-muted-foreground">
+                            Just message the ManxTints team and we&apos;ll find a payment plan that suits you! 
+                            We&apos;re flexible and here to help. 💬
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    <p className="text-xs text-center text-muted-foreground">
                       {category === "vehicle" 
                         ? "*Price includes rear windows as specified"
                         : "*Final price confirmed after professional assessment"

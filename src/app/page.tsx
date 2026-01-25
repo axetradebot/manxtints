@@ -145,7 +145,7 @@ const faqs = [
   },
   {
     question: "How much does window tinting cost?",
-    answer: "The pricing for our services is influenced by several factors, including the number of windows, accessibility, and the type of tint chosen. While the exact cost varies based on these considerations, a general estimate is around £60 per square meter.",
+    answer: "The pricing for our services is influenced by several factors, including the number of windows, accessibility, and the type of tint chosen. While the exact cost varies based on these considerations, a general estimate is around £98 per square meter.",
   },
   {
     question: "Can I choose the level of darkness for my window tint?",

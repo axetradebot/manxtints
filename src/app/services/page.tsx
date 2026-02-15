@@ -48,9 +48,9 @@ const services = [
       "Various tint levels available",
     ],
     films: [
-      { name: "Solar Control Film", price: "£98/m²", description: "Excellent heat rejection" },
-      { name: "Privacy Film", price: "£98/m²", description: "One-way mirror effect" },
-      { name: "Decorative Film", price: "£98/m²", description: "Frosted and patterned options" },
+      { name: "Solar Control Film", price: "£89/m²", description: "Excellent heat rejection" },
+      { name: "Privacy Film", price: "£89/m²", description: "One-way mirror effect" },
+      { name: "Decorative Film", price: "£89/m²", description: "Frosted and patterned options" },
     ],
   },
   {
@@ -90,7 +90,7 @@ const services = [
       "Professional consultation",
     ],
     films: [
-      { name: "Security Film", price: "£98/m²", description: "Protect your home from break-ins" },
+      { name: "Security Film", price: "£89/m²", description: "Protect your home from break-ins" },
       { name: "Energy Saving Film", price: "£90/m²", description: "Winter heat loss reduction of 27%" },
       { name: "Anti Fog Film", price: "£200/m²", description: "Prevents condensation and fogging" },
       { name: "Data Jammer Film", price: "£900/m²", description: "Makes screens black from outside, protect sensitive data" },

@@ -591,25 +591,31 @@ function DIYCalculator() {
       const vehicleLabel = getVehicleLabel()
       const vehicleDescription = getVehicleDescription()
       
+      const discountedPrice = (parseFloat(currentTotals.totalQuote) * 0.9).toFixed(2)
+      
       formData.append('_subject', `New Vehicle Quote Request - ${vehicleLabel} - £${currentTotals.totalQuote}${extendedGuarantee ? ' (15yr Guarantee)' : ''}`)
       formData.append('Category', 'Vehicle')
       formData.append('Vehicle Type', vehicleLabel)
       formData.append('Package', vehicleDescription)
-      formData.append('Guarantee', extendedGuarantee ? '15 Year Guarantee (+£17)' : 'Standard 5 Year Guarantee')
-      formData.append('Quote', `£${currentTotals.totalQuote}`)
+      formData.append('15 Year Guarantee', extendedGuarantee ? 'YES (+£17)' : 'No - Standard 5 Year')
+      formData.append('Full Quote (4 weekly payments)', `£${currentTotals.totalQuote}`)
+      formData.append('Pay in Full Price (10% off)', `£${discountedPrice}`)
     } else {
       // Property submission
       const projectTypeName = selectedType === 'house' ? 'Residential' : 
                              selectedType === 'conservatory' ? 'Conservatory' : 
                              selectedType === 'commercial' ? 'Commercial' : selectedType
       
+      const discountedPrice = (parseFloat(currentTotals.totalQuote) * 0.9).toFixed(2)
+      
       formData.append('_subject', `New Property Quote Request - ${projectTypeName} - £${currentTotals.totalQuote}${extendedGuarantee ? ' (15yr Guarantee)' : ''}`)
       formData.append('Category', 'Property')
       formData.append('Project Type', projectTypeName || 'Not specified')
       formData.append('Total Area (m²)', currentTotals.totalAreaSqM)
       formData.append('Price per m²', `£${currentTotals.pricePerSqM}`)
-      formData.append('Guarantee', extendedGuarantee ? '15 Year Guarantee (+£17)' : 'Standard 5 Year Guarantee')
-      formData.append('Estimated Quote', `£${currentTotals.totalQuote}`)
+      formData.append('15 Year Guarantee', extendedGuarantee ? 'YES (+£17)' : 'No - Standard 5 Year')
+      formData.append('Full Quote (4 weekly payments)', `£${currentTotals.totalQuote}`)
+      formData.append('Pay in Full Price (10% off)', `£${discountedPrice}`)
       formData.append('Number of Windows', windows.length.toString())
       
       // Add individual window measurements
@@ -1453,74 +1459,92 @@ function DIYCalculator() {
                   )}
 
                   {/* Guarantee Selection */}
-                  {extendedGuarantee && (
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="relative overflow-hidden rounded-xl border-2 border-amber-500 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-red-500/10 p-4"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                            <Shield className="h-5 w-5 text-white" />
-                          </div>
-                          <div>
-                            <p className="font-semibold">15 Year Guarantee</p>
-                            <p className="text-sm text-muted-foreground">Complete peace of mind</p>
-                          </div>
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className={`relative overflow-hidden rounded-xl border-2 p-4 ${
+                      extendedGuarantee 
+                        ? "border-amber-500 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-red-500/10" 
+                        : "border-border bg-card/50"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          extendedGuarantee 
+                            ? "bg-gradient-to-br from-amber-500 to-orange-500" 
+                            : "bg-primary/20"
+                        }`}>
+                          <Shield className={`h-5 w-5 ${extendedGuarantee ? "text-white" : "text-primary"}`} />
                         </div>
+                        <div>
+                          <p className="font-semibold">
+                            {extendedGuarantee ? "15 Year Guarantee" : "Standard 5 Year Guarantee"}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {extendedGuarantee ? "Complete peace of mind" : "Included with your tint"}
+                          </p>
+                        </div>
+                      </div>
+                      {extendedGuarantee ? (
                         <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
                           +£17
                         </Badge>
-                      </div>
-                    </motion.div>
-                  )}
+                      ) : (
+                        <Badge variant="secondary">Included</Badge>
+                      )}
+                    </div>
+                  </motion.div>
 
                   {/* Payment Options */}
                   <div className="space-y-4">
-                    {/* Main Option: 4 Weekly Payments */}
+                    {/* Main Option: Pay in Full with 10% Discount */}
                     <motion.div 
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="relative overflow-hidden rounded-2xl border-2 border-primary bg-gradient-to-br from-primary/10 via-primary/5 to-cyan-400/10"
+                      className="relative overflow-hidden rounded-2xl border-2 border-green-500 bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-teal-400/10"
                     >
                       {/* Recommended badge */}
                       <div className="absolute top-0 right-0">
-                        <div className="bg-gradient-to-r from-primary to-cyan-400 text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-bl-xl flex items-center gap-1.5">
+                        <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-4 py-1.5 rounded-bl-xl flex items-center gap-1.5">
                           <Sparkles className="h-3.5 w-3.5" />
                           RECOMMENDED
                         </div>
                       </div>
                       
                       <div className="p-6 pt-8 text-center">
-                        <p className="text-sm font-medium text-primary mb-3">Pay in 4 Easy Weekly Instalments</p>
-                        <div className="flex items-center justify-center gap-2 mb-2">
+                        <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-3">Pay in Full & Save 10%</p>
+                        <div className="flex items-center justify-center gap-3 mb-2">
                           <span className="text-5xl font-bold text-gradient">
-                            £{(parseFloat(totals.totalQuote) / 4).toFixed(2)}
+                            £{(parseFloat(totals.totalQuote) * 0.9).toFixed(2)}
                           </span>
-                          <span className="text-muted-foreground font-medium">/week</span>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          Total: £{totals.totalQuote} over 4 weeks
-                        </p>
+                        <div className="flex items-center justify-center gap-2 mb-3">
+                          <span className="text-sm text-muted-foreground line-through">
+                            £{totals.totalQuote}
+                          </span>
+                          <Badge className="bg-green-500 text-white border-0">
+                            SAVE £{(parseFloat(totals.totalQuote) * 0.1).toFixed(2)}
+                          </Badge>
+                        </div>
                         <div className="mt-4 flex items-center justify-center gap-6 text-xs text-muted-foreground">
                           <span className="flex items-center gap-1.5">
                             <Check className="h-4 w-4 text-green-500" />
-                            No interest
+                            Best value
                           </span>
                           <span className="flex items-center gap-1.5">
                             <Check className="h-4 w-4 text-green-500" />
-                            No credit check
+                            10% discount
                           </span>
                           <span className="flex items-center gap-1.5">
                             <Check className="h-4 w-4 text-green-500" />
-                            Flexible
+                            One payment
                           </span>
                         </div>
                       </div>
                     </motion.div>
 
-                    {/* Alternative: Lump Sum with Discount */}
+                    {/* Alternative: 4 Weekly Payments */}
                     <motion.div 
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -1529,18 +1553,17 @@ function DIYCalculator() {
                     >
                       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="text-center sm:text-left">
-                          <p className="text-sm font-medium mb-1">Or pay in full & save 10%</p>
+                          <p className="text-sm font-medium mb-1">Or pay in 4 easy weekly instalments</p>
                           <div className="flex items-center gap-2 justify-center sm:justify-start">
                             <span className="text-2xl font-bold text-gradient">
-                              £{(parseFloat(totals.totalQuote) * 0.9).toFixed(2)}
+                              £{(parseFloat(totals.totalQuote) / 4).toFixed(2)}
                             </span>
-                            <span className="text-sm text-muted-foreground line-through">
-                              £{totals.totalQuote}
-                            </span>
-                            <Badge variant="secondary" className="bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/30">
-                              SAVE £{(parseFloat(totals.totalQuote) * 0.1).toFixed(2)}
+                            <span className="text-sm text-muted-foreground">/week</span>
+                            <Badge variant="secondary">
+                              Total £{totals.totalQuote}
                             </Badge>
                           </div>
+                          <p className="text-xs text-muted-foreground mt-1">No interest • No credit check • Flexible</p>
                         </div>
                       </div>
                     </motion.div>
@@ -1662,6 +1685,55 @@ function DIYCalculator() {
                         className="bg-background/50 resize-none"
                       />
                     </div>
+
+                    {/* Last Chance Guarantee Upsell - Only show if not already selected */}
+                    {!extendedGuarantee && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="relative overflow-hidden rounded-xl border-2 border-dashed border-amber-500/50 bg-gradient-to-r from-amber-500/5 via-orange-500/5 to-red-500/5 p-4"
+                      >
+                        <div className="absolute -top-1 -right-1">
+                          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-xs">
+                            LAST CHANCE
+                          </Badge>
+                        </div>
+                        <div className="flex items-start gap-4">
+                          <motion.button
+                            type="button"
+                            onClick={() => setExtendedGuarantee(true)}
+                            className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all mt-0.5 ${
+                              extendedGuarantee 
+                                ? "bg-gradient-to-br from-amber-500 to-orange-500 border-amber-500" 
+                                : "border-amber-500/50 hover:border-amber-500 hover:bg-amber-500/10"
+                            }`}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            {extendedGuarantee && <Check className="h-5 w-5 text-white" />}
+                          </motion.button>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Shield className="h-5 w-5 text-amber-500" />
+                              <p className="font-semibold">Add 15 Year Guarantee?</p>
+                              <span className="text-amber-600 dark:text-amber-400 font-bold">Just +£17</span>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              Any peeling, bubbles, or problems at all — we replace the tint <span className="font-medium text-foreground">no questions asked</span>, at no extra cost.
+                            </p>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => setExtendedGuarantee(true)}
+                              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0 gap-1"
+                            >
+                              <Check className="h-4 w-4" />
+                              Yes, add 15 Year Guarantee
+                            </Button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
 
                     <div className="flex justify-between">
                       <Button

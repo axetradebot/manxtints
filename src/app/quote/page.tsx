@@ -478,6 +478,7 @@ function DIYCalculator() {
   const [doorCount, setDoorCount] = useState<"2" | "4" | null>(null)
   // const [selectedFilm, setSelectedFilm] = useState(filmTypes[1]) // SAVED FOR FUTURE USE
   const [windows, setWindows] = useState<Window[]>([])
+  const [extendedGuarantee, setExtendedGuarantee] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
 
@@ -534,15 +535,23 @@ function DIYCalculator() {
     return category === "vehicle" && vehicleType !== null && doorCount !== null
   }
 
+  // Guarantee pricing
+  const guaranteePrice = 17
+
   // Calculate totals
   const calculateTotals = () => {
     // For vehicles, use fixed pricing
     if (category === "vehicle") {
       const vehiclePrice = getVehiclePrice()
+      const guaranteeCost = extendedGuarantee ? guaranteePrice : 0
+      const baseQuote = vehiclePrice
+      const totalWithGuarantee = baseQuote + guaranteeCost
       return {
         totalAreaSqM: "N/A",
         pricePerSqM: 0,
-        totalQuote: vehiclePrice.toFixed(2),
+        baseQuote: baseQuote.toFixed(2),
+        totalQuote: totalWithGuarantee.toFixed(2),
+        guaranteeCost: guaranteeCost,
         isVehicle: true,
         vehicleLabel: getVehicleLabel(),
         vehicleDescription: getVehicleDescription(),
@@ -556,12 +565,16 @@ function DIYCalculator() {
     const pricePerSqM = selectedType && category === "property" 
       ? propertyPrices[selectedType] || 60 
       : 0
-    const totalQuote = totalAreaSqM * pricePerSqM
+    const baseQuote = totalAreaSqM * pricePerSqM
+    const guaranteeCost = extendedGuarantee ? guaranteePrice : 0
+    const totalWithGuarantee = baseQuote + guaranteeCost
 
     return {
       totalAreaSqM: totalAreaSqM.toFixed(2),
       pricePerSqM,
-      totalQuote: totalQuote.toFixed(2),
+      baseQuote: baseQuote.toFixed(2),
+      totalQuote: totalWithGuarantee.toFixed(2),
+      guaranteeCost: guaranteeCost,
       isVehicle: false,
     }
   }
@@ -578,10 +591,11 @@ function DIYCalculator() {
       const vehicleLabel = getVehicleLabel()
       const vehicleDescription = getVehicleDescription()
       
-      formData.append('_subject', `New Vehicle Quote Request - ${vehicleLabel} - £${currentTotals.totalQuote}`)
+      formData.append('_subject', `New Vehicle Quote Request - ${vehicleLabel} - £${currentTotals.totalQuote}${extendedGuarantee ? ' (15yr Guarantee)' : ''}`)
       formData.append('Category', 'Vehicle')
       formData.append('Vehicle Type', vehicleLabel)
       formData.append('Package', vehicleDescription)
+      formData.append('Guarantee', extendedGuarantee ? '15 Year Guarantee (+£17)' : 'Standard 5 Year Guarantee')
       formData.append('Quote', `£${currentTotals.totalQuote}`)
     } else {
       // Property submission
@@ -589,11 +603,12 @@ function DIYCalculator() {
                              selectedType === 'conservatory' ? 'Conservatory' : 
                              selectedType === 'commercial' ? 'Commercial' : selectedType
       
-      formData.append('_subject', `New Property Quote Request - ${projectTypeName} - £${currentTotals.totalQuote}`)
+      formData.append('_subject', `New Property Quote Request - ${projectTypeName} - £${currentTotals.totalQuote}${extendedGuarantee ? ' (15yr Guarantee)' : ''}`)
       formData.append('Category', 'Property')
       formData.append('Project Type', projectTypeName || 'Not specified')
       formData.append('Total Area (m²)', currentTotals.totalAreaSqM)
       formData.append('Price per m²', `£${currentTotals.pricePerSqM}`)
+      formData.append('Guarantee', extendedGuarantee ? '15 Year Guarantee (+£17)' : 'Standard 5 Year Guarantee')
       formData.append('Estimated Quote', `£${currentTotals.totalQuote}`)
       formData.append('Number of Windows', windows.length.toString())
       
@@ -660,6 +675,7 @@ function DIYCalculator() {
               setVehicleType(null)
               setDoorCount(null)
               setWindows([])
+              setExtendedGuarantee(false)
             }} variant="outline" size="lg">
               Start New Quote
             </Button>
@@ -675,15 +691,15 @@ function DIYCalculator() {
         {/* Progress indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            {/* Show 2 steps for vehicles, 3 steps for properties */}
-            {(category === "vehicle" ? [1, 2] : [1, 2, 3]).map((s, index, arr) => {
-              // For vehicles: step 1 = select, step 3 = review (displayed as step 2)
+            {/* Show 2 steps for vehicles, 4 steps for properties */}
+            {(category === "vehicle" ? [1, 2] : [1, 2, 3, 4]).map((s, index, arr) => {
+              // For vehicles: step 1 = select, step 4 = review (displayed as step 2)
               const displayStep = category === "vehicle" && s === 2 ? 2 : s
               const isActive = category === "vehicle" 
-                ? (s === 1 ? step >= 1 : step >= 3)
+                ? (s === 1 ? step >= 1 : step >= 4)
                 : step >= s
               const lineActive = category === "vehicle"
-                ? (s === 1 ? step >= 3 : false)
+                ? (s === 1 ? step >= 4 : false)
                 : step > s
               
               return (
@@ -696,7 +712,7 @@ function DIYCalculator() {
                     {displayStep}
                   </div>
                   {index < arr.length - 1 && (
-                    <div className={`w-16 h-1 mx-1 rounded transition-all ${
+                    <div className={`w-12 h-1 mx-1 rounded transition-all ${
                       lineActive ? "bg-primary" : "bg-muted"
                     }`} />
                   )}
@@ -707,7 +723,8 @@ function DIYCalculator() {
           <p className="text-center text-muted-foreground">
             {step === 1 && "Select what you want tinted"}
             {step === 2 && category === "property" && "Enter window measurements"}
-            {step === 3 && "Review & submit"}
+            {step === 3 && "Upgrade your guarantee"}
+            {step === 4 && "Review & submit"}
           </p>
         </div>
 
@@ -1006,7 +1023,7 @@ function DIYCalculator() {
                       variant="electric"
                       size="lg"
                       onClick={() => {
-                        // Vehicles skip to step 3 (review), properties go to step 2 (measurements)
+                        // Vehicles skip to step 3 (guarantee), properties go to step 2 (measurements)
                         if (category === "vehicle") {
                           setStep(3)
                         } else {
@@ -1204,15 +1221,187 @@ function DIYCalculator() {
                       disabled={windows.some(w => w.width === 0 || w.height === 0)}
                       className="gap-2"
                     >
-                      See Estimate
+                      Continue
                       <ArrowRight className="h-5 w-5" />
                     </Button>
                   </div>
                 </motion.div>
               )}
 
-              {/* Step 3: Review & Submit */}
+              {/* Step 3: 15 Year Guarantee Upsell */}
               {step === 3 && (
+                <motion.div
+                  key="step3"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-8"
+                >
+                  <div className="text-center">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", bounce: 0.5, delay: 0.2 }}
+                      className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/30"
+                    >
+                      <Shield className="h-10 w-10 text-white" />
+                    </motion.div>
+                    <h3 className="text-2xl font-bold mb-2">Upgrade to 15 Year Guarantee</h3>
+                    <p className="text-muted-foreground">
+                      Ultimate peace of mind for just a little extra
+                    </p>
+                  </div>
+
+                  {/* Upsell Card */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="relative"
+                  >
+                    <Card 
+                      className={`cursor-pointer transition-all overflow-hidden ${
+                        extendedGuarantee 
+                          ? "border-2 border-amber-500 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-red-500/10 shadow-xl shadow-amber-500/20" 
+                          : "border-2 border-dashed border-border hover:border-amber-500/50"
+                      }`}
+                      onClick={() => setExtendedGuarantee(!extendedGuarantee)}
+                    >
+                      {extendedGuarantee && (
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500" />
+                      )}
+                      <CardContent className="p-6">
+                        <div className="flex items-start gap-4">
+                          {/* Checkbox */}
+                          <motion.div 
+                            className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                              extendedGuarantee 
+                                ? "bg-gradient-to-br from-amber-500 to-orange-500 border-amber-500" 
+                                : "border-muted-foreground/50"
+                            }`}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            {extendedGuarantee && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: "spring", bounce: 0.5 }}
+                              >
+                                <Check className="h-5 w-5 text-white" />
+                              </motion.div>
+                            )}
+                          </motion.div>
+
+                          {/* Content */}
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                              <h4 className="text-xl font-bold">15 Year Guarantee</h4>
+                              <div className="flex items-center gap-2">
+                                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-lg px-3 py-1">
+                                  Just +£17
+                                </Badge>
+                              </div>
+                            </div>
+                            
+                            <p className="text-muted-foreground mb-4">
+                              Get <span className="font-semibold text-foreground">triple the coverage</span> of our standard 5-year guarantee. 
+                              Any problems at all? We&apos;ve got you covered.
+                            </p>
+
+                            <div className="grid sm:grid-cols-2 gap-3">
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                                  <Check className="h-4 w-4 text-green-500" />
+                                </div>
+                                <span className="text-sm">Peeling? <span className="font-medium">Replaced free</span></span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                                  <Check className="h-4 w-4 text-green-500" />
+                                </div>
+                                <span className="text-sm">Bubbles? <span className="font-medium">Replaced free</span></span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                                  <Check className="h-4 w-4 text-green-500" />
+                                </div>
+                                <span className="text-sm">Discoloration? <span className="font-medium">Replaced free</span></span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                                  <Check className="h-4 w-4 text-green-500" />
+                                </div>
+                                <span className="text-sm">Any issues? <span className="font-medium">No questions asked</span></span>
+                              </div>
+                            </div>
+
+                            {extendedGuarantee && (
+                              <motion.div 
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                className="mt-4 pt-4 border-t border-amber-500/30"
+                              >
+                                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                                  <Sparkles className="h-5 w-5" />
+                                  <span className="font-semibold">You&apos;re covered for 15 years!</span>
+                                </div>
+                              </motion.div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+
+                  {/* Value proposition */}
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="text-center"
+                  >
+                    <p className="text-sm text-muted-foreground">
+                      That&apos;s just <span className="font-semibold text-foreground">£1.13 per year</span> for complete peace of mind
+                    </p>
+                  </motion.div>
+
+                  {/* Skip option */}
+                  {!extendedGuarantee && (
+                    <motion.p 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.6 }}
+                      className="text-center text-sm text-muted-foreground"
+                    >
+                      Not interested? No problem — you&apos;re still covered by our standard 5-year guarantee
+                    </motion.p>
+                  )}
+
+                  <div className="flex justify-between">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => setStep(category === "vehicle" ? 1 : 2)}
+                      className="gap-2"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                      Back
+                    </Button>
+                    <Button
+                      variant="electric"
+                      size="lg"
+                      onClick={() => setStep(4)}
+                      className="gap-2"
+                    >
+                      {extendedGuarantee ? "Continue with 15 Year Guarantee" : "Continue with Standard Guarantee"}
+                      <ArrowRight className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Step 4: Review & Submit */}
+              {step === 4 && (
                 <motion.div
                   key="step3"
                   initial={{ opacity: 0, x: 20 }}
@@ -1261,6 +1450,30 @@ function DIYCalculator() {
                         <span className="font-medium">{getVehicleDescription()}</span>
                       </div>
                     </div>
+                  )}
+
+                  {/* Guarantee Selection */}
+                  {extendedGuarantee && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="relative overflow-hidden rounded-xl border-2 border-amber-500 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-red-500/10 p-4"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                            <Shield className="h-5 w-5 text-white" />
+                          </div>
+                          <div>
+                            <p className="font-semibold">15 Year Guarantee</p>
+                            <p className="text-sm text-muted-foreground">Complete peace of mind</p>
+                          </div>
+                        </div>
+                        <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
+                          +£17
+                        </Badge>
+                      </div>
+                    </motion.div>
                   )}
 
                   {/* Payment Options */}
@@ -1455,7 +1668,7 @@ function DIYCalculator() {
                         type="button"
                         variant="outline"
                         size="lg"
-                        onClick={() => setStep(category === "vehicle" ? 1 : 2)}
+                        onClick={() => setStep(3)}
                         className="gap-2"
                       >
                         <ArrowLeft className="h-5 w-5" />

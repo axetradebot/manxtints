@@ -34,10 +34,6 @@ export const metadata: Metadata = {
     "Douglas",
   ],
   authors: [{ name: "ManxTints LTD" }],
-  icons: {
-    icon: "/images/logo3.png",
-    apple: "/images/logo3.png",
-  },
   openGraph: {
     type: "website",
     locale: "en_GB",

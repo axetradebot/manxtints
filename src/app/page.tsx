@@ -217,7 +217,7 @@ export default function Home() {
               </FadeIn>
 
               <FadeIn delay={0.3}>
-                <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-slate-800">
+                <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-slate-800">
                   Shading Excellence,
                   <span className="block text-gradient">One Window</span>
                   <span className="block">At a Time.</span>
@@ -225,7 +225,7 @@ export default function Home() {
               </FadeIn>
 
               <FadeIn delay={0.4}>
-                <p className="text-xl text-slate-600 mb-8 max-w-xl leading-relaxed">
+                <p className="text-base sm:text-xl text-slate-600 mb-8 max-w-xl leading-relaxed">
                   Professional window tinting for homes, businesses, and vehicles across the Isle of Man. 
                   Quality films, expert installation, satisfaction guaranteed.
                 </p>
@@ -278,8 +278,9 @@ export default function Home() {
                     alt="Professional window tinting"
                     width={600}
                     height={500}
-                    className="object-cover w-full h-[500px]"
+                    className="object-cover w-full h-[300px] sm:h-[400px] lg:h-[500px]"
                     priority
+                    unoptimized
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-blue-900/20 to-transparent" />
                 </motion.div>
@@ -289,7 +290,7 @@ export default function Home() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8 }}
-                  className="absolute -bottom-6 -left-6 bg-white rounded-xl p-4 shadow-xl border border-slate-100"
+                  className="absolute -bottom-6 left-0 sm:-left-6 bg-white rounded-xl p-4 shadow-xl border border-slate-100"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex -space-x-1">
@@ -313,7 +314,7 @@ export default function Home() {
           <FadeIn>
             <div className="text-center mb-16">
               <Badge className="mb-4 bg-blue-100 text-blue-700 border-blue-200">Why Choose Us</Badge>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-800">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 text-slate-800">
                 Why Choose
                 <span className="text-gradient block">ManxTints?</span>
               </h2>
@@ -349,7 +350,7 @@ export default function Home() {
           <FadeIn>
             <div className="text-center mb-16">
               <Badge className="mb-4 bg-blue-100 text-blue-700 border-blue-200">Our Services</Badge>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-800">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 text-slate-800">
                 Professional Tinting
                 <span className="text-gradient block">For Every Need</span>
               </h2>
@@ -417,7 +418,7 @@ export default function Home() {
           <FadeIn>
             <div className="text-center mb-16">
               <Badge className="mb-4 bg-blue-100 text-blue-700 border-blue-200">Testimonials</Badge>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-800">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 text-slate-800">
                 Here&apos;s What Our
                 <span className="text-gradient block">Customers Say</span>
               </h2>
@@ -502,7 +503,7 @@ export default function Home() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <FadeIn>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 text-white">
                 Ready to Transform Your Windows?
               </h2>
               <p className="text-xl text-blue-100 mb-10">
@@ -536,7 +537,7 @@ export default function Home() {
                 <HelpCircle className="h-3 w-3 mr-1" />
                 FAQ
               </Badge>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-800">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 text-slate-800">
                 Frequently Asked
                 <span className="text-gradient block">Questions</span>
               </h2>

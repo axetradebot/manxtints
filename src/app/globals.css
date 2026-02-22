@@ -71,11 +71,13 @@ body {
   color: var(--color-foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 /* Custom scrollbar */
@@ -209,4 +211,18 @@ html {
 /* Tabular numbers for counters */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+/* Mobile bottom bar safe area */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .mobile-bottom-safe {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Add bottom padding to footer on mobile so content isn't hidden behind floating bar */
+@media (max-width: 639px) {
+  footer {
+    padding-bottom: 80px !important;
+  }
 }

@@ -56,14 +56,14 @@ interface GalleryItem {
 
 const galleryItems: GalleryItem[] = [
   // =====================================================
-  // AUTOMOTIVE PROJECTS (6 photos)
+  // AUTOMOTIVE PROJECTS — temporarily disabled. Uncomment block below to re-enable.
   // =====================================================
-  { src: "/gallery/automotive/1000006918_1705874620.jpg", category: "automotive", title: "Vehicle Tinting", description: "Professional automotive tint" },
-  { src: "/gallery/automotive/FB_IMG_1769248545189.jpg", category: "automotive", title: "Car Tint", description: "Premium ceramic film" },
-  { src: "/gallery/automotive/FB_IMG_1769248558394.jpg", category: "automotive", title: "Automotive Project", description: "UV protection & style" },
-  { src: "/gallery/automotive/FB_IMG_1769248565209.jpg", category: "automotive", title: "Vehicle Window Film", description: "Heat rejection" },
-  { src: "/gallery/automotive/FB_IMG_1769248570779.jpg", category: "automotive", title: "Car Tinting", description: "Privacy & protection" },
-  { src: "/gallery/automotive/FB_IMG_1769248575415.jpg", category: "automotive", title: "Auto Tint", description: "Sleek finish" },
+  // { src: "/gallery/automotive/1000006918_1705874620.jpg", category: "automotive", title: "Vehicle Tinting", description: "Professional automotive tint" },
+  // { src: "/gallery/automotive/FB_IMG_1769248545189.jpg", category: "automotive", title: "Car Tint", description: "Premium ceramic film" },
+  // { src: "/gallery/automotive/FB_IMG_1769248558394.jpg", category: "automotive", title: "Automotive Project", description: "UV protection & style" },
+  // { src: "/gallery/automotive/FB_IMG_1769248565209.jpg", category: "automotive", title: "Vehicle Window Film", description: "Heat rejection" },
+  // { src: "/gallery/automotive/FB_IMG_1769248570779.jpg", category: "automotive", title: "Car Tinting", description: "Privacy & protection" },
+  // { src: "/gallery/automotive/FB_IMG_1769248575415.jpg", category: "automotive", title: "Auto Tint", description: "Sleek finish" },
   // =====================================================
   // RESIDENTIAL PROJECTS (28 photos + 13 videos)
   // =====================================================
@@ -131,7 +131,8 @@ const galleryItems: GalleryItem[] = [
 
 const categories = [
   { value: "all", label: "All", count: galleryItems.length },
-  { value: "automotive", label: "Automotive", count: galleryItems.filter(i => i.category === "automotive").length },
+  // Automotive category — temporarily disabled. Uncomment to re-enable.
+  // { value: "automotive", label: "Automotive", count: galleryItems.filter(i => i.category === "automotive").length },
   { value: "residential", label: "Residential", count: galleryItems.filter(i => i.category === "residential").length },
   { value: "commercial", label: "Commercial", count: galleryItems.filter(i => i.category === "commercial").length },
 ]

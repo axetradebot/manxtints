@@ -3,7 +3,8 @@
 import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { ArrowRight, Check, Shield, Sun, Eye, Thermometer, Car, Home, Building2, Sparkles } from "lucide-react"
+// Car icon temporarily removed — re-add to import when re-enabling Automotive Tinting service entry above
+import { ArrowRight, Check, Shield, Sun, Eye, Thermometer, Home, Building2, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,27 +12,28 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { FadeIn, Stagger, StaggerItem } from "@/components/motion"
 
 const services = [
-  {
-    id: "automotive",
-    icon: Car,
-    title: "Automotive Tinting",
-    tagline: "Style, Privacy & Protection",
-    description: "Transform your vehicle with our premium automotive window tinting. We use only the finest films that provide exceptional UV protection, heat rejection, and that sleek, mysterious look that turns heads wherever you go.",
-    image: "/images/automotive.jpg",
-    features: [
-      "Up to 99% UV ray protection",
-      "Reduces interior heat by up to 60%",
-      "Enhanced privacy and security",
-      "Reduces glare for safer driving",
-      "Protects interior from fading",
-      "Legal tint levels available",
-    ],
-    films: [
-      { name: "Standard Dyed Film", price: "From £150", description: "Great value with excellent appearance" },
-      { name: "Carbon Film", price: "From £250", description: "Superior heat rejection, no fading" },
-      { name: "Ceramic Film", price: "From £350", description: "Premium performance, best clarity" },
-    ],
-  },
+  // Automotive Tinting — temporarily disabled. To re-enable, uncomment block below.
+  // {
+  //   id: "automotive",
+  //   icon: Car,
+  //   title: "Automotive Tinting",
+  //   tagline: "Style, Privacy & Protection",
+  //   description: "Transform your vehicle with our premium automotive window tinting. We use only the finest films that provide exceptional UV protection, heat rejection, and that sleek, mysterious look that turns heads wherever you go.",
+  //   image: "/images/automotive.jpg",
+  //   features: [
+  //     "Up to 99% UV ray protection",
+  //     "Reduces interior heat by up to 60%",
+  //     "Enhanced privacy and security",
+  //     "Reduces glare for safer driving",
+  //     "Protects interior from fading",
+  //     "Legal tint levels available",
+  //   ],
+  //   films: [
+  //     { name: "Standard Dyed Film", price: "From £150", description: "Great value with excellent appearance" },
+  //     { name: "Carbon Film", price: "From £250", description: "Superior heat rejection, no fading" },
+  //     { name: "Ceramic Film", price: "From £350", description: "Premium performance, best clarity" },
+  //   ],
+  // },
   {
     id: "residential",
     icon: Home,
@@ -109,11 +111,11 @@ const benefits = [
 const faqs = [
   {
     question: "Is window tinting legal on the Isle of Man?",
-    answer: "Yes, window tinting is legal on the Isle of Man. For vehicles, there are regulations regarding how dark the tint can be on front side windows (must allow 70% light transmission) and windscreen (top strip only). Rear windows can be any tint level. We always ensure our installations comply with Isle of Man road regulations.",
+    answer: "Yes, window tinting is fully legal on the Isle of Man for residential and commercial properties. We always ensure our installations comply with all relevant Isle of Man regulations.",
   },
   {
     question: "How long does tinting take?",
-    answer: "For a standard car, the process typically takes 2-4 hours depending on the number of windows and complexity. Residential and commercial projects vary based on the number and size of windows. We'll give you an accurate time estimate when providing your quote.",
+    answer: "Residential and commercial projects vary based on the number and size of windows — typically a few hours to a full day. We'll give you an accurate time estimate when providing your quote.",
   },
   {
     question: "How long does window tint last?",
@@ -124,12 +126,8 @@ const faqs = [
     answer: "We recommend waiting 3-5 days before cleaning newly tinted windows to allow the film to fully cure. After that, use a soft cloth and ammonia-free cleaner. Avoid abrasive materials that could scratch the film.",
   },
   {
-    question: "Will tinting affect my visibility at night?",
-    answer: "When professionally installed with appropriate tint levels, window film should not significantly impact night visibility. We help you choose the right tint level for your needs, balancing style and privacy with safety and visibility.",
-  },
-  {
     question: "Do you offer mobile services?",
-    answer: "Yes! We offer mobile tinting services across the Isle of Man. For automotive tinting, we can come to your home or workplace. Contact us to arrange a convenient location.",
+    answer: "Yes! We come to you across the Isle of Man for residential and commercial installations — from Douglas to Ramsey, Peel to Castletown. Contact us to arrange a convenient location and time.",
   },
 ]
 
@@ -157,8 +155,8 @@ export default function ServicesPage() {
                 <span className="text-gradient block">Solutions</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-8">
-                From sleek automotive tints to energy-efficient building films, 
-                we deliver premium quality and stunning results for every project.
+                From energy-efficient residential films to professional commercial 
+                installations, we deliver premium quality and stunning results for every project.
               </p>
             </div>
           </FadeIn>
@@ -263,7 +261,7 @@ export default function ServicesPage() {
         </section>
       ))}
 
-      {/* PPF Section */}
+      {/* PPF Section temporarily disabled (vehicle paint protection — uncomment when Automotive returns)
       <section id="ppf" className="py-24 bg-gradient-to-b from-card/50 to-background">
         <div className="container mx-auto px-4">
           <FadeIn>
@@ -284,6 +282,7 @@ export default function ServicesPage() {
           </FadeIn>
         </div>
       </section>
+      */}
 
       {/* FAQ Section */}
       <section className="py-24">

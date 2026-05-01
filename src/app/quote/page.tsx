@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   ArrowRight, 
@@ -106,7 +105,7 @@ const faqs = [
   },
   {
     question: "How long until I receive my quote?",
-    answer: "For home visit requests, we typically schedule within 2-3 days and provide your quote immediately after the visit. For DIY calculator submissions, we'll review your measurements and send a detailed quote within 24 hours.",
+    answer: "If you use our DIY Calculator, your quote — including the 10% discount — is calculated instantly on screen, no waiting required! For free home visits, we typically schedule within 2-3 days and provide your quote on the spot.",
   },
   {
     question: "Can I change my mind after getting a quote?",
@@ -115,7 +114,7 @@ const faqs = [
 ]
 
 export default function QuotePage() {
-  const [activeTab, setActiveTab] = useState("visit")
+  const [activeTab, setActiveTab] = useState("calculator")
   
   return (
     <div className="relative">
@@ -139,10 +138,45 @@ export default function QuotePage() {
                 Get Your
                 <span className="text-gradient block">Free Quote</span>
               </h1>
-              <p className="text-xl text-muted-foreground">
-                Two ways to get your personalized quote: request a free home visit 
-                or use our instant DIY calculator for a rough estimate.
+              <p className="text-xl text-muted-foreground mb-8">
+                Two ways to get your personalized quote — but here&apos;s the smart move...
               </p>
+
+              {/* 10% Off DIY Calculator Promo */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="relative inline-block max-w-2xl pt-4"
+              >
+                {/* Floating SAVE 10% badge */}
+                <motion.div
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="absolute top-0 right-4 sm:right-6 z-10"
+                >
+                  <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 text-sm px-3 py-1.5 shadow-lg">
+                    <Sparkles className="h-3.5 w-3.5 mr-1" />
+                    SAVE 10%
+                  </Badge>
+                </motion.div>
+
+                <div className="relative rounded-2xl border-2 border-green-500 bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-teal-400/10 p-6">
+                  <div className="flex items-center gap-4 text-left">
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
+                      <Calculator className="h-7 w-7 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-lg mb-1">
+                        Use our DIY Calculator and get <span className="text-green-600 dark:text-green-400">10% off automatically!</span>
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Skip the wait — instant quote, instant discount. Takes 2 minutes.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </FadeIn>
         </div>
@@ -151,9 +185,20 @@ export default function QuotePage() {
       {/* Quote Options */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <Tabs defaultValue="visit" className="space-y-12" onValueChange={setActiveTab}>
+          <Tabs value={activeTab} className="space-y-12" onValueChange={setActiveTab}>
             <FadeIn>
               <TabsList className="grid grid-cols-2 max-w-2xl mx-auto h-auto p-2 bg-card/50">
+                <TabsTrigger 
+                  value="calculator" 
+                  className="relative py-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-500 data-[state=active]:text-white gap-2"
+                >
+                  <Calculator className="h-5 w-5" />
+                  <span className="hidden sm:inline">DIY Calculator</span>
+                  <span className="sm:hidden">Calculator</span>
+                  <Badge className="absolute -top-2 -right-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 text-[10px] px-2 py-0.5 shadow-md">
+                    SAVE 10%
+                  </Badge>
+                </TabsTrigger>
                 <TabsTrigger 
                   value="visit" 
                   className="py-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2"
@@ -162,19 +207,16 @@ export default function QuotePage() {
                   <span className="hidden sm:inline">Request Free Visit</span>
                   <span className="sm:hidden">Free Visit</span>
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="calculator" 
-                  className="py-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2"
-                >
-                  <Calculator className="h-5 w-5" />
-                  <span className="hidden sm:inline">DIY Calculator</span>
-                  <span className="sm:hidden">Calculator</span>
-                </TabsTrigger>
               </TabsList>
             </FadeIn>
 
             <TabsContent value="visit">
-              <VisitRequestForm />
+              <VisitRequestForm onSwitchToCalculator={() => {
+                setActiveTab("calculator")
+                if (typeof window !== "undefined") {
+                  window.scrollTo({ top: 0, behavior: "smooth" })
+                }
+              }} />
             </TabsContent>
 
             <TabsContent value="calculator">
@@ -223,7 +265,7 @@ export default function QuotePage() {
 }
 
 // Visit Request Form Component
-function VisitRequestForm() {
+function VisitRequestForm({ onSwitchToCalculator }: { onSwitchToCalculator: () => void }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [projectType, setProjectType] = useState<"vehicle" | "property">("property")
@@ -288,16 +330,47 @@ function VisitRequestForm() {
 
   return (
     <FadeIn>
-      <Card className="max-w-2xl mx-auto glass">
-        <CardHeader className="text-center pb-2">
-          <CardTitle className="text-2xl">Request a Free Home/Vehicle Visit</CardTitle>
-          <CardDescription>
-            We&apos;ll come to you, assess your needs, and provide an accurate quote on the spot.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Project Type Toggle */}
+      <div className="max-w-2xl mx-auto space-y-6">
+        {/* DIY Calculator Nudge Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-2xl border-2 border-green-500/60 bg-gradient-to-br from-green-500/10 via-emerald-500/10 to-teal-400/10 p-5"
+        >
+          <div className="flex items-start sm:items-center gap-4 flex-col sm:flex-row">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="h-6 w-6 text-white" />
+            </div>
+            <div className="flex-1 text-center sm:text-left">
+              <p className="font-bold mb-1">
+                Want <span className="text-green-600 dark:text-green-400">10% off your tint</span> right now?
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Use our DIY Calculator instead — instant quote, automatic 10% discount, no waiting.
+              </p>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              onClick={onSwitchToCalculator}
+              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-0 gap-2 whitespace-nowrap"
+            >
+              <Calculator className="h-4 w-4" />
+              Use Calculator
+            </Button>
+          </div>
+        </motion.div>
+
+        <Card className="glass">
+          <CardHeader className="text-center pb-2">
+            <CardTitle className="text-2xl">Request a Free Home Visit</CardTitle>
+            <CardDescription>
+              We&apos;ll come to you, assess your needs, and provide an accurate quote on the spot.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Project Type Toggle — Vehicle option temporarily disabled. To re-enable, uncomment below
             <div className="space-y-2">
               <Label>What would you like tinted?</Label>
               <div className="grid grid-cols-2 gap-4">
@@ -321,6 +394,7 @@ function VisitRequestForm() {
                 </Button>
               </div>
             </div>
+            */}
 
             {/* Contact Details */}
             <div className="grid sm:grid-cols-2 gap-6">
@@ -359,72 +433,69 @@ function VisitRequestForm() {
               />
             </div>
 
-            {/* Conditional Fields */}
-            <AnimatePresence mode="wait">
-              {projectType === "vehicle" ? (
-                <motion.div
-                  key="vehicle"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="space-y-6"
-                >
-                  <div className="space-y-2">
-                    <Label htmlFor="vehicleReg">Vehicle Registration *</Label>
-                    <Input
-                      id="vehicleReg"
-                      name="vehicleReg"
-                      required
-                      placeholder="MAN 123"
-                      className="bg-background/50 uppercase"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="vehicleType">Vehicle Type</Label>
-                    <Select name="vehicleType">
-                      <SelectTrigger className="bg-background/50">
-                        <SelectValue placeholder="Select vehicle type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="car">Car</SelectItem>
-                        <SelectItem value="suv">SUV / 4x4</SelectItem>
-                        <SelectItem value="van">Van</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="property"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="space-y-6"
-                >
-                  <div className="space-y-2">
-                    <Label htmlFor="address">Property Address *</Label>
-                    <Input
-                      id="address"
-                      name="address"
-                      required
-                      placeholder="123 Main Street"
-                      className="bg-background/50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="postcode">Postcode *</Label>
-                    <Input
-                      id="postcode"
-                      name="postcode"
-                      required
-                      placeholder="IM1 1AA"
-                      className="bg-background/50 uppercase"
-                    />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Property fields (Vehicle fields temporarily disabled — see commented block below to re-enable) */}
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="address">Property Address *</Label>
+                <Input
+                  id="address"
+                  name="address"
+                  required
+                  placeholder="123 Main Street"
+                  className="bg-background/50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="postcode">Postcode *</Label>
+                <Input
+                  id="postcode"
+                  name="postcode"
+                  required
+                  placeholder="IM1 1AA"
+                  className="bg-background/50 uppercase"
+                />
+              </div>
+            </div>
+
+            {/* Vehicle fields temporarily disabled. Change `false` to `true` to re-enable along with Project Type Toggle above. */}
+            {false && (
+              <AnimatePresence mode="wait">
+                {projectType === "vehicle" ? (
+                  <motion.div
+                    key="vehicle"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="space-y-6"
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="vehicleReg">Vehicle Registration *</Label>
+                      <Input
+                        id="vehicleReg"
+                        name="vehicleReg"
+                        required
+                        placeholder="MAN 123"
+                        className="bg-background/50 uppercase"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="vehicleType">Vehicle Type</Label>
+                      <Select name="vehicleType">
+                        <SelectTrigger className="bg-background/50">
+                          <SelectValue placeholder="Select vehicle type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="car">Car</SelectItem>
+                          <SelectItem value="suv">SUV / 4x4</SelectItem>
+                          <SelectItem value="van">Van</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            )}
 
             {/* Message */}
             <div className="space-y-2">
@@ -461,9 +532,10 @@ function VisitRequestForm() {
                 </>
               )}
             </Button>
-          </form>
-        </CardContent>
-      </Card>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </FadeIn>
   )
 }
@@ -471,9 +543,10 @@ function VisitRequestForm() {
 // DIY Calculator Component
 function DIYCalculator() {
   const [step, setStep] = useState(1)
-  const [category, setCategory] = useState<"vehicle" | "property" | null>(null)
+  // Vehicle category is temporarily disabled — keeping the union for future re-enable
+  const [category, setCategory] = useState<"vehicle" | "property" | null>("property")
   const [selectedType, setSelectedType] = useState<string | null>(null)
-  // Vehicle-specific state
+  // Vehicle-specific state — kept for future re-enable
   const [vehicleType, setVehicleType] = useState<"car" | "suv" | null>(null)
   const [doorCount, setDoorCount] = useState<"2" | "4" | null>(null)
   // const [selectedFilm, setSelectedFilm] = useState(filmTypes[1]) // SAVED FOR FUTURE USE
@@ -502,7 +575,7 @@ function DIYCalculator() {
   // Price per square meter for property types
   const propertyPrices: Record<string, number> = {
     house: 89,        // Residential: £89 per m²
-    conservatory: 130, // Conservatory: £130 per m²
+    conservatory: 100, // Conservatory: £100 per m²
     commercial: 98,   // Commercial: £98 per m²
   }
 
@@ -586,36 +659,38 @@ function DIYCalculator() {
     const formData = new FormData(e.currentTarget)
     const currentTotals = calculateTotals()
     
+    const subtotal = parseFloat(currentTotals.totalQuote)
+    const discountAmount = (subtotal * 0.1).toFixed(2)
+    const finalPrice = (subtotal * 0.9).toFixed(2)
+
     if (category === "vehicle") {
       // Vehicle submission
       const vehicleLabel = getVehicleLabel()
       const vehicleDescription = getVehicleDescription()
       
-      const discountedPrice = (parseFloat(currentTotals.totalQuote) * 0.9).toFixed(2)
-      
-      formData.append('_subject', `New Vehicle Quote Request - ${vehicleLabel} - £${currentTotals.totalQuote}${extendedGuarantee ? ' (15yr Guarantee)' : ''}`)
+      formData.append('_subject', `New Vehicle Quote Request - ${vehicleLabel} - £${finalPrice}${extendedGuarantee ? ' (15yr Guarantee)' : ''}`)
       formData.append('Category', 'Vehicle')
       formData.append('Vehicle Type', vehicleLabel)
       formData.append('Package', vehicleDescription)
       formData.append('15 Year Guarantee', extendedGuarantee ? 'YES (+£17)' : 'No - Standard 5 Year')
-      formData.append('Full Quote (4 weekly payments)', `£${currentTotals.totalQuote}`)
-      formData.append('Pay in Full Price (10% off)', `£${discountedPrice}`)
+      formData.append('Subtotal', `£${currentTotals.totalQuote}`)
+      formData.append('DIY Calculator Discount (10%)', `-£${discountAmount}`)
+      formData.append('Final Total (with 10% DIY discount)', `£${finalPrice}`)
     } else {
       // Property submission
       const projectTypeName = selectedType === 'house' ? 'Residential' : 
                              selectedType === 'conservatory' ? 'Conservatory' : 
                              selectedType === 'commercial' ? 'Commercial' : selectedType
       
-      const discountedPrice = (parseFloat(currentTotals.totalQuote) * 0.9).toFixed(2)
-      
-      formData.append('_subject', `New Property Quote Request - ${projectTypeName} - £${currentTotals.totalQuote}${extendedGuarantee ? ' (15yr Guarantee)' : ''}`)
+      formData.append('_subject', `New Property Quote Request - ${projectTypeName} - £${finalPrice}${extendedGuarantee ? ' (15yr Guarantee)' : ''}`)
       formData.append('Category', 'Property')
       formData.append('Project Type', projectTypeName || 'Not specified')
       formData.append('Total Area (m²)', currentTotals.totalAreaSqM)
       formData.append('Price per m²', `£${currentTotals.pricePerSqM}`)
       formData.append('15 Year Guarantee', extendedGuarantee ? 'YES (+£17)' : 'No - Standard 5 Year')
-      formData.append('Full Quote (4 weekly payments)', `£${currentTotals.totalQuote}`)
-      formData.append('Pay in Full Price (10% off)', `£${discountedPrice}`)
+      formData.append('Subtotal', `£${currentTotals.totalQuote}`)
+      formData.append('DIY Calculator Discount (10%)', `-£${discountAmount}`)
+      formData.append('Final Total (with 10% DIY discount)', `£${finalPrice}`)
       formData.append('Number of Windows', windows.length.toString())
       
       // Add individual window measurements
@@ -676,7 +751,7 @@ function DIYCalculator() {
             <Button onClick={() => {
               setIsSubmitted(false)
               setStep(1)
-              setCategory(null)
+              setCategory("property")
               setSelectedType(null)
               setVehicleType(null)
               setDoorCount(null)
@@ -751,9 +826,55 @@ function DIYCalculator() {
                     <p className="text-muted-foreground">Select your project type to get started</p>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {/* Vehicle */}
-                    <motion.div whileHover={{ scale: category === "vehicle" ? 1 : 1.02 }}>
+                  {/* Property Type Cards — bigger, more prominent layout */}
+                  <div className="grid sm:grid-cols-3 gap-4 sm:gap-6">
+                    {propertyTypes.map((type) => {
+                      const Icon = type.icon
+                      const isSelected = selectedType === type.id
+                      return (
+                        <motion.button
+                          key={type.id}
+                          type="button"
+                          whileHover={{ scale: isSelected ? 1.02 : 1.04, y: -2 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setSelectedType(type.id)}
+                          className={`relative p-6 sm:p-8 rounded-2xl border-2 transition-all text-center ${
+                            isSelected
+                              ? "border-primary bg-primary/10 shadow-xl shadow-primary/20"
+                              : "border-border hover:border-primary/50 bg-card/50"
+                          }`}
+                        >
+                          {isSelected && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", bounce: 0.5 }}
+                              className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-lg"
+                            >
+                              <Check className="h-4 w-4 text-primary-foreground" />
+                            </motion.div>
+                          )}
+                          <div className={`w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center transition-all ${
+                            isSelected
+                              ? "bg-gradient-to-br from-primary to-cyan-400 shadow-lg shadow-primary/30"
+                              : "bg-gradient-to-br from-primary/80 to-cyan-400/80"
+                          }`}>
+                            <Icon className="h-8 w-8 sm:h-10 sm:w-10 text-background" />
+                          </div>
+                          <h4 className="text-lg sm:text-xl font-bold mb-1">{type.label}</h4>
+                          <p className="text-xs sm:text-sm text-muted-foreground">
+                            {type.id === "house" && "Homes & flats"}
+                            {type.id === "conservatory" && "Sun-rooms & extensions"}
+                            {type.id === "commercial" && "Offices, shops & buildings"}
+                          </p>
+                        </motion.button>
+                      )
+                    })}
+                  </div>
+
+                  {/* Vehicle category is temporarily disabled. Change `false` to `true` below to re-enable. */}
+                  {false && (
+                  <motion.div whileHover={{ scale: category === "vehicle" ? 1 : 1.02 }}>
                       <Card 
                         className={`cursor-pointer transition-all h-full ${
                           category === "vehicle" 
@@ -762,7 +883,6 @@ function DIYCalculator() {
                         }`}
                         onClick={() => {
                           setCategory("vehicle")
-                          // Reset vehicle selection when clicking the card
                           if (category !== "vehicle") {
                             setVehicleType(null)
                             setDoorCount(null)
@@ -971,73 +1091,18 @@ function DIYCalculator() {
                         </CardContent>
                       </Card>
                     </motion.div>
-
-                    {/* Property */}
-                    <motion.div whileHover={{ scale: 1.02 }}>
-                      <Card 
-                        className={`cursor-pointer transition-all h-full ${
-                          category === "property" 
-                            ? "border-primary bg-primary/10" 
-                            : "hover:border-primary/50"
-                        }`}
-                        onClick={() => setCategory("property")}
-                      >
-                        <CardContent className="p-6">
-                          <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-br from-primary to-cyan-400 flex items-center justify-center">
-                            <Home className="h-8 w-8 text-background" />
-                          </div>
-                          <h4 className="text-xl font-semibold text-center mb-2">Property</h4>
-                          <p className="text-sm text-muted-foreground text-center">
-                            House, Conservatory, or Commercial
-                          </p>
-                          {category === "property" && (
-                            <div className="mt-4 grid grid-cols-3 gap-2">
-                              {propertyTypes.map((type) => (
-                                <Button
-                                  key={type.id}
-                                  variant={selectedType === type.id ? "default" : "outline"}
-                                  size="sm"
-                                  className="text-xs px-2 truncate"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setSelectedType(type.id)
-                                  }}
-                                >
-                                  {type.label}
-                                </Button>
-                              ))}
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  </div>
-
-                  {/* IOM Tint Regulations Note for Vehicles */}
-                  {category === "vehicle" && selectedType && (
-                    <div className="glass rounded-xl p-4 flex items-start gap-3">
-                      <Info className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                      <p className="text-sm text-muted-foreground">
-                        <strong>Please note:</strong> Due to Isle of Man tint regulations, we cannot tint 
-                        the front windows any darker than factory tint.
-                      </p>
-                    </div>
                   )}
+                  {/* end of Vehicle category block */}
 
                   <div className="flex justify-end">
                     <Button
                       variant="electric"
                       size="lg"
                       onClick={() => {
-                        // Vehicles skip to step 3 (guarantee), properties go to step 2 (measurements)
-                        if (category === "vehicle") {
-                          setStep(3)
-                        } else {
-                          if (windows.length === 0) addWindow()
-                          setStep(2)
-                        }
+                        if (windows.length === 0) addWindow()
+                        setStep(2)
                       }}
-                      disabled={category === "vehicle" ? !isVehicleComplete() : !selectedType}
+                      disabled={!selectedType}
                       className="gap-2"
                     >
                       Continue
@@ -1496,83 +1561,110 @@ function DIYCalculator() {
                     </div>
                   </motion.div>
 
-                  {/* Payment Options */}
+                  {/* Single Total with DIY Calculator 10% Discount */}
                   <div className="space-y-4">
-                    {/* Main Option: Pay in Full with 10% Discount */}
                     <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="relative overflow-hidden rounded-2xl border-2 border-green-500 bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-teal-400/10"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ type: "spring", bounce: 0.35, duration: 0.6 }}
+                      className="relative overflow-hidden rounded-3xl border-2 border-green-500 bg-gradient-to-br from-green-500/10 via-emerald-500/10 to-teal-400/10 shadow-xl shadow-green-500/10"
                     >
-                      {/* Recommended badge */}
-                      <div className="absolute top-0 right-0">
-                        <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-4 py-1.5 rounded-bl-xl flex items-center gap-1.5">
-                          <Sparkles className="h-3.5 w-3.5" />
-                          RECOMMENDED
-                        </div>
-                      </div>
+                      {/* Animated shimmer top stripe */}
+                      <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400" />
                       
-                      <div className="p-6 pt-8 text-center">
-                        <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-3">Pay in Full & Save 10%</p>
-                        <div className="flex items-center justify-center gap-3 mb-2">
-                          <span className="text-5xl font-bold text-gradient">
-                            £{(parseFloat(totals.totalQuote) * 0.9).toFixed(2)}
+                      {/* DIY Discount badge */}
+                      <div className="absolute top-0 right-0">
+                        <motion.div
+                          animate={{ scale: [1, 1.04, 1] }}
+                          transition={{ duration: 2.5, repeat: Infinity }}
+                          className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-4 py-1.5 rounded-bl-2xl flex items-center gap-1.5 shadow-lg"
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                          DIY CALCULATOR DISCOUNT
+                        </motion.div>
+                      </div>
+
+                      <div className="p-8 pt-12 text-center">
+                        {/* Discount applied banner */}
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2 }}
+                          className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full bg-green-500/15 border border-green-500/30"
+                        >
+                          <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                          <span className="text-sm font-semibold text-green-700 dark:text-green-300">
+                            10% off applied — for using the calculator!
                           </span>
-                        </div>
-                        <div className="flex items-center justify-center gap-2 mb-3">
-                          <span className="text-sm text-muted-foreground line-through">
+                        </motion.div>
+
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Your Total</p>
+
+                        {/* Strikethrough original */}
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.3 }}
+                          className="mb-1"
+                        >
+                          <span className="text-lg text-muted-foreground line-through">
                             £{totals.totalQuote}
                           </span>
-                          <Badge className="bg-green-500 text-white border-0">
-                            SAVE £{(parseFloat(totals.totalQuote) * 0.1).toFixed(2)}
-                          </Badge>
-                        </div>
-                        <div className="mt-4 flex items-center justify-center gap-6 text-xs text-muted-foreground">
+                        </motion.div>
+
+                        {/* Big satisfying total */}
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.7 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.35, type: "spring", bounce: 0.5 }}
+                          className="flex items-center justify-center mb-3"
+                        >
+                          <span className="text-7xl md:text-8xl font-bold text-gradient leading-none">
+                            £{(parseFloat(totals.totalQuote) * 0.9).toFixed(2)}
+                          </span>
+                        </motion.div>
+
+                        {/* Savings call-out */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.5 }}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg mb-6"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          <span className="font-bold">
+                            You saved £{(parseFloat(totals.totalQuote) * 0.1).toFixed(2)}
+                          </span>
+                        </motion.div>
+
+                        {/* Benefits row */}
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.6 }}
+                          className="flex items-center justify-center gap-4 sm:gap-6 text-xs text-muted-foreground flex-wrap"
+                        >
                           <span className="flex items-center gap-1.5">
                             <Check className="h-4 w-4 text-green-500" />
-                            Best value
+                            10% discount included
                           </span>
                           <span className="flex items-center gap-1.5">
                             <Check className="h-4 w-4 text-green-500" />
-                            10% discount
+                            No hidden fees
                           </span>
                           <span className="flex items-center gap-1.5">
                             <Check className="h-4 w-4 text-green-500" />
-                            One payment
+                            All-in price
                           </span>
-                        </div>
+                        </motion.div>
                       </div>
                     </motion.div>
 
-                    {/* Alternative: 4 Weekly Payments */}
+                    {/* Flexible payment helper note */}
                     <motion.div 
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                      className="rounded-xl border border-border/50 bg-card/50 p-5"
-                    >
-                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="text-center sm:text-left">
-                          <p className="text-sm font-medium mb-1">Or pay in 4 easy weekly instalments</p>
-                          <div className="flex items-center gap-2 justify-center sm:justify-start">
-                            <span className="text-2xl font-bold text-gradient">
-                              £{(parseFloat(totals.totalQuote) / 4).toFixed(2)}
-                            </span>
-                            <span className="text-sm text-muted-foreground">/week</span>
-                            <Badge variant="secondary">
-                              Total £{totals.totalQuote}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">No interest • No credit check • Flexible</p>
-                        </div>
-                      </div>
-                    </motion.div>
-
-                    {/* Custom Payment Message */}
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
+                      transition={{ delay: 0.7 }}
                       className="relative rounded-xl bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-pink-500/10 border border-violet-500/20 p-4"
                     >
                       <div className="flex items-start gap-3">
@@ -1580,10 +1672,9 @@ function DIYCalculator() {
                           <Sparkles className="h-5 w-5 text-white" />
                         </div>
                         <div>
-                          <p className="font-medium text-sm mb-1">Need smaller weekly payments?</p>
+                          <p className="font-medium text-sm mb-1">Need to spread the cost?</p>
                           <p className="text-sm text-muted-foreground">
-                            Just message the ManxTints team and we&apos;ll find a payment plan that suits you! 
-                            We&apos;re flexible and here to help. 💬
+                            Just message the ManxTints team and we&apos;ll find a flexible payment arrangement that suits you. We&apos;re here to help.
                           </p>
                         </div>
                       </div>

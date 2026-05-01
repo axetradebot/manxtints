@@ -21,11 +21,12 @@ const knowledgeBase = [
   },
   {
     keywords: ["price", "cost", "how much", "pricing", "expensive", "cheap", "afford", "quote", "estimate"],
-    response: "Our pricing varies by service:\n\n🚗 Automotive: From £150 (Dyed), £250 (Carbon), £350 (Ceramic)\n🏠 Residential: From £89/m²\n🏢 Commercial: From £98/m²\n🛡️ Security Film: From £89/m²\n\nWe offer free, no-obligation quotes! Would you like to request one?",
+    response: "Our pricing varies by service:\n\n🏠 Residential: From £89/m²\n🏢 Commercial: From £98/m²\n🛡️ Security Film: From £89/m²\n\nWe offer free, no-obligation quotes! Would you like to request one?",
   },
   {
+    // Automotive enquiries — temporarily redirect customers since we've paused the service.
     keywords: ["car", "vehicle", "automotive", "auto", "van", "truck", "suv"],
-    response: "Our automotive tinting packages:\n\n• 2-door car: £200 (rear 3 windows + boot)\n• 4-door car: £250 (rear 5 windows + boot)\n• 2-door SUV: £250 (rear windows + boot)\n• 4-door SUV: £300 (rear 4 windows + boot)\n\nFilms available: Standard Dyed, Carbon, and premium Ceramic. All provide up to 99% UV protection!",
+    response: "Sorry — we've temporarily paused our automotive tinting service. We may bring it back in the future! In the meantime, we'd love to help with residential or commercial window tinting. Would you like to know more?",
   },
   {
     keywords: ["home", "house", "residential", "window", "flat", "apartment"],
@@ -49,11 +50,11 @@ const knowledgeBase = [
   },
   {
     keywords: ["legal", "law", "regulation", "allowed", "permit"],
-    response: "Yes, window tinting is fully legal on the Isle of Man! For vehicles, front side windows must allow at least 70% light transmission, while rear windows can have any tint level. We ensure all installations comply with IOM regulations.",
+    response: "Yes, window tinting is fully legal on the Isle of Man for residential and commercial properties! We ensure all installations comply with IOM regulations.",
   },
   {
     keywords: ["long", "time", "duration", "take", "how long", "wait"],
-    response: "Installation times vary:\n\n🚗 Standard car: 2-4 hours\n🏠 Residential: Depends on number/size of windows\n🏢 Commercial: Varies by project scope\n\nWe'll give you an accurate time estimate with your quote. We also recommend waiting 3-5 days before cleaning newly tinted windows.",
+    response: "Installation times vary:\n\n🏠 Residential: Depends on number/size of windows\n🏢 Commercial: Varies by project scope\n\nWe'll give you an accurate time estimate with your quote. We also recommend waiting 3-5 days before cleaning newly tinted windows.",
   },
   {
     keywords: ["guarantee", "warranty", "last", "lifespan", "durability"],
@@ -61,11 +62,11 @@ const knowledgeBase = [
   },
   {
     keywords: ["payment", "pay", "finance", "installment", "credit"],
-    response: "We offer flexible payment options:\n\n💰 Pay in full — Get a 10% discount!\n📅 4 weekly payments — No interest, no credit check\n\nMaking quality tinting affordable for everyone on the island.",
+    response: "Get an automatic 10% off when you use our online DIY Calculator! Need a flexible payment plan? Just message us and we'll work something out — making quality tinting affordable for everyone on the island.",
   },
   {
     keywords: ["area", "cover", "location", "where", "travel", "mobile", "come to"],
-    response: "We cover the entire Isle of Man! Whether you're in Douglas, Ramsey, Peel, Castletown, or anywhere else on the island, we can come to you. We offer mobile services for automotive tinting — we'll come to your home or workplace.",
+    response: "We cover the entire Isle of Man! Whether you're in Douglas, Ramsey, Peel, Castletown, or anywhere else on the island, we can come to you for residential and commercial installations.",
   },
   {
     keywords: ["contact", "phone", "call", "email", "reach", "address", "hours"],
@@ -73,7 +74,7 @@ const knowledgeBase = [
   },
   {
     keywords: ["book", "appointment", "schedule", "consultation", "visit"],
-    response: "Booking is easy! You can:\n\n1. Request a free home/vehicle visit through our quote page\n2. Call us at +44 7624 331401\n3. Email manxtints@gmail.com\n\nWe offer free, no-obligation consultations and quotes!",
+    response: "Booking is easy! You can:\n\n1. Request a free home visit through our quote page\n2. Use our DIY Calculator for an instant 10% off quote\n3. Call us at +44 7624 331401\n4. Email manxtints@gmail.com\n\nWe offer free, no-obligation consultations and quotes!",
   },
   {
     keywords: ["remove", "take off", "undo", "peel"],
@@ -83,13 +84,14 @@ const knowledgeBase = [
     keywords: ["wash", "clean", "maintain", "care"],
     response: "After tinting, wait 3-5 days for the film to fully cure. After that, use a soft cloth and ammonia-free cleaning products. Avoid abrasive materials that could scratch the film. Simple care for long-lasting results!",
   },
-  {
-    keywords: ["ppf", "paint protection", "paint film", "stone chip", "scratch"],
-    response: "We're expanding our services to include premium Paint Protection Film (PPF) installation soon! PPF protects your vehicle's paintwork from stone chips, scratches, and environmental damage. Contact us to be notified when this service launches!",
-  },
+  // PPF (vehicle paint protection) — temporarily disabled along with Automotive service.
+  // {
+  //   keywords: ["ppf", "paint protection", "paint film", "stone chip", "scratch"],
+  //   response: "We're expanding our services to include premium Paint Protection Film (PPF) installation soon! PPF protects your vehicle's paintwork from stone chips, scratches, and environmental damage. Contact us to be notified when this service launches!",
+  // },
   {
     keywords: ["dark", "darkness", "shade", "level", "light", "tint level"],
-    response: "You can choose your preferred level of darkness! During the consultation, we'll guide you through all available options including different levels of darkness and shades. For vehicles, we ensure compliance with IOM regulations (70% light transmission on front side windows).",
+    response: "You can choose your preferred level of darkness! During the consultation, we'll guide you through all available options including different levels of darkness and shades.",
   },
   {
     keywords: ["energy", "heat", "cold", "insulation", "temperature", "saving"],
@@ -105,11 +107,11 @@ const knowledgeBase = [
   },
   {
     keywords: ["service", "what do you", "offer", "do you do", "services"],
-    response: "We offer a wide range of window tinting services:\n\n🚗 Automotive Tinting — Style, privacy & UV protection\n🏠 Residential Tinting — Comfort, efficiency & privacy\n🏢 Commercial Tinting — Professional, efficient & secure\n🛡️ Specialty Films — Security, energy saving, anti-fog, data jammer, bomb blast protection\n🎨 Paint Protection Film — Coming soon!\n\nWhat would you like to know more about?",
+    response: "We offer a wide range of window tinting services:\n\n🏠 Residential Tinting — Comfort, efficiency & privacy\n🏢 Commercial Tinting — Professional, efficient & secure\n🛡️ Specialty Films — Security, energy saving, anti-fog, data jammer, bomb blast protection\n\nWhat would you like to know more about?",
   },
   {
     keywords: ["glare", "screen", "computer", "monitor"],
-    response: "Our window tinting significantly reduces glare — perfect for homes with TV rooms, offices with computer screens, or vehicles. No more squinting or repositioning screens! Our commercial films are specifically designed to reduce computer screen glare.",
+    response: "Our window tinting significantly reduces glare — perfect for homes with TV rooms or offices with computer screens. No more squinting or repositioning screens! Our commercial films are specifically designed to reduce computer screen glare.",
   },
   {
     keywords: ["fog", "condensation", "mist", "moisture"],

@@ -86,8 +86,8 @@ export default function AboutPage() {
                 className="relative rounded-2xl overflow-hidden aspect-square"
               >
                 <Image
-                  src="/gallery/automotive/FB_IMG_1769248558394.jpg"
-                  alt="Professional automotive tinting work"
+                  src="/gallery/residential/PXL_20251031_093144846.jpg"
+                  alt="Professional residential tinting work"
                   fill
                   className="object-cover"
                 />
@@ -139,8 +139,8 @@ export default function AboutPage() {
                     className="relative rounded-xl overflow-hidden aspect-[3/4]"
                   >
                     <Image
-                      src="/gallery/automotive/FB_IMG_1769248570779.jpg"
-                      alt="Tinted car"
+                      src="/gallery/residential/PXL_20260117_114210544.jpg"
+                      alt="Tinted home"
                       fill
                       className="object-cover"
                     />

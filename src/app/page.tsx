@@ -3,7 +3,8 @@
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { ArrowRight, Shield, Sun, Eye, Zap, Award, Clock, Star, CheckCircle2, ThumbsUp, Users, Building2, Car, Home as HomeIcon, HelpCircle } from "lucide-react"
+// `Car` icon temporarily removed — re-add when re-enabling Automotive Tinting service entry below
+import { ArrowRight, Shield, Sun, Eye, Zap, Award, Clock, Star, CheckCircle2, ThumbsUp, Users, Building2, Home as HomeIcon, HelpCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -27,14 +28,15 @@ const services = [
     icon: Building2,
     features: ["Professional Look", "Energy Efficient", "Glare Reduction"],
   },
-  {
-    title: "Automotive Tinting",
-    description: "Drive in style with our automotive window tinting. Experience superior UV protection, glare reduction, and a sleek look for your vehicle.",
-    image: "/images/automotive.jpg",
-    href: "/services#automotive",
-    icon: Car,
-    features: ["UV Protection", "Style Upgrade", "Sleek Look"],
-  },
+  // Automotive Tinting — temporarily disabled. To re-enable, uncomment below and re-add `Car` icon import.
+  // {
+  //   title: "Automotive Tinting",
+  //   description: "Drive in style with our automotive window tinting. Experience superior UV protection, glare reduction, and a sleek look for your vehicle.",
+  //   image: "/images/automotive.jpg",
+  //   href: "/services#automotive",
+  //   icon: Car,
+  //   features: ["UV Protection", "Style Upgrade", "Sleek Look"],
+  // },
 ]
 
 const whyChooseUs = [
@@ -115,12 +117,13 @@ const testimonials = [
     rating: 5,
     date: "March 2024",
   },
-  {
-    name: "Becci Varey",
-    content: "Got my car tinted by ManxTints and love the result. Highly recommend!!",
-    rating: 5,
-    date: "January 2024",
-  },
+  // Car-related testimonial — temporarily hidden while Automotive service is paused.
+  // {
+  //   name: "Becci Varey",
+  //   content: "Got my car tinted by ManxTints and love the result. Highly recommend!!",
+  //   rating: 5,
+  //   date: "January 2024",
+  // },
   {
     name: "Brooke Cafearo",
     content: "I've had some privacy tint fitted on my lounge windows. I can see out but no one can see in! I'm SO impressed!!! Axe was efficient and professional! Would highly recommend!",
@@ -178,11 +181,11 @@ const faqs = [
   // Original FAQs
   {
     question: "What types of window tinting do you offer?",
-    answer: "We offer three main types of window tinting services: Residential Tinting for homes (privacy, energy savings, UV protection), Commercial Tinting for businesses (professional appearance, energy efficiency, glare reduction), and Automotive Tinting for vehicles (UV protection, style, privacy). Each service uses premium films tailored to your specific needs.",
+    answer: "We offer two main types of window tinting services: Residential Tinting for homes (privacy, energy savings, UV protection) and Commercial Tinting for businesses (professional appearance, energy efficiency, glare reduction). Each service uses premium films tailored to your specific needs.",
   },
   {
     question: "Is window tinting legal on the Isle of Man?",
-    answer: "Yes, window tinting is legal on the Isle of Man. For vehicles, front side windows must allow at least 70% light transmission, while rear windows can have any tint level. We ensure all our automotive installations comply with local regulations.",
+    answer: "Yes, window tinting is fully legal on the Isle of Man for residential and commercial properties. We ensure all our installations comply with local regulations.",
   },
   {
     question: "Can I wash my windows after tinting?",
@@ -190,7 +193,7 @@ const faqs = [
   },
   {
     question: "What areas do you cover?",
-    answer: "We provide window tinting services across the entire Isle of Man. Whether you're in Douglas, Ramsey, Peel, Castletown, or anywhere else on the island, we can come to you for automotive tinting or arrange installation for your home or business.",
+    answer: "We provide window tinting services across the entire Isle of Man. Whether you're in Douglas, Ramsey, Peel, Castletown, or anywhere else on the island, we can arrange installation for your home or business.",
   },
 ]
 
@@ -226,7 +229,7 @@ export default function Home() {
 
               <FadeIn delay={0.4}>
                 <p className="text-base sm:text-xl text-slate-600 mb-8 max-w-xl leading-relaxed">
-                  Professional window tinting for homes, businesses, and vehicles across the Isle of Man. 
+                  Professional window tinting for homes and businesses across the Isle of Man. 
                   Quality films, expert installation, satisfaction guaranteed.
                 </p>
               </FadeIn>
@@ -355,8 +358,8 @@ export default function Home() {
                 <span className="text-gradient block">For Every Need</span>
               </h2>
               <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-                From cosy homes to sleek vehicles, we deliver premium window tinting 
-                solutions tailored to your needs.
+                From cosy homes to professional commercial spaces, we deliver premium window 
+                tinting solutions tailored to your needs.
               </p>
             </div>
           </FadeIn>

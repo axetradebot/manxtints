@@ -18,7 +18,8 @@ const footerLinks = {
   services: [
     { label: "Residential Tinting", href: "/services#residential" },
     { label: "Commercial Tinting", href: "/services#commercial" },
-    { label: "Automotive Tinting", href: "/services#automotive" },
+    // Automotive Tinting — temporarily disabled. Uncomment to re-enable.
+    // { label: "Automotive Tinting", href: "/services#automotive" },
   ],
   company: [
     { label: "About Us", href: "/about" },

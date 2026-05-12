@@ -867,7 +867,7 @@ function DIYCalculator() {
                           <h4 className="text-lg sm:text-xl font-bold mb-1">{type.label}</h4>
                           <p className="text-xs sm:text-sm text-muted-foreground">
                             {type.id === "house" && "Homes & flats"}
-                            {type.id === "conservatory" && "Sun-rooms & extensions"}
+                            {type.id === "conservatory" && "Roof Panels"}
                             {type.id === "commercial" && "Offices, shops & buildings"}
                           </p>
                         </motion.button>

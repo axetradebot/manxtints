@@ -28,6 +28,14 @@ const services = [
     icon: Building2,
     features: ["Professional Look", "Energy Efficient", "Glare Reduction"],
   },
+  {
+    title: "Specialist Tinting",
+    description: "Advanced films for security, energy saving, anti-fog, and other specialist needs—with professional consultation for homes and businesses.",
+    image: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80",
+    href: "/services#specialty",
+    icon: Shield,
+    features: ["High-Security", "Energy Saving", "Custom Solutions"],
+  },
   // Automotive Tinting — temporarily disabled. To re-enable, uncomment below and re-add `Car` icon import.
   // {
   //   title: "Automotive Tinting",
@@ -62,12 +70,87 @@ const whyChooseUs = [
   },
 ]
 
+const GOOGLE_REVIEWS_URL =
+  "https://www.google.com/search?sca_esv=c4e89c2c5914c7f8&rlz=1C1CHBF_en-GBIM1032IM1032&sxsrf=ANbL-n4DfdEfn1NW6XcXnkj-Dm1-yuc7qg:1778594927633&si=AL3DRZEsmMGCryMMFSHJ3StBhOdZ2-6yYkXd_doETEE1OR-qOeXcdVt2lmgtKzBRhXCJXS4GpuZ0OdtsvY-tbf0aIRKagdvijPWMeXIXIHwM2m5jza-c5txbeTXiCh34oRJQyNneifQ9&q=ManxTints+LTD+Reviews&sa=X&ved=2ahUKEwiXpPG29rOUAxW2VkEAHTDHAvwQ0bkNegQIIxAF&biw=2133&bih=1012&dpr=0.9"
+
 const testimonials = [
+  // Google reviews
+  {
+    name: "Jamie Powell",
+    content:
+      "We enquired about window tints primarily to help our elderly neighbour with privacy issues in his lounge. Axel was great—we asked lots of questions, which he answered so well, so much so we had ours done too! The whole experience was excellent from start to finish.",
+    rating: 5,
+    date: "April 2026",
+  },
+  {
+    name: "Rob Hulley",
+    content:
+      "Got my windows tinted today. Great job, swift installation, and very happy with the result. Will be perfect once summer arrives. Thanks Axel.",
+    rating: 5,
+    date: "April 2026",
+  },
+  {
+    name: "Chris S",
+    content:
+      "Great job by Axel. Showed up on time, explained everything clearly, and did the job professionally with proper cleaning when done. Highly recommend.",
+    rating: 5,
+    date: "April 2026",
+  },
+  {
+    name: "Andrea Barker",
+    content:
+      "Had a skylight tinted to help with heat and glare. Fabulous from start to finish! Great value, brilliant customer service—highly recommended. Will go back for more window work.",
+    rating: 5,
+    date: "April 2026",
+  },
+  {
+    name: "Deborah Bridson",
+    content:
+      "Another first class job by Axel—this is the third lot of windows we have had tinted on our house and it makes a real difference to privacy. Axel provides an excellent service and we wouldn't hesitate to recommend him.",
+    rating: 5,
+    date: "March 2026",
+  },
+  {
+    name: "Greg Manning",
+    content:
+      "Excellent service, quality job, quick, reasonable prices and a nice man 👍",
+    rating: 5,
+    date: "March 2026",
+  },
+  {
+    name: "Stewart Hunter",
+    content:
+      "Extremely pleased with the service and quality of the job. Axel is a great guy who turned up exactly when he said he would and did a top class job—very rare these days. His prices are also very reasonable; I was pleasantly surprised.",
+    rating: 5,
+    date: "February 2026",
+  },
+  {
+    name: "Kim Fletcher",
+    content: "Excellent service from ManxTints. Very helpful and reliable.",
+    rating: 5,
+    date: "February 2026",
+  },
+  // Facebook reviews
+  {
+    name: "Fraser Kinley",
+    content:
+      "A few questions asked online and quickly made an appointment to measure and explain options. About a week later had one-way mirror film applied. Nice friendly service. Highly recommend.",
+    rating: 5,
+    date: "20 February 2026",
+  },
+  {
+    name: "Geordie Larter",
+    content:
+      "Arrived on time, did a great job, very helpful—would recommend and use again. Thank you.",
+    rating: 5,
+    date: "11 February 2026",
+  },
   {
     name: "Paul King",
-    content: "A huge thank you to Manx Tints for the fantastic job on my living room windows. The service was top-notch from start to finish. Axel was very polite and professional throughout the process. If you are looking for high-quality window tinting, I highly recommend Axel at Manx Tints.",
+    content:
+      "A huge thank you to Manx Tints for the fantastic job on my living room windows. The service was top-notch from start to finish. Axel was very polite and professional throughout the process. If you are looking for high-quality window tinting, I highly recommend Axel at Manx Tints.",
     rating: 5,
-    date: "January 2026",
+    date: "6 January 2026",
   },
   {
     name: "Nina Marie Jensen",
@@ -117,13 +200,6 @@ const testimonials = [
     rating: 5,
     date: "March 2024",
   },
-  // Car-related testimonial — temporarily hidden while Automotive service is paused.
-  // {
-  //   name: "Becci Varey",
-  //   content: "Got my car tinted by ManxTints and love the result. Highly recommend!!",
-  //   rating: 5,
-  //   date: "January 2024",
-  // },
   {
     name: "Brooke Cafearo",
     content: "I've had some privacy tint fitted on my lounge windows. I can see out but no one can see in! I'm SO impressed!!! Axe was efficient and professional! Would highly recommend!",
@@ -434,24 +510,35 @@ export default function Home() {
                 <span className="text-xl font-semibold text-slate-800">100% Recommend</span>
                 <span className="text-slate-500">({testimonials.length} Reviews)</span>
               </div>
-              <a 
-                href="https://www.facebook.com/manxtints/reviews" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
-                </svg>
-                View all reviews on Facebook
-                <ArrowRight className="h-4 w-4" />
-              </a>
+              <div className="flex flex-col items-center gap-2 mb-4">
+                <a
+                  href="https://www.facebook.com/manxtints/reviews"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
+                  </svg>
+                  View all reviews on Facebook
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+                <a
+                  href={GOOGLE_REVIEWS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                >
+                  View all reviews on Google
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+              </div>
             </div>
           </FadeIn>
 
           <Stagger className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {testimonials.map((testimonial, index) => (
-              <StaggerItem key={testimonial.name}>
+              <StaggerItem key={`${testimonial.name}-${index}`}>
                 <Card className="bg-white border-slate-200 shadow-lg h-full card-hover">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-3">
@@ -462,7 +549,7 @@ export default function Home() {
                       </div>
                       <span className="text-xs text-slate-400">{testimonial.date}</span>
                     </div>
-                    <p className="text-slate-600 italic leading-relaxed mb-4 line-clamp-4">
+                    <p className="text-slate-600 italic leading-relaxed mb-4">
                       &ldquo;{testimonial.content}&rdquo;
                     </p>
                     <div className="flex items-center gap-3">

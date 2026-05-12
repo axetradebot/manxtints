@@ -119,7 +119,7 @@ const faqs = [
   },
   {
     question: "How long does window tint last?",
-    answer: "Quality window tint, like the films we use, can last 15-25 years with proper care. We provide a 5 year guarantee on our premium ceramic films. Cheaper films may fade or bubble within a few years, which is why we only use trusted, premium brands.",
+    answer: "Quality window tint, like the films we use, can last 15-25 years with proper care. We provide a 5 year guarantee on our premium ceramic films, with an optional 10 year upgrade (+£19) via our DIY quote calculator. Cheaper films may fade or bubble within a few years, which is why we only use trusted, premium brands.",
   },
   {
     question: "Can I wash my windows after tinting?",

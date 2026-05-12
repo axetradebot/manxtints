@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
@@ -119,7 +120,7 @@ export default function QuotePage() {
   return (
     <div className="relative">
       {/* Hero Section */}
-      <section className="relative py-24 md:py-32 overflow-hidden">
+      <section className="relative pt-24 md:pt-32 pb-8 md:pb-10 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image
             src="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=1920&q=80"
@@ -183,7 +184,7 @@ export default function QuotePage() {
       </section>
 
       {/* Quote Options */}
-      <section className="py-16">
+      <section className="pt-2 pb-16 md:pt-4 md:pb-16">
         <div className="container mx-auto px-4">
           <Tabs value={activeTab} className="space-y-12" onValueChange={setActiveTab}>
             <FadeIn>
@@ -608,8 +609,10 @@ function DIYCalculator() {
     return category === "vehicle" && vehicleType !== null && doorCount !== null
   }
 
-  // Guarantee pricing
-  const guaranteePrice = 17
+  // Extended guarantee upsell (+£19 vs standard 5 years)
+  const EXTENDED_GUARANTEE_YEARS = 10
+  const guaranteePrice = 19
+  const extendedGuaranteePerYear = (guaranteePrice / EXTENDED_GUARANTEE_YEARS).toFixed(2)
 
   // Calculate totals
   const calculateTotals = () => {
@@ -668,11 +671,11 @@ function DIYCalculator() {
       const vehicleLabel = getVehicleLabel()
       const vehicleDescription = getVehicleDescription()
       
-      formData.append('_subject', `New Vehicle Quote Request - ${vehicleLabel} - £${finalPrice}${extendedGuarantee ? ' (15yr Guarantee)' : ''}`)
+      formData.append('_subject', `New Vehicle Quote Request - ${vehicleLabel} - £${finalPrice}${extendedGuarantee ? ' (10yr Guarantee)' : ''}`)
       formData.append('Category', 'Vehicle')
       formData.append('Vehicle Type', vehicleLabel)
       formData.append('Package', vehicleDescription)
-      formData.append('15 Year Guarantee', extendedGuarantee ? 'YES (+£17)' : 'No - Standard 5 Year')
+      formData.append('10 Year Guarantee', extendedGuarantee ? `YES (+£${guaranteePrice})` : 'No - Standard 5 Year')
       formData.append('Subtotal', `£${currentTotals.totalQuote}`)
       formData.append('DIY Calculator Discount (10%)', `-£${discountAmount}`)
       formData.append('Final Total (with 10% DIY discount)', `£${finalPrice}`)
@@ -682,12 +685,12 @@ function DIYCalculator() {
                              selectedType === 'conservatory' ? 'Conservatory' : 
                              selectedType === 'commercial' ? 'Commercial' : selectedType
       
-      formData.append('_subject', `New Property Quote Request - ${projectTypeName} - £${finalPrice}${extendedGuarantee ? ' (15yr Guarantee)' : ''}`)
+      formData.append('_subject', `New Property Quote Request - ${projectTypeName} - £${finalPrice}${extendedGuarantee ? ' (10yr Guarantee)' : ''}`)
       formData.append('Category', 'Property')
       formData.append('Project Type', projectTypeName || 'Not specified')
       formData.append('Total Area (m²)', currentTotals.totalAreaSqM)
       formData.append('Price per m²', `£${currentTotals.pricePerSqM}`)
-      formData.append('15 Year Guarantee', extendedGuarantee ? 'YES (+£17)' : 'No - Standard 5 Year')
+      formData.append('10 Year Guarantee', extendedGuarantee ? `YES (+£${guaranteePrice})` : 'No - Standard 5 Year')
       formData.append('Subtotal', `£${currentTotals.totalQuote}`)
       formData.append('DIY Calculator Discount (10%)', `-£${discountAmount}`)
       formData.append('Final Total (with 10% DIY discount)', `£${finalPrice}`)
@@ -1206,9 +1209,8 @@ function DIYCalculator() {
                   <div className="glass rounded-xl p-4 flex items-start gap-3">
                     <Info className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                     <p className="text-sm text-muted-foreground">
-                      <strong>Tip:</strong> For houses, measure just the visible glass of each window, 
-                      not the frame. Don&apos;t worry about being exact — we&apos;ll confirm measurements 
-                      during our visit.
+                      <strong>Tip:</strong> For houses, measure just the visible glass of each window,
+                      not the frame.
                     </p>
                   </div>
 
@@ -1299,7 +1301,7 @@ function DIYCalculator() {
                 </motion.div>
               )}
 
-              {/* Step 3: 15 Year Guarantee Upsell */}
+              {/* Step 3: 10 Year Guarantee Upsell */}
               {step === 3 && (
                 <motion.div
                   key="step3"
@@ -1317,7 +1319,7 @@ function DIYCalculator() {
                     >
                       <Shield className="h-10 w-10 text-white" />
                     </motion.div>
-                    <h3 className="text-2xl font-bold mb-2">Upgrade to 15 Year Guarantee</h3>
+                    <h3 className="text-2xl font-bold mb-2">Upgrade to 10 Year Guarantee</h3>
                     <p className="text-muted-foreground">
                       Ultimate peace of mind for just a little extra
                     </p>
@@ -1366,16 +1368,16 @@ function DIYCalculator() {
                           {/* Content */}
                           <div className="flex-1">
                             <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-                              <h4 className="text-xl font-bold">15 Year Guarantee</h4>
+                              <h4 className="text-xl font-bold">10 Year Guarantee</h4>
                               <div className="flex items-center gap-2">
                                 <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-lg px-3 py-1">
-                                  Just +£17
+                                  Just +£{guaranteePrice}
                                 </Badge>
                               </div>
                             </div>
                             
                             <p className="text-muted-foreground mb-4">
-                              Get <span className="font-semibold text-foreground">triple the coverage</span> of our standard 5-year guarantee. 
+                              Get <span className="font-semibold text-foreground">double the coverage</span> of our standard 5-year guarantee. 
                               Any problems at all? We&apos;ve got you covered.
                             </p>
 
@@ -1414,7 +1416,7 @@ function DIYCalculator() {
                               >
                                 <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
                                   <Sparkles className="h-5 w-5" />
-                                  <span className="font-semibold">You&apos;re covered for 15 years!</span>
+                                  <span className="font-semibold">You&apos;re covered for 10 years!</span>
                                 </div>
                               </motion.div>
                             )}
@@ -1432,7 +1434,7 @@ function DIYCalculator() {
                     className="text-center"
                   >
                     <p className="text-sm text-muted-foreground">
-                      That&apos;s just <span className="font-semibold text-foreground">£1.13 per year</span> for complete peace of mind
+                      That&apos;s just <span className="font-semibold text-foreground">£{extendedGuaranteePerYear} per year</span> for complete peace of mind
                     </p>
                   </motion.div>
 
@@ -1464,7 +1466,7 @@ function DIYCalculator() {
                       onClick={() => setStep(4)}
                       className="gap-2"
                     >
-                      {extendedGuarantee ? "Continue with 15 Year Guarantee" : "Continue with Standard Guarantee"}
+                      {extendedGuarantee ? "Continue with 10 Year Guarantee" : "Continue with Standard Guarantee"}
                       <ArrowRight className="h-5 w-5" />
                     </Button>
                   </div>
@@ -1544,7 +1546,7 @@ function DIYCalculator() {
                         </div>
                         <div>
                           <p className="font-semibold">
-                            {extendedGuarantee ? "15 Year Guarantee" : "Standard 5 Year Guarantee"}
+                            {extendedGuarantee ? "10 Year Guarantee" : "Standard 5 Year Guarantee"}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             {extendedGuarantee ? "Complete peace of mind" : "Included with your tint"}
@@ -1553,7 +1555,7 @@ function DIYCalculator() {
                       </div>
                       {extendedGuarantee ? (
                         <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
-                          +£17
+                          +£{guaranteePrice}
                         </Badge>
                       ) : (
                         <Badge variant="secondary">Included</Badge>
@@ -1806,8 +1808,8 @@ function DIYCalculator() {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <Shield className="h-5 w-5 text-amber-500" />
-                              <p className="font-semibold">Add 15 Year Guarantee?</p>
-                              <span className="text-amber-600 dark:text-amber-400 font-bold">Just +£17</span>
+                              <p className="font-semibold">Add 10 Year Guarantee?</p>
+                              <span className="text-amber-600 dark:text-amber-400 font-bold">Just +£{guaranteePrice}</span>
                             </div>
                             <p className="text-sm text-muted-foreground mb-2">
                               Any peeling, bubbles, or problems at all — we replace the tint <span className="font-medium text-foreground">no questions asked</span>, at no extra cost.
@@ -1819,12 +1821,23 @@ function DIYCalculator() {
                               className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0 gap-1"
                             >
                               <Check className="h-4 w-4" />
-                              Yes, add 15 Year Guarantee
+                              Yes, add 10 Year Guarantee
                             </Button>
                           </div>
                         </div>
                       </motion.div>
                     )}
+
+                    <p className="text-center text-xs text-muted-foreground leading-relaxed max-w-xl mx-auto">
+                      By booking ManxTints LTD you agree to our{" "}
+                      <Link
+                        href="/terms"
+                        className="underline underline-offset-2 hover:text-foreground"
+                      >
+                        terms &amp; conditions
+                      </Link>
+                      .
+                    </p>
 
                     <div className="flex justify-between">
                       <Button
@@ -1855,7 +1868,7 @@ function DIYCalculator() {
                           </>
                         ) : (
                           <>
-                            Request Accurate Quote
+                            Book Installation
                             <ArrowRight className="h-5 w-5" />
                           </>
                         )}

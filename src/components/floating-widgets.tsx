@@ -58,7 +58,7 @@ const knowledgeBase = [
   },
   {
     keywords: ["guarantee", "warranty", "last", "lifespan", "durability"],
-    response: "Our premium films last 15-25 years with proper care. We offer:\n\n• Standard guarantee: 5 years (included)\n• Extended guarantee: 15 years (just +£17)\n\nWe only use trusted, premium brands that won't fade or bubble.",
+    response: "Our premium films last 15-25 years with proper care. We offer:\n\n• Standard guarantee: 5 years (included)\n• Extended guarantee: 10 years (just +£19)\n\nWe only use trusted, premium brands that won't fade or bubble.",
   },
   {
     keywords: ["payment", "pay", "finance", "installment", "credit"],
@@ -99,7 +99,7 @@ const knowledgeBase = [
   },
   {
     keywords: ["why", "choose", "different", "special", "best", "better"],
-    response: "Why choose ManxTints?\n\n⭐ Professional & friendly staff\n💰 Competitive, transparent pricing\n📅 Hassle-free booking process\n✅ Satisfaction guaranteed\n🇮🇲 Island-wide service, 7 days a week\n🏆 IOM Government contractor\n🛡️ Up to 15-year guarantee\n\nWe use only premium materials and stand behind every installation!",
+    response: "Why choose ManxTints?\n\n⭐ Professional & friendly staff\n💰 Competitive, transparent pricing\n📅 Hassle-free booking process\n✅ Satisfaction guaranteed\n🇮🇲 Island-wide service, 7 days a week\n🏆 IOM Government contractor\n🛡️ Extended guarantee up to 10 years (+£19)\n\nWe use only premium materials and stand behind every installation!",
   },
   {
     keywords: ["thank", "thanks", "cheers", "appreciate", "great", "helpful"],

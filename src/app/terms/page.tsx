@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { FadeIn } from "@/components/motion"
 import {
   Shield,
-  AlertTriangle,
   ClipboardCheck,
   Banknote,
   CalendarX,
@@ -153,14 +152,7 @@ export default function TermsPage() {
             {/* ------------------------------------------------------------------ */}
             <FadeIn>
               <div className="relative rounded-2xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-6 sm:p-8 md:p-10 shadow-sm">
-                <div className="absolute -top-4 left-6 sm:left-8">
-                  <span className="inline-flex items-center gap-1.5 bg-amber-500 text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-md shadow-amber-500/30">
-                    <AlertTriangle className="h-3.5 w-3.5" />
-                    Important Notice
-                  </span>
-                </div>
-
-                <div className="flex items-start gap-4 mb-6 mt-2">
+                <div className="flex items-start gap-4 mb-6">
                   <div className="hidden sm:flex shrink-0 w-12 h-12 rounded-xl bg-amber-100 items-center justify-center">
                     <Shield className="h-6 w-6 text-amber-600" />
                   </div>
@@ -347,6 +339,13 @@ export default function TermsPage() {
                     workmanship. Our standard and premium films are backed by a
                     five-year guarantee against peeling, bubbling, discolouration,
                     and delamination under normal usage conditions.
+                  </p>
+                  <p>
+                    You may optionally purchase a 10-year extended guarantee when
+                    you accept a quote; if purchased, coverage for peeling,
+                    bubbling, discolouration, and delamination under normal use
+                    applies for 10 years from installation, on the same basis as
+                    the standard guarantee and subject to the exclusions below.
                   </p>
                   <p>
                     This warranty does not extend to damage resulting from

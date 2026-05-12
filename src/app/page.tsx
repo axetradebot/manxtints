@@ -176,7 +176,7 @@ const faqs = [
   },
   {
     question: "How long will the window tint last, and is there a Guarantee?",
-    answer: "Our high-quality window tinting films are durable and come with a 10 year guarantee. The lifespan may vary based on factors like sun exposure and maintenance, but you can expect long-lasting results.",
+    answer: "Premium films can last many years with proper care (often 15–25 years depending on conditions). Every installation includes a standard 5-year guarantee, and you can upgrade to a 10-year guarantee for +£19 when you use our DIY quote calculator.",
   },
   // Original FAQs
   {

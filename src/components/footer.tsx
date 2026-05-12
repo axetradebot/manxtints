@@ -79,7 +79,7 @@ export function Footer() {
                 <Facebook className="h-5 w-5" />
               </motion.a>
               <motion.a
-                href="https://instagram.com/manxtints"
+                href="https://www.instagram.com/manxtintsltd"
                 target="_blank"
                 rel="noopener noreferrer"
                 whileHover={{ scale: 1.1, y: -2 }}

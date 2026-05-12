@@ -276,7 +276,7 @@ export default function ContactPage() {
                         <span>Facebook</span>
                       </motion.a>
                       <motion.a
-                        href="https://instagram.com/manxtints"
+                        href="https://www.instagram.com/manxtintsltd"
                         target="_blank"
                         rel="noopener noreferrer"
                         whileHover={{ scale: 1.1, y: -2 }}

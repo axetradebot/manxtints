@@ -50,7 +50,7 @@ const services = [
       "Various tint levels available",
     ],
     films: [
-      { name: "Solar Control Film", price: "£89/m²", description: "Excellent heat rejection" },
+      { name: "Ceramic Film", price: "£150-£200/m²", description: "Clear film with excellent heat rejection" },
       { name: "Privacy Film", price: "£89/m²", description: "One-way mirror effect" },
       { name: "Decorative Film", price: "£89/m²", description: "Frosted and patterned options" },
     ],
@@ -103,7 +103,7 @@ const services = [
 
 const benefits = [
   { icon: Shield, title: "UV Protection", description: "Block up to 99% of harmful UV rays" },
-  { icon: Sun, title: "Heat Rejection", description: "Reduce interior heat by up to 60%" },
+  { icon: Sun, title: "Heat Rejection", description: "Reduce interior heat by up to 97%" },
   { icon: Eye, title: "Privacy", description: "Enhanced privacy without losing light" },
   { icon: Thermometer, title: "Energy Savings", description: "Lower heating and cooling costs" },
 ]

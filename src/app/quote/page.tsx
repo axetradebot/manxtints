@@ -34,6 +34,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { FadeIn, Stagger, StaggerItem } from "@/components/motion"
+import { trackLead } from "@/lib/metaPixel"
 
 // Vehicle pricing configuration
 const vehiclePricing = {
@@ -280,7 +281,18 @@ function VisitRequestForm({ onSwitchToCalculator }: { onSwitchToCalculator: () =
     // Add project type to form data
     formData.append('_subject', `New Visit Request - ${projectType === 'property' ? 'Property' : 'Vehicle'}`)
     formData.append('Project Type', projectType === 'property' ? 'Property' : 'Vehicle')
-    
+
+    // Fire Meta Lead event (Pixel + CAPI) before submitting — never blocks the UI.
+    const visitName = formData.get('name')?.toString().trim()
+    void trackLead({
+      contentName: 'home_visit',
+      value: 50,
+      email: formData.get('email')?.toString() || undefined,
+      phone: formData.get('phone')?.toString() || undefined,
+      firstName: visitName ? visitName.split(' ')[0] : undefined,
+      zip: formData.get('postcode')?.toString() || undefined,
+    })
+
     try {
       const response = await fetch('https://formspree.io/f/mpqpzwve', {
         method: 'POST',
@@ -665,6 +677,17 @@ function DIYCalculator() {
     const subtotal = parseFloat(currentTotals.totalQuote)
     const discountAmount = (subtotal * 0.1).toFixed(2)
     const finalPrice = (subtotal * 0.9).toFixed(2)
+
+    // Fire Meta Lead event (Pixel + CAPI) before submitting — never blocks the UI.
+    const calcName = formData.get('name')?.toString().trim()
+    void trackLead({
+      contentName: 'diy_calculator',
+      value: 10,
+      email: formData.get('email')?.toString() || undefined,
+      phone: formData.get('phone')?.toString() || undefined,
+      firstName: calcName ? calcName.split(' ')[0] : undefined,
+      zip: formData.get('postcode')?.toString() || undefined,
+    })
 
     if (category === "vehicle") {
       // Vehicle submission

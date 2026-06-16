@@ -93,7 +93,10 @@ export async function POST(request: NextRequest) {
     if (contentName) custom_data.content_name = contentName
     if (typeof value === "number") custom_data.value = value
 
-    const payload = {
+    const payload: {
+      data: unknown[]
+      test_event_code?: string
+    } = {
       data: [
         {
           event_name: eventName,
@@ -105,6 +108,13 @@ export async function POST(request: NextRequest) {
           custom_data,
         },
       ],
+    }
+
+    // Optional: route events to Events Manager > Test events for verification.
+    // Set META_TEST_EVENT_CODE in the environment; leave unset in production.
+    const testEventCode = process.env.META_TEST_EVENT_CODE
+    if (testEventCode) {
+      payload.test_event_code = testEventCode
     }
 
     const url = `https://graph.facebook.com/${GRAPH_API_VERSION}/${datasetId}/events?access_token=${encodeURIComponent(

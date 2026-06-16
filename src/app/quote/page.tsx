@@ -282,9 +282,11 @@ function VisitRequestForm({ onSwitchToCalculator }: { onSwitchToCalculator: () =
     formData.append('_subject', `New Visit Request - ${projectType === 'property' ? 'Property' : 'Vehicle'}`)
     formData.append('Project Type', projectType === 'property' ? 'Property' : 'Vehicle')
 
-    // Fire Meta Lead event (Pixel + CAPI) before submitting — never blocks the UI.
+    // Fire Meta Lead event (Pixel + CAPI) BEFORE submitting so the browser
+    // Pixel beacon is sent while the page is still alive. Awaited so fbq has
+    // fired; trackLead never throws and is internally time-capped.
     const visitName = formData.get('name')?.toString().trim()
-    void trackLead({
+    await trackLead({
       contentName: 'home_visit',
       value: 50,
       email: formData.get('email')?.toString() || undefined,
@@ -678,9 +680,11 @@ function DIYCalculator() {
     const discountAmount = (subtotal * 0.1).toFixed(2)
     const finalPrice = (subtotal * 0.9).toFixed(2)
 
-    // Fire Meta Lead event (Pixel + CAPI) before submitting — never blocks the UI.
+    // Fire Meta Lead event (Pixel + CAPI) BEFORE submitting so the browser
+    // Pixel beacon is sent while the page is still alive. Awaited so fbq has
+    // fired; trackLead never throws and is internally time-capped.
     const calcName = formData.get('name')?.toString().trim()
-    void trackLead({
+    await trackLead({
       contentName: 'diy_calculator',
       value: 10,
       email: formData.get('email')?.toString() || undefined,

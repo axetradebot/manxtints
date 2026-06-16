@@ -15,11 +15,37 @@ export interface TrackLeadParams {
   zip?: string
 }
 
+type Fbq = (...args: unknown[]) => void
+
+/** Return window.fbq only if it's currently a callable function. */
+function resolveFbq(): Fbq | undefined {
+  if (typeof window === "undefined") return undefined
+  return typeof window.fbq === "function" ? window.fbq : undefined
+}
+
+/**
+ * Wait briefly for the Pixel (window.fbq) to be available. The base code
+ * defines fbq as a queueing stub almost immediately, but this guards against
+ * a submit that happens before the script has run. Capped so it never blocks
+ * the UI for long.
+ */
+async function waitForFbq(timeoutMs = 1500): Promise<Fbq | undefined> {
+  const start = Date.now()
+  let fbq = resolveFbq()
+  while (!fbq && Date.now() - start < timeoutMs) {
+    await new Promise((resolve) => setTimeout(resolve, 75))
+    fbq = resolveFbq()
+  }
+  return fbq
+}
+
 /**
  * Fire a Meta "Lead" event via the browser Pixel and the server-side
  * Conversions API, deduplicated by a shared eventId.
  *
- * Fire-and-forget: never throws, never blocks the UI.
+ * The browser Pixel is fired FIRST (awaiting fbq readiness) so the beacon is
+ * sent before any navigation/unload. The CAPI POST is fire-and-forget with
+ * keepalive so it completes even if the page unloads. Never throws.
  */
 export async function trackLead(params: TrackLeadParams): Promise<void> {
   if (typeof window === "undefined") return
@@ -31,9 +57,12 @@ export async function trackLead(params: TrackLeadParams): Promise<void> {
 
   const { contentName, value, email, phone, firstName, zip } = params
 
+  // 1) Browser Pixel — ensure fbq exists, then fire before returning so the
+  //    beacon isn't cancelled by a subsequent navigation/page unload.
   try {
-    if (typeof window.fbq === "function") {
-      window.fbq(
+    const fbq = await waitForFbq()
+    if (fbq) {
+      fbq(
         "track",
         "Lead",
         {
@@ -48,8 +77,10 @@ export async function trackLead(params: TrackLeadParams): Promise<void> {
     // Ignore Pixel errors — tracking must never break the UI.
   }
 
+  // 2) Conversions API — fire-and-forget with keepalive so the request
+  //    survives page unload. We intentionally do not await it.
   try {
-    await fetch("/api/meta-capi", {
+    void fetch("/api/meta-capi", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       keepalive: true,

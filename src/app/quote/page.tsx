@@ -121,7 +121,7 @@ export default function QuotePage() {
   return (
     <div className="relative">
       {/* Hero Section */}
-      <section className="relative pt-24 md:pt-32 pb-8 md:pb-10 overflow-hidden">
+      <section className="relative pt-10 md:pt-14 pb-8 md:pb-10 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image
             src="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=1920&q=80"

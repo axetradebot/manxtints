@@ -9,6 +9,8 @@ interface FadeInProps extends HTMLMotionProps<"div"> {
   direction?: "up" | "down" | "left" | "right"
   fullWidth?: boolean
   className?: string
+  /** Animate on mount instead of waiting to scroll into view. */
+  immediate?: boolean
 }
 
 export function FadeIn({
@@ -17,6 +19,7 @@ export function FadeIn({
   direction = "up",
   fullWidth = false,
   className,
+  immediate = false,
   ...props
 }: FadeInProps) {
   const directions = {
@@ -26,18 +29,20 @@ export function FadeIn({
     right: { x: -40 },
   }
 
+  const visible = { opacity: 1, y: 0, x: 0 }
+
   return (
     <motion.div
       initial={{
         opacity: 0,
         ...directions[direction],
       }}
-      whileInView={{
-        opacity: 1,
-        y: 0,
-        x: 0,
-      }}
-      viewport={{ once: true, margin: "-100px" }}
+      {...(immediate
+        ? { animate: visible }
+        : {
+            whileInView: visible,
+            viewport: { once: true, margin: "-100px" },
+          })}
       transition={{
         duration: 0.7,
         delay,

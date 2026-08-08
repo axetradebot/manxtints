@@ -188,7 +188,7 @@ export default function QuotePage() {
       <section className="pt-2 pb-16 md:pt-4 md:pb-16">
         <div className="container mx-auto px-4">
           <Tabs value={activeTab} className="space-y-12" onValueChange={setActiveTab}>
-            <FadeIn>
+            <FadeIn immediate>
               <TabsList className="grid grid-cols-2 max-w-2xl mx-auto h-auto p-2 bg-card/50">
                 <TabsTrigger 
                   value="calculator" 
@@ -344,7 +344,7 @@ function VisitRequestForm({ onSwitchToCalculator }: { onSwitchToCalculator: () =
   }
 
   return (
-    <FadeIn>
+    <FadeIn immediate>
       <div className="max-w-2xl mx-auto space-y-6">
         {/* DIY Calculator Nudge Banner */}
         <motion.div
@@ -797,7 +797,7 @@ function DIYCalculator() {
   }
 
   return (
-    <FadeIn>
+    <FadeIn immediate>
       <div className="max-w-4xl mx-auto">
         {/* Progress indicator */}
         <div className="mb-8">

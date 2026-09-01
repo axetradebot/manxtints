@@ -51,8 +51,8 @@ const services = [
     ],
     films: [
       { name: "Ceramic Film", price: "£150-£200/m²", description: "Clear film with excellent heat rejection" },
-      { name: "Privacy Film", price: "£89/m²", description: "One-way mirror effect" },
-      { name: "Decorative Film", price: "£89/m²", description: "Frosted and patterned options" },
+      { name: "Privacy Film", price: "£99/m²", description: "One-way mirror effect" },
+      { name: "Decorative Film", price: "£99/m²", description: "Frosted and patterned options" },
     ],
   },
   {

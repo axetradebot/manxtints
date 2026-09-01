@@ -21,7 +21,7 @@ const knowledgeBase = [
   },
   {
     keywords: ["price", "cost", "how much", "pricing", "expensive", "cheap", "afford", "quote", "estimate"],
-    response: "Our pricing varies by service:\n\n🏠 Residential: From £89/m²\n🏢 Commercial: From £98/m²\n🛡️ Security Film: From £89/m²\n\nWe offer free, no-obligation quotes! Would you like to request one?",
+    response: "Our pricing varies by service:\n\n🏠 Residential: From £99/m²\n🏢 Commercial: From £98/m²\n🛡️ Security Film: From £89/m²\n\nWe offer free, no-obligation quotes! Would you like to request one?",
   },
   {
     // Automotive enquiries — temporarily redirect customers since we've paused the service.
@@ -30,7 +30,7 @@ const knowledgeBase = [
   },
   {
     keywords: ["home", "house", "residential", "window", "flat", "apartment"],
-    response: "Our residential tinting services include:\n\n• Solar Control Film — £89/m² (heat rejection)\n• Privacy Film — £89/m² (one-way mirror effect)\n• Decorative Film — £89/m² (frosted & patterned)\n\nBenefits: Blocks 99% UV rays, reduces energy costs, enhances privacy, and protects furniture from fading.",
+    response: "Our residential tinting services include:\n\n• Ceramic Film — £150-£200/m² (clear, excellent heat rejection)\n• Privacy Film — £99/m² (one-way mirror effect)\n• Decorative Film — £99/m² (frosted & patterned)\n\nBenefits: Blocks 99% UV rays, reduces energy costs, enhances privacy, and protects furniture from fading.",
   },
   {
     keywords: ["commercial", "business", "office", "shop", "store", "workplace"],

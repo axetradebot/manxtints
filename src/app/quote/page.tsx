@@ -35,6 +35,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { FadeIn, Stagger, StaggerItem } from "@/components/motion"
 import { trackLead } from "@/lib/metaPixel"
+import { submitLead } from "@/lib/submitLead"
 
 // Vehicle pricing configuration
 const vehiclePricing = {
@@ -295,24 +296,27 @@ function VisitRequestForm({ onSwitchToCalculator }: { onSwitchToCalculator: () =
       zip: formData.get('postcode')?.toString() || undefined,
     })
 
-    try {
-      const response = await fetch('https://formspree.io/f/mpqpzwve', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json'
-        }
-      })
-      
-      if (response.ok) {
-        setIsSubmitted(true)
-      } else {
-        alert('There was an error submitting the form. Please try again.')
-      }
-    } catch (error) {
+    const success = await submitLead(
+      {
+        name: visitName || '',
+        phone: formData.get('phone')?.toString() || '',
+        email: formData.get('email')?.toString() || '',
+        address: [formData.get('address')?.toString(), formData.get('postcode')?.toString()]
+          .filter(Boolean)
+          .join(', '),
+        service: `Free Home Visit — ${projectType === 'property' ? 'Property' : 'Vehicle'}`,
+        message: formData.get('message')?.toString() || '',
+        gotcha: formData.get('_gotcha')?.toString() || '',
+      },
+      formData
+    )
+
+    if (success) {
+      setIsSubmitted(true)
+    } else {
       alert('There was an error submitting the form. Please try again.')
     }
-    
+
     setIsSubmitting(false)
   }
 
@@ -385,6 +389,8 @@ function VisitRequestForm({ onSwitchToCalculator }: { onSwitchToCalculator: () =
           </CardHeader>
           <CardContent className="p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Honeypot — hidden from real users; bots that fill it are filtered out */}
+            <input type="text" name="_gotcha" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
             {/* Project Type Toggle — Vehicle option temporarily disabled. To re-enable, uncomment below
             <div className="space-y-2">
               <Label>What would you like tinted?</Label>
@@ -693,11 +699,17 @@ function DIYCalculator() {
       zip: formData.get('postcode')?.toString() || undefined,
     })
 
+    let leadService = ''
+    let leadQuoteSummary = ''
+
     if (category === "vehicle") {
       // Vehicle submission
       const vehicleLabel = getVehicleLabel()
       const vehicleDescription = getVehicleDescription()
-      
+
+      leadService = `DIY Calculator — Vehicle (${vehicleLabel})`
+      leadQuoteSummary = `Quote: £${finalPrice} incl. 10% DIY discount${extendedGuarantee ? `, 10yr guarantee (+£${guaranteePrice})` : ''}. Package: ${vehicleDescription}`
+
       formData.append('_subject', `New Vehicle Quote Request - ${vehicleLabel} - £${finalPrice}${extendedGuarantee ? ' (10yr Guarantee)' : ''}`)
       formData.append('Category', 'Vehicle')
       formData.append('Vehicle Type', vehicleLabel)
@@ -711,7 +723,10 @@ function DIYCalculator() {
       const projectTypeName = selectedType === 'house' ? 'Residential' : 
                              selectedType === 'conservatory' ? 'Conservatory' : 
                              selectedType === 'commercial' ? 'Commercial' : selectedType
-      
+
+      leadService = `DIY Calculator — ${projectTypeName || 'Property'}`
+      leadQuoteSummary = `Quote: £${finalPrice} incl. 10% DIY discount${extendedGuarantee ? `, 10yr guarantee (+£${guaranteePrice})` : ''}. ${windows.length} window(s), ${currentTotals.totalAreaSqM}m² @ £${currentTotals.pricePerSqM}/m²`
+
       formData.append('_subject', `New Property Quote Request - ${projectTypeName} - £${finalPrice}${extendedGuarantee ? ' (10yr Guarantee)' : ''}`)
       formData.append('Category', 'Property')
       formData.append('Project Type', projectTypeName || 'Not specified')
@@ -737,24 +752,29 @@ function DIYCalculator() {
       if (postcode) formData.append('Postcode', postcode.toString())
     }
     
-    try {
-      const response = await fetch('https://formspree.io/f/mpqpzwve', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json'
-        }
-      })
-      
-      if (response.ok) {
-        setIsSubmitted(true)
-      } else {
-        alert('There was an error submitting the form. Please try again.')
-      }
-    } catch (error) {
+    const userMessage = formData.get('message')?.toString().trim() || ''
+
+    const success = await submitLead(
+      {
+        name: calcName || '',
+        phone: formData.get('phone')?.toString() || '',
+        email: formData.get('email')?.toString() || '',
+        address: [formData.get('houseName')?.toString(), formData.get('postcode')?.toString()]
+          .filter(Boolean)
+          .join(', '),
+        service: leadService,
+        message: userMessage ? `${userMessage}\n\n${leadQuoteSummary}` : leadQuoteSummary,
+        gotcha: formData.get('_gotcha')?.toString() || '',
+      },
+      formData
+    )
+
+    if (success) {
+      setIsSubmitted(true)
+    } else {
       alert('There was an error submitting the form. Please try again.')
     }
-    
+
     setIsSubmitting(false)
   }
 
@@ -1730,6 +1750,8 @@ function DIYCalculator() {
 
                   {/* Contact Form */}
                   <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Honeypot — hidden from real users; bots that fill it are filtered out */}
+                    <input type="text" name="_gotcha" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
                     <p className="text-center text-muted-foreground">
                       Happy with the quote? Let&apos;s get you booked in!
                     </p>

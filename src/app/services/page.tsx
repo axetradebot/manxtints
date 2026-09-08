@@ -242,7 +242,7 @@ export default function ServicesPage() {
                             <p className="font-medium">{film.name}</p>
                             <p className="text-sm text-muted-foreground">{film.description}</p>
                           </div>
-                          <Badge variant="secondary">{film.price}</Badge>
+                          <Badge variant="secondary">{film.price} · VAT Inclusive</Badge>
                         </CardContent>
                       </Card>
                     ))}

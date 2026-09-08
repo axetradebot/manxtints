@@ -1577,10 +1577,7 @@ function DIYCalculator() {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Price per m²</span>
-                        <span className="font-medium">
-                          £{quote.pricePerSqM}{" "}
-                          <span className="text-muted-foreground font-normal text-sm">VAT Inclusive</span>
-                        </span>
+                        <span className="font-medium">£{quote.pricePerSqM}</span>
                       </div>
 
                       {/* Per-window breakdown — shows the £10 minimum transparently */}
@@ -1592,7 +1589,6 @@ function DIYCalculator() {
                             </span>
                             <span className="font-medium whitespace-nowrap">
                               £{line.price.toFixed(2)}
-                              <span className="text-muted-foreground font-normal"> VAT Inclusive</span>
                               {line.floorApplied && (
                                 <span className="text-muted-foreground font-normal"> (min per window)</span>
                               )}
@@ -1647,7 +1643,7 @@ function DIYCalculator() {
                       </div>
                       {extendedGuarantee ? (
                         <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
-                          +£{guaranteePrice} · VAT Inclusive
+                          +£{guaranteePrice}
                         </Badge>
                       ) : (
                         <Badge variant="secondary">Included</Badge>
@@ -1707,8 +1703,7 @@ function DIYCalculator() {
                             <span className="text-lg text-muted-foreground">
                               <span className="line-through">
                                 £{(quote.subtotal + quote.guaranteeCost).toFixed(2)}
-                              </span>{" "}
-                              <span className="text-sm">VAT Inclusive</span>
+                              </span>
                             </span>
                           </motion.div>
                         )}
@@ -1723,7 +1718,9 @@ function DIYCalculator() {
                           <span className="text-7xl md:text-8xl font-bold text-gradient leading-none">
                             £{quote.finalTotal.toFixed(2)}
                           </span>
-                          <span className="text-sm text-muted-foreground mt-2">VAT Inclusive</span>
+                          <span className="mt-3 text-sm font-medium text-muted-foreground tracking-wide">
+                            All prices include VAT
+                          </span>
                         </motion.div>
 
                         {/* Minimum job note + add-more-windows nudge */}

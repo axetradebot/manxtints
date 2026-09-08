@@ -242,7 +242,10 @@ export default function ServicesPage() {
                             <p className="font-medium">{film.name}</p>
                             <p className="text-sm text-muted-foreground">{film.description}</p>
                           </div>
-                          <Badge variant="secondary">{film.price} · VAT Inclusive</Badge>
+                          <div className="shrink-0 text-right ml-4">
+                            <p className="font-semibold">{film.price}</p>
+                            <p className="text-xs font-semibold text-primary mt-0.5">VAT Inclusive</p>
+                          </div>
                         </CardContent>
                       </Card>
                     ))}

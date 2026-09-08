@@ -5,6 +5,7 @@ import "./globals.css";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { FloatingWidgets } from "@/components/floating-widgets";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
 
 const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 
@@ -85,6 +86,7 @@ fbq('track', 'PageView');`}
             </noscript>
           </>
         )}
+        <AnalyticsTracker />
         <Navigation />
         <main className="flex-1">{children}</main>
         <Footer />

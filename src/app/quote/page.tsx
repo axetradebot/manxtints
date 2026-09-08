@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
@@ -36,6 +36,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { FadeIn, Stagger, StaggerItem } from "@/components/motion"
 import { trackLead } from "@/lib/metaPixel"
 import { submitLead } from "@/lib/submitLead"
+import { track } from "@/lib/analytics"
+import { quoteProperty, quoteVehicle, MIN_JOB, GUARANTEE_PRICE } from "@/lib/pricing"
 
 // Vehicle pricing configuration
 const vehiclePricing = {
@@ -100,7 +102,7 @@ interface Window {
 const faqs = [
   {
     question: "How accurate is the DIY calculator?",
-    answer: "The calculator provides a rough estimate based on typical measurements and pricing. Actual costs may vary based on window complexity, film type availability, and installation requirements. We'll confirm the exact price during our free consultation.",
+    answer: "The calculator provides a rough estimate based on typical measurements and pricing. Actual costs may vary based on window complexity, film type availability, and installation requirements.",
   },
   {
     question: "Is the home visit really free?",
@@ -312,6 +314,7 @@ function VisitRequestForm({ onSwitchToCalculator }: { onSwitchToCalculator: () =
     )
 
     if (success) {
+      track('visit_form_submitted')
       setIsSubmitted(true)
     } else {
       alert('There was an error submitting the form. Please try again.')
@@ -575,8 +578,32 @@ function DIYCalculator() {
   const [extendedGuarantee, setExtendedGuarantee] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const calcStartedRef = useRef(false)
+
+  // Cache the window list in sessionStorage so "Add more windows" (and
+  // accidental refreshes) never lose what's been typed.
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("mt_calc_windows")
+      if (saved) {
+        const parsed = JSON.parse(saved) as Window[]
+        if (Array.isArray(parsed) && parsed.length > 0) setWindows(parsed)
+      }
+    } catch { /* ignore corrupt cache */ }
+  }, [])
+
+  useEffect(() => {
+    try {
+      if (windows.length > 0) {
+        sessionStorage.setItem("mt_calc_windows", JSON.stringify(windows))
+      } else {
+        sessionStorage.removeItem("mt_calc_windows")
+      }
+    } catch { /* storage full/unavailable — non-critical */ }
+  }, [windows])
 
   const addWindow = () => {
+    track('calc_windows_added', { count: windows.length + 1 })
     setWindows([
       ...windows,
       { id: crypto.randomUUID(), name: `Window ${windows.length + 1}`, width: 0, height: 0 }
@@ -584,6 +611,10 @@ function DIYCalculator() {
   }
 
   const updateWindow = (id: string, field: keyof Window, value: string | number) => {
+    if (!calcStartedRef.current) {
+      calcStartedRef.current = true
+      track('calc_started')
+    }
     setWindows(windows.map(w => 
       w.id === id ? { ...w, [field]: value } : w
     ))
@@ -631,60 +662,45 @@ function DIYCalculator() {
 
   // Extended guarantee upsell (+£19 vs standard 5 years)
   const EXTENDED_GUARANTEE_YEARS = 10
-  const guaranteePrice = 19
+  const guaranteePrice = GUARANTEE_PRICE
   const extendedGuaranteePerYear = (guaranteePrice / EXTENDED_GUARANTEE_YEARS).toFixed(2)
 
-  // Calculate totals
-  const calculateTotals = () => {
-    // For vehicles, use fixed pricing
+  // All pricing rules (per-window £10 floor, £100 job floor, discount and
+  // guarantee ordering) live in src/lib/pricing.ts.
+  const getQuote = () => {
     if (category === "vehicle") {
-      const vehiclePrice = getVehiclePrice()
-      const guaranteeCost = extendedGuarantee ? guaranteePrice : 0
-      const baseQuote = vehiclePrice
-      const totalWithGuarantee = baseQuote + guaranteeCost
-      return {
-        totalAreaSqM: "N/A",
-        pricePerSqM: 0,
-        baseQuote: baseQuote.toFixed(2),
-        totalQuote: totalWithGuarantee.toFixed(2),
-        guaranteeCost: guaranteeCost,
-        isVehicle: true,
-        vehicleLabel: getVehicleLabel(),
-        vehicleDescription: getVehicleDescription(),
-      }
+      return quoteVehicle(getVehiclePrice(), extendedGuarantee)
     }
-
-    // For properties, calculate based on area
-    const totalAreaCm = windows.reduce((sum, w) => sum + (w.width * w.height), 0)
-    const totalAreaSqM = totalAreaCm / 10000 // Convert cm² to m²
-    
-    const pricePerSqM = selectedType && category === "property" 
-      ? propertyPrices[selectedType] || 60 
-      : 0
-    const baseQuote = totalAreaSqM * pricePerSqM
-    const guaranteeCost = extendedGuarantee ? guaranteePrice : 0
-    const totalWithGuarantee = baseQuote + guaranteeCost
-
-    return {
-      totalAreaSqM: totalAreaSqM.toFixed(2),
-      pricePerSqM,
-      baseQuote: baseQuote.toFixed(2),
-      totalQuote: totalWithGuarantee.toFixed(2),
-      guaranteeCost: guaranteeCost,
-      isVehicle: false,
-    }
+    const pricePerSqM = selectedType ? propertyPrices[selectedType] || 60 : 0
+    return quoteProperty(windows, pricePerSqM, extendedGuarantee)
   }
+
+  // Log the funnel's price-shown moment once per arrival at the summary step
+  useEffect(() => {
+    if (step === 4) {
+      const q = getQuote()
+      track('calc_price_shown', {
+        total: Number(q.finalTotal.toFixed(2)),
+        windows: windows.length,
+        areaSqM: Number(q.totalAreaSqM.toFixed(2)),
+        pricePerSqM: q.pricePerSqM,
+        projectType: category === "vehicle" ? "vehicle" : selectedType,
+        jobFloorApplied: q.jobFloorApplied,
+        guarantee: extendedGuarantee,
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
     
     const formData = new FormData(e.currentTarget)
-    const currentTotals = calculateTotals()
-    
-    const subtotal = parseFloat(currentTotals.totalQuote)
-    const discountAmount = (subtotal * 0.1).toFixed(2)
-    const finalPrice = (subtotal * 0.9).toFixed(2)
+    const currentQuote = getQuote()
+
+    const discountAmount = currentQuote.discountAmount.toFixed(2)
+    const finalPrice = currentQuote.finalTotal.toFixed(2)
 
     // Fire Meta Lead event (Pixel + CAPI) BEFORE submitting so the browser
     // Pixel beacon is sent while the page is still alive. Awaited so fbq has
@@ -715,7 +731,7 @@ function DIYCalculator() {
       formData.append('Vehicle Type', vehicleLabel)
       formData.append('Package', vehicleDescription)
       formData.append('10 Year Guarantee', extendedGuarantee ? `YES (+£${guaranteePrice})` : 'No - Standard 5 Year')
-      formData.append('Subtotal', `£${currentTotals.totalQuote}`)
+      formData.append('Subtotal', `£${currentQuote.subtotal.toFixed(2)}`)
       formData.append('DIY Calculator Discount (10%)', `-£${discountAmount}`)
       formData.append('Final Total (with 10% DIY discount)', `£${finalPrice}`)
     } else {
@@ -725,24 +741,31 @@ function DIYCalculator() {
                              selectedType === 'commercial' ? 'Commercial' : selectedType
 
       leadService = `DIY Calculator — ${projectTypeName || 'Property'}`
-      leadQuoteSummary = `Quote: £${finalPrice} incl. 10% DIY discount${extendedGuarantee ? `, 10yr guarantee (+£${guaranteePrice})` : ''}. ${windows.length} window(s), ${currentTotals.totalAreaSqM}m² @ £${currentTotals.pricePerSqM}/m²`
+      const quoteLine = currentQuote.jobFloorApplied
+        ? `£${currentQuote.baseTotal.toFixed(2)} (minimum job charge)${extendedGuarantee ? ` + £${guaranteePrice} 10yr guarantee = £${finalPrice}` : ''}`
+        : `£${finalPrice} incl. 10% DIY discount${extendedGuarantee ? `, 10yr guarantee (+£${guaranteePrice})` : ''}`
+      leadQuoteSummary = `Quote: ${quoteLine}. ${windows.length} window(s), ${currentQuote.totalAreaSqM.toFixed(2)}m² @ £${currentQuote.pricePerSqM}/m²`
 
       formData.append('_subject', `New Property Quote Request - ${projectTypeName} - £${finalPrice}${extendedGuarantee ? ' (10yr Guarantee)' : ''}`)
       formData.append('Category', 'Property')
       formData.append('Project Type', projectTypeName || 'Not specified')
-      formData.append('Total Area (m²)', currentTotals.totalAreaSqM)
-      formData.append('Price per m²', `£${currentTotals.pricePerSqM}`)
+      formData.append('Total Area (m²)', currentQuote.totalAreaSqM.toFixed(2))
+      formData.append('Price per m²', `£${currentQuote.pricePerSqM}`)
       formData.append('10 Year Guarantee', extendedGuarantee ? `YES (+£${guaranteePrice})` : 'No - Standard 5 Year')
-      formData.append('Subtotal', `£${currentTotals.totalQuote}`)
+      formData.append('Subtotal', `£${currentQuote.subtotal.toFixed(2)}`)
       formData.append('DIY Calculator Discount (10%)', `-£${discountAmount}`)
-      formData.append('Final Total (with 10% DIY discount)', `£${finalPrice}`)
+      if (currentQuote.jobFloorApplied) {
+        formData.append('Minimum Job Charge', `Applied — total floored to £${MIN_JOB}`)
+      }
+      formData.append('Final Total (with 10% DIY discount)', `£${finalPrice}${currentQuote.jobFloorApplied ? ' (minimum job charge)' : ''}`)
       formData.append('Number of Windows', windows.length.toString())
       
-      // Add individual window measurements
-      windows.forEach((window, index) => {
-        const areaCm = window.width * window.height
-        const areaSqM = (areaCm / 10000).toFixed(2)
-        formData.append(`Window ${index + 1}`, `${window.name}: ${window.width}cm x ${window.height}cm = ${areaSqM}m²`)
+      // Add individual window measurements with their priced contribution
+      currentQuote.lines.forEach((line, index) => {
+        formData.append(
+          `Window ${index + 1}`,
+          `${line.name}: ${line.width}cm x ${line.height}cm = ${line.areaSqM.toFixed(2)}m² — £${line.price.toFixed(2)}${line.floorApplied ? ' (min per window)' : ''}`
+        )
       })
       
       // Add property address details
@@ -770,6 +793,7 @@ function DIYCalculator() {
     )
 
     if (success) {
+      track('calc_submitted', { total: Number(finalPrice), jobFloorApplied: currentQuote.jobFloorApplied })
       setIsSubmitted(true)
     } else {
       alert('There was an error submitting the form. Please try again.')
@@ -778,7 +802,7 @@ function DIYCalculator() {
     setIsSubmitting(false)
   }
 
-  const totals = calculateTotals()
+  const quote = getQuote()
 
   if (isSubmitted) {
     return (
@@ -1523,7 +1547,7 @@ function DIYCalculator() {
               {/* Step 4: Review & Submit */}
               {step === 4 && (
                 <motion.div
-                  key="step3"
+                  key="step4"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
@@ -1549,11 +1573,28 @@ function DIYCalculator() {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Total Area</span>
-                        <span className="font-medium">{totals.totalAreaSqM} m²</span>
+                        <span className="font-medium">{quote.totalAreaSqM.toFixed(2)} m²</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Price per m²</span>
-                        <span className="font-medium">£{totals.pricePerSqM}</span>
+                        <span className="font-medium">£{quote.pricePerSqM}</span>
+                      </div>
+
+                      {/* Per-window breakdown — shows the £10 minimum transparently */}
+                      <div className="pt-3 border-t border-border/50 space-y-2">
+                        {quote.lines.map((line) => (
+                          <div key={`${line.name}-${line.width}-${line.height}`} className="flex justify-between items-center gap-4 text-sm">
+                            <span className="text-muted-foreground">
+                              {line.name}: {line.width}cm x {line.height}cm = {line.areaSqM.toFixed(2)}m²
+                            </span>
+                            <span className="font-medium whitespace-nowrap">
+                              £{line.price.toFixed(2)}
+                              {line.floorApplied && (
+                                <span className="text-muted-foreground font-normal"> (min per window)</span>
+                              )}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -1634,32 +1675,36 @@ function DIYCalculator() {
                       </div>
 
                       <div className="p-8 pt-12 text-center">
-                        {/* Discount applied banner */}
-                        <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.2 }}
-                          className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full bg-green-500/15 border border-green-500/30"
-                        >
-                          <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
-                          <span className="text-sm font-semibold text-green-700 dark:text-green-300">
-                            10% off applied — for using the calculator!
-                          </span>
-                        </motion.div>
+                        {/* Discount applied banner (hidden when the £100 minimum absorbs it) */}
+                        {!quote.jobFloorApplied && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full bg-green-500/15 border border-green-500/30"
+                          >
+                            <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            <span className="text-sm font-semibold text-green-700 dark:text-green-300">
+                              10% off applied — for using the calculator!
+                            </span>
+                          </motion.div>
+                        )}
 
                         <p className="text-sm font-medium text-muted-foreground mb-2">Your Total</p>
 
                         {/* Strikethrough original */}
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.3 }}
-                          className="mb-1"
-                        >
-                          <span className="text-lg text-muted-foreground line-through">
-                            £{totals.totalQuote}
-                          </span>
-                        </motion.div>
+                        {!quote.jobFloorApplied && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.3 }}
+                            className="mb-1"
+                          >
+                            <span className="text-lg text-muted-foreground line-through">
+                              £{(quote.subtotal + quote.guaranteeCost).toFixed(2)}
+                            </span>
+                          </motion.div>
+                        )}
 
                         {/* Big satisfying total */}
                         <motion.div
@@ -1669,22 +1714,47 @@ function DIYCalculator() {
                           className="flex items-center justify-center mb-3"
                         >
                           <span className="text-7xl md:text-8xl font-bold text-gradient leading-none">
-                            £{(parseFloat(totals.totalQuote) * 0.9).toFixed(2)}
+                            £{quote.finalTotal.toFixed(2)}
                           </span>
                         </motion.div>
 
+                        {/* Minimum job note + add-more-windows nudge */}
+                        {quote.jobFloorApplied && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.45 }}
+                            className="mb-6 space-y-3"
+                          >
+                            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                              Minimum job size is £{MIN_JOB} — want to add some extra windows to get full value?
+                            </p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => setStep(2)}
+                              className="gap-2"
+                            >
+                              <Plus className="h-4 w-4" />
+                              Add more windows
+                            </Button>
+                          </motion.div>
+                        )}
+
                         {/* Savings call-out */}
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.5 }}
-                          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg mb-6"
-                        >
-                          <Sparkles className="h-4 w-4" />
-                          <span className="font-bold">
-                            You saved £{(parseFloat(totals.totalQuote) * 0.1).toFixed(2)}
-                          </span>
-                        </motion.div>
+                        {!quote.jobFloorApplied && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.5 }}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg mb-6"
+                          >
+                            <Sparkles className="h-4 w-4" />
+                            <span className="font-bold">
+                              You saved £{quote.discountAmount.toFixed(2)}
+                            </span>
+                          </motion.div>
+                        )}
 
                         {/* Benefits row */}
                         <motion.div

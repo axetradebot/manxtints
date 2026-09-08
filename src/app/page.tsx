@@ -357,7 +357,7 @@ export default function Home() {
                     alt="Professional window tinting"
                     width={600}
                     height={500}
-                    className="object-cover object-[center_28%] w-full h-[300px] sm:h-[400px] lg:h-[500px]"
+                    className="object-cover object-[center_38%] w-full h-[300px] sm:h-[400px] lg:h-[500px]"
                     priority
                     unoptimized
                   />

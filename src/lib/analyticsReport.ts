@@ -42,6 +42,8 @@ export interface Report {
   daily: DailyPoint[]
   deviceSplit: { mobile: number; desktop: number }
   visitFormSubmits: number
+  enquiryFormSubmits: number
+  enquiryNeeds: Array<{ need: string; count: number }>
 }
 
 const BUCKET_EDGES: Array<{ label: string; min: number; max: number | null }> = [
@@ -174,6 +176,20 @@ export async function buildReport(days: number): Promise<Report> {
   }
 
   const visitFormSubmits = events.filter((e) => e.event === "visit_form_submitted").length
+  const enquiryEvents = events.filter((e) => e.event === "enquiry_submitted")
+  const enquiryFormSubmits = enquiryEvents.length
+  const needCounts = new Map<string, number>()
+  for (const e of enquiryEvents) {
+    const needs = (e.payload as { needs?: unknown } | null)?.needs
+    if (!Array.isArray(needs)) continue
+    for (const need of needs) {
+      if (typeof need !== "string" || !need) continue
+      needCounts.set(need, (needCounts.get(need) || 0) + 1)
+    }
+  }
+  const enquiryNeeds = [...needCounts.entries()]
+    .map(([need, count]) => ({ need, count }))
+    .sort((a, b) => b.count - a.count)
 
   return {
     days,
@@ -187,5 +203,7 @@ export async function buildReport(days: number): Promise<Report> {
     daily,
     deviceSplit: { mobile, desktop },
     visitFormSubmits,
+    enquiryFormSubmits,
+    enquiryNeeds,
   }
 }

@@ -1,52 +1,69 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Manrope, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { FloatingWidgets } from "@/components/floating-widgets";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { MotionProvider } from "@/components/motion-provider";
+import { OrganizationJsonLd } from "@/components/seo/organization-json-ld";
+import { site } from "@/site.config";
 
 const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const bodyFont = Inter({
+  variable: "--font-body",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const headlineFont = Manrope({
+  variable: "--font-headline",
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
+const defaultTitle = `${site.name} | ${site.tagline} · ${site.areasServed}`;
+const defaultDescription = `Window film for homes and businesses across the ${site.areasServed}. Instant online quotes, deposit-protected booking and installation by vetted local ManxTints installers — privacy, heat and UV control, guaranteed.`;
+
 export const metadata: Metadata = {
+  metadataBase: new URL(site.url),
   title: {
-    default: "ManxTints LTD | Premium Window Tinting Isle of Man",
-    template: "%s | ManxTints LTD",
+    default: defaultTitle,
+    template: `%s | ${site.name}`,
   },
-  description:
-    "Professional window tinting services across the Isle of Man. Automotive, residential, and commercial tinting with premium films. UV protection, privacy, and style.",
+  description: defaultDescription,
   keywords: [
     "window tinting",
+    "window film",
+    "privacy film",
+    "one-way mirror film",
+    "solar film",
     "Isle of Man",
-    "car tinting",
-    "automotive tinting",
+    "UK",
     "residential tinting",
     "commercial tinting",
     "UV protection",
-    "privacy film",
     "Manx",
     "Douglas",
   ],
-  authors: [{ name: "ManxTints LTD" }],
+  authors: [{ name: site.legalName }],
   openGraph: {
     type: "website",
     locale: "en_GB",
-    url: "https://manxtints.im",
-    title: "ManxTints LTD | Premium Window Tinting Isle of Man",
-    description:
-      "Professional window tinting services across the Isle of Man.",
-    siteName: "ManxTints LTD",
+    url: site.url,
+    title: defaultTitle,
+    description: defaultDescription,
+    siteName: site.name,
+    images: [{ url: site.hero.image, alt: site.hero.alt }],
   },
 };
 
@@ -58,11 +75,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
+        className={`${bodyFont.variable} ${headlineFont.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         {META_PIXEL_ID && (
           <>
-            <Script id="meta-pixel" strategy="afterInteractive">
+            {/* Loaded after window.onload so the 250KB pixel bundle doesn't block first interaction; PageView still fires and trackLead awaits fbq. */}
+            <Script id="meta-pixel" strategy="lazyOnload">
               {`!function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -86,11 +104,14 @@ fbq('track', 'PageView');`}
             </noscript>
           </>
         )}
+        <OrganizationJsonLd />
         <AnalyticsTracker />
-        <Navigation />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <FloatingWidgets />
+        <MotionProvider>
+          <Navigation />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <FloatingWidgets />
+        </MotionProvider>
       </body>
     </html>
   );

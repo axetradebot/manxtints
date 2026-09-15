@@ -171,7 +171,8 @@ export default async function AdminPage({
         </div>
         <p className="text-xs text-muted-foreground">
           Percentages show conversion from the previous step. The biggest drop is highlighted in red.
-          Home-visit form submissions (outside this funnel): {report.visitFormSubmits}
+          Quote enquiry submissions (outside this funnel): {report.enquiryFormSubmits}
+          {report.visitFormSubmits > 0 ? ` · legacy visit-form events: ${report.visitFormSubmits}` : ""}
         </p>
       </section>
 
@@ -237,6 +238,19 @@ export default async function AdminPage({
             <Sparkline points={report.daily} metric="submits" color="bg-green-500/70" />
           </div>
         </div>
+        {report.enquiryNeeds.length > 0 && (
+          <div>
+            <p className="text-xs text-muted-foreground mb-2">Enquiry needs</p>
+            <ul className="text-sm space-y-1">
+              {report.enquiryNeeds.map((row) => (
+                <li key={row.need} className="flex justify-between gap-4">
+                  <span>{row.need}</span>
+                  <span className="text-muted-foreground">{row.count}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div>
           <p className="text-xs text-muted-foreground mb-2">Device split (sessions)</p>
           {(() => {

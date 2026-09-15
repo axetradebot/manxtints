@@ -9,6 +9,7 @@ const ALLOWED_EVENTS = new Set([
   "calc_price_shown",
   "calc_submitted",
   "visit_form_submitted",
+  "enquiry_submitted",
 ])
 
 // Fire-and-forget collector: always answers 204 so a storage hiccup can

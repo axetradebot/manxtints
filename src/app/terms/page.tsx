@@ -121,14 +121,14 @@ export default function TermsPage() {
                     straightforward and accessible as possible. To that end,{" "}
                     <strong className="text-slate-800">
                       no deposit is required for any job valued at or below
-                      &pound;5,000.
+                      &pound;500.
                     </strong>{" "}
                     We believe this demonstrates the confidence we place in the
                     quality of our service and the trust we extend to our valued
                     customers.
                   </p>
                   <p>
-                    For projects exceeding &pound;5,000 in total value, a
+                    For projects exceeding &pound;500 in total value, a
                     deposit may be requested at the time of booking in order to
                     secure the appointment and cover material procurement costs.
                     The specific deposit amount will be communicated clearly at
@@ -139,7 +139,7 @@ export default function TermsPage() {
                   <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 sm:p-5 flex items-start gap-3">
                     <Sparkles className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
                     <p className="text-emerald-800 text-sm font-medium">
-                      Jobs under &pound;5,000 &mdash; no deposit necessary. Book
+                      Jobs under &pound;500 &mdash; no deposit necessary. Book
                       with confidence, pay on completion.
                     </p>
                   </div>
@@ -495,7 +495,7 @@ export default function TermsPage() {
               </h2>
               <p className="text-sm sm:text-base md:text-xl text-blue-100 mb-6 md:mb-10 max-w-xl mx-auto leading-relaxed">
                 Get your free, no-obligation quote today. No deposit needed for
-                jobs under &pound;5,000.
+                jobs under &pound;500.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link href="/quote">

@@ -31,10 +31,12 @@ export function FadeIn({
 
   const visible = { opacity: 1, y: 0, x: 0 }
 
+  // Above-the-fold (`immediate`) content must be painted in the server HTML so it can
+  // count as LCP: animate transform only, never start from opacity 0.
   return (
     <motion.div
       initial={{
-        opacity: 0,
+        ...(immediate ? {} : { opacity: 0 }),
         ...directions[direction],
       }}
       {...(immediate

@@ -23,12 +23,17 @@
   --color-ring: #0066cc;
   --color-electric: #0066cc;
   --color-electric-glow: #38bdf8;
+  /* Trust accent: the one non-blue colour, reserved for ticks, guarantees and badges */
+  --color-trust: #1a9c5b;
+  --color-trust-soft: #e9f7ef;
+  --color-primary-deep: #004a99;
   
   --radius-lg: 0.75rem;
   --radius-md: 0.5rem;
   --radius-sm: 0.25rem;
   
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-headline), var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
   
   --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
@@ -69,9 +74,30 @@
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+}
+
+/* Geometric headline face for all headings; body stays on the readable sans */
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .card-hover,
+  .card-hover:hover {
+    transition: none;
+    transform: none;
+  }
+  .animated-gradient {
+    animation: none;
+  }
 }
 
 /* Smooth scrolling */
@@ -140,7 +166,7 @@ html {
 
 /* Text gradient - blue theme */
 .text-gradient {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  background: linear-gradient(135deg, var(--color-primary-deep), var(--color-primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

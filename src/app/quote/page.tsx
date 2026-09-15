@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { 
   ArrowRight, 
   ArrowLeft,
-  Calendar, 
+  MessageSquare,
   Calculator, 
   Car, 
   Truck, 
@@ -28,16 +28,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { FadeIn, Stagger, StaggerItem } from "@/components/motion"
+import { FadeIn } from "@/components/motion"
 import { trackLead } from "@/lib/metaPixel"
 import { submitLead } from "@/lib/submitLead"
 import { track } from "@/lib/analytics"
 import { quoteProperty, quoteVehicle, MIN_JOB, GUARANTEE_PRICE } from "@/lib/pricing"
+import { QuoteEnquiryForm } from "@/components/quote-enquiry-form"
 
 // Vehicle pricing configuration
 const vehiclePricing = {
@@ -105,12 +105,12 @@ const faqs = [
     answer: "The calculator provides a rough estimate based on typical measurements and pricing. Actual costs may vary based on window complexity, film type availability, and installation requirements.",
   },
   {
-    question: "Is the home visit really free?",
-    answer: "Absolutely! We offer free, no-obligation consultations across the Isle of Man. We'll assess your needs, take precise measurements, and provide an accurate quote — all at no cost to you.",
+    question: "How do you quote without a visit?",
+    answer: "We quote everything remotely from your measurements or photos, and our installer re-measures on the day before fitting. If anything differs from the quote, we'll agree it with you before work starts.",
   },
   {
     question: "How long until I receive my quote?",
-    answer: "If you use our DIY Calculator, your quote — including the 10% discount — is calculated instantly on screen, no waiting required! For free home visits, we typically schedule within 2-3 days and provide your quote on the spot.",
+    answer: "If you use our DIY Calculator, your quote — including the 10% discount — is calculated instantly on screen. Send photos through Quote Enquiry and we usually come back the same day.",
   },
   {
     question: "Can I change my mind after getting a quote?",
@@ -120,6 +120,14 @@ const faqs = [
 
 export default function QuotePage() {
   const [activeTab, setActiveTab] = useState("calculator")
+
+  useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get("tab")
+    if (tab !== "visit" && tab !== "enquiry") return
+    // Deferred so the deep-link alias doesn't force a synchronous cascading render.
+    const id = requestAnimationFrame(() => setActiveTab("enquiry"))
+    return () => cancelAnimationFrame(id)
+  }, [])
   
   return (
     <div className="relative">
@@ -130,6 +138,9 @@ export default function QuotePage() {
             src="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=1920&q=80"
             alt="Get a quote"
             fill
+            priority
+            sizes="100vw"
+            quality={60}
             className="object-cover opacity-20"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-background via-background/90 to-background" />
@@ -138,7 +149,7 @@ export default function QuotePage() {
         <div className="container mx-auto px-4 relative z-10">
           <FadeIn>
             <div className="text-center max-w-3xl mx-auto">
-              <Badge variant="electric" className="mb-6">Free Quote</Badge>
+              <Badge variant="electric" className="mb-6">Free quotes online — no visit needed</Badge>
               <h1 className="text-5xl md:text-6xl font-bold mb-6">
                 Get Your
                 <span className="text-gradient block">Free Quote</span>
@@ -205,18 +216,18 @@ export default function QuotePage() {
                   </Badge>
                 </TabsTrigger>
                 <TabsTrigger 
-                  value="visit" 
+                  value="enquiry" 
                   className="py-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2"
                 >
-                  <Calendar className="h-5 w-5" />
-                  <span className="hidden sm:inline">Request Free Visit</span>
-                  <span className="sm:hidden">Free Visit</span>
+                  <MessageSquare className="h-5 w-5" />
+                  <span className="hidden sm:inline">Quote Enquiry</span>
+                  <span className="sm:hidden">Enquiry</span>
                 </TabsTrigger>
               </TabsList>
             </FadeIn>
 
-            <TabsContent value="visit">
-              <VisitRequestForm onSwitchToCalculator={() => {
+            <TabsContent value="enquiry">
+              <QuoteEnquiryForm onSwitchToCalculator={() => {
                 setActiveTab("calculator")
                 if (typeof window !== "undefined") {
                   window.scrollTo({ top: 0, behavior: "smooth" })
@@ -266,301 +277,6 @@ export default function QuotePage() {
         </div>
       </section>
     </div>
-  )
-}
-
-// Visit Request Form Component
-function VisitRequestForm({ onSwitchToCalculator }: { onSwitchToCalculator: () => void }) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
-  const [projectType, setProjectType] = useState<"vehicle" | "property">("property")
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    
-    const formData = new FormData(e.currentTarget)
-    
-    // Add project type to form data
-    formData.append('_subject', `New Visit Request - ${projectType === 'property' ? 'Property' : 'Vehicle'}`)
-    formData.append('Project Type', projectType === 'property' ? 'Property' : 'Vehicle')
-
-    // Fire Meta Lead event (Pixel + CAPI) BEFORE submitting so the browser
-    // Pixel beacon is sent while the page is still alive. Awaited so fbq has
-    // fired; trackLead never throws and is internally time-capped.
-    const visitName = formData.get('name')?.toString().trim()
-    await trackLead({
-      contentName: 'home_visit',
-      value: 50,
-      email: formData.get('email')?.toString() || undefined,
-      phone: formData.get('phone')?.toString() || undefined,
-      firstName: visitName ? visitName.split(' ')[0] : undefined,
-      zip: formData.get('postcode')?.toString() || undefined,
-    })
-
-    const success = await submitLead(
-      {
-        name: visitName || '',
-        phone: formData.get('phone')?.toString() || '',
-        email: formData.get('email')?.toString() || '',
-        address: [formData.get('address')?.toString(), formData.get('postcode')?.toString()]
-          .filter(Boolean)
-          .join(', '),
-        service: `Free Home Visit — ${projectType === 'property' ? 'Property' : 'Vehicle'}`,
-        message: formData.get('message')?.toString() || '',
-        gotcha: formData.get('_gotcha')?.toString() || '',
-      },
-      formData
-    )
-
-    if (success) {
-      track('visit_form_submitted')
-      setIsSubmitted(true)
-    } else {
-      alert('There was an error submitting the form. Please try again.')
-    }
-
-    setIsSubmitting(false)
-  }
-
-  if (isSubmitted) {
-    return (
-      <FadeIn>
-        <Card className="max-w-2xl mx-auto glass">
-          <CardContent className="p-12 text-center">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", bounce: 0.5 }}
-              className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary to-cyan-400 flex items-center justify-center"
-            >
-              <CheckCircle2 className="h-10 w-10 text-background" />
-            </motion.div>
-            <h3 className="text-3xl font-bold mb-4">Request Sent!</h3>
-            <p className="text-lg text-muted-foreground mb-8">
-              Thank you for your request. We&apos;ll be in touch within 24 hours 
-              to confirm your appointment.
-            </p>
-            <Button onClick={() => setIsSubmitted(false)} variant="outline" size="lg">
-              Submit Another Request
-            </Button>
-          </CardContent>
-        </Card>
-      </FadeIn>
-    )
-  }
-
-  return (
-    <FadeIn immediate>
-      <div className="max-w-2xl mx-auto space-y-6">
-        {/* DIY Calculator Nudge Banner */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-2xl border-2 border-green-500/60 bg-gradient-to-br from-green-500/10 via-emerald-500/10 to-teal-400/10 p-5"
-        >
-          <div className="flex items-start sm:items-center gap-4 flex-col sm:flex-row">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="h-6 w-6 text-white" />
-            </div>
-            <div className="flex-1 text-center sm:text-left">
-              <p className="font-bold mb-1">
-                Want <span className="text-green-600 dark:text-green-400">10% off your tint</span> right now?
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Use our DIY Calculator instead — instant quote, automatic 10% discount, no waiting.
-              </p>
-            </div>
-            <Button
-              type="button"
-              size="sm"
-              onClick={onSwitchToCalculator}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-0 gap-2 whitespace-nowrap"
-            >
-              <Calculator className="h-4 w-4" />
-              Use Calculator
-            </Button>
-          </div>
-        </motion.div>
-
-        <Card className="glass">
-          <CardHeader className="text-center pb-2">
-            <CardTitle className="text-2xl">Request a Free Home Visit</CardTitle>
-            <CardDescription>
-              We&apos;ll come to you, assess your needs, and provide an accurate quote on the spot.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Honeypot — hidden from real users; bots that fill it are filtered out */}
-            <input type="text" name="_gotcha" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
-            {/* Project Type Toggle — Vehicle option temporarily disabled. To re-enable, uncomment below
-            <div className="space-y-2">
-              <Label>What would you like tinted?</Label>
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  type="button"
-                  variant={projectType === "property" ? "default" : "outline"}
-                  className="h-auto py-4 flex-col gap-2"
-                  onClick={() => setProjectType("property")}
-                >
-                  <Home className="h-6 w-6" />
-                  <span>Property</span>
-                </Button>
-                <Button
-                  type="button"
-                  variant={projectType === "vehicle" ? "default" : "outline"}
-                  className="h-auto py-4 flex-col gap-2"
-                  onClick={() => setProjectType("vehicle")}
-                >
-                  <Car className="h-6 w-6" />
-                  <span>Vehicle</span>
-                </Button>
-              </div>
-            </div>
-            */}
-
-            {/* Contact Details */}
-            <div className="grid sm:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name *</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  required
-                  placeholder="John Smith"
-                  className="bg-background/50"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number *</Label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  required
-                  placeholder="+44 7624 000 000"
-                  className="bg-background/50"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address *</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                required
-                placeholder="john@example.com"
-                className="bg-background/50"
-              />
-            </div>
-
-            {/* Property fields (Vehicle fields temporarily disabled — see commented block below to re-enable) */}
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="address">Property Address *</Label>
-                <Input
-                  id="address"
-                  name="address"
-                  required
-                  placeholder="123 Main Street"
-                  className="bg-background/50"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="postcode">Postcode *</Label>
-                <Input
-                  id="postcode"
-                  name="postcode"
-                  required
-                  placeholder="IM1 1AA"
-                  className="bg-background/50 uppercase"
-                />
-              </div>
-            </div>
-
-            {/* Vehicle fields temporarily disabled. Change `false` to `true` to re-enable along with Project Type Toggle above. */}
-            {false && (
-              <AnimatePresence mode="wait">
-                {projectType === "vehicle" ? (
-                  <motion.div
-                    key="vehicle"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="space-y-6"
-                  >
-                    <div className="space-y-2">
-                      <Label htmlFor="vehicleReg">Vehicle Registration *</Label>
-                      <Input
-                        id="vehicleReg"
-                        name="vehicleReg"
-                        required
-                        placeholder="MAN 123"
-                        className="bg-background/50 uppercase"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="vehicleType">Vehicle Type</Label>
-                      <Select name="vehicleType">
-                        <SelectTrigger className="bg-background/50">
-                          <SelectValue placeholder="Select vehicle type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="car">Car</SelectItem>
-                          <SelectItem value="suv">SUV / 4x4</SelectItem>
-                          <SelectItem value="van">Van</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
-            )}
-
-            {/* Message */}
-            <div className="space-y-2">
-              <Label htmlFor="message">Additional Information</Label>
-              <Textarea
-                id="message"
-                name="message"
-                placeholder="Tell us more about your requirements..."
-                rows={4}
-                className="bg-background/50 resize-none"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              variant="electric"
-              size="xl"
-              className="w-full gap-2"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-5 h-5 border-2 border-background border-t-transparent rounded-full"
-                  />
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  Request Free Visit
-                  <ArrowRight className="h-5 w-5" />
-                </>
-              )}
-            </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    </FadeIn>
   )
 }
 

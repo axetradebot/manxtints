@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { Phone, MessageCircle, X, Send, ArrowRight, Bot, User } from "lucide-react"
+import { site } from "@/site.config"
 
 interface Message {
   id: number
@@ -17,7 +18,7 @@ const PHONE_NUMBER = "+447624331401"
 const knowledgeBase = [
   {
     keywords: ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "howdy", "hiya"],
-    response: "Hello! Welcome to ManxTints 👋 I'm here to help with any questions about our window tinting services. What can I help you with today?",
+    response: "Hello! Welcome to ManxTints 👋 We're here to help with any questions about our window film services. What can we help you with today?",
   },
   {
     keywords: ["price", "cost", "how much", "pricing", "expensive", "cheap", "afford", "quote", "estimate"],
@@ -46,11 +47,11 @@ const knowledgeBase = [
   },
   {
     keywords: ["privacy", "see through", "mirror", "one way", "visible", "night"],
-    response: "Our privacy films use dual ceramic technology. They create a reflective exterior layer for daytime privacy while maintaining a non-reflective interior, so you can see out clearly both day and night. Unlike inferior brands, the privacy effect doesn't reverse at night!",
+    response: "One-way mirror film reflects whichever side is brighter. By day that's outside, so people see a mirror and you see out clearly. At night with your lights on the effect reverses and people can see in — so for privacy at all hours we recommend frosted film, or a combination. Happy to advise on the quote page!",
   },
   {
     keywords: ["legal", "law", "regulation", "allowed", "permit"],
-    response: "Yes, window tinting is fully legal on the Isle of Man for residential and commercial properties! We ensure all installations comply with IOM regulations.",
+    response: `Yes, window film is fully legal for residential and commercial properties across the ${site.areasServed}. Our installers make sure every installation complies with local regulations.`,
   },
   {
     keywords: ["long", "time", "duration", "take", "how long", "wait"],
@@ -62,11 +63,11 @@ const knowledgeBase = [
   },
   {
     keywords: ["payment", "pay", "finance", "installment", "credit"],
-    response: "Get an automatic 10% off when you use our online DIY Calculator! Need a flexible payment plan? Just message us and we'll work something out — making quality tinting affordable for everyone on the island.",
+    response: "Get an automatic 10% off when you use our online DIY Calculator! Need a flexible payment plan? Just message us and we'll work something out — making quality tinting affordable for everyone.",
   },
   {
     keywords: ["area", "cover", "location", "where", "travel", "mobile", "come to"],
-    response: "We cover the entire Isle of Man! Whether you're in Douglas, Ramsey, Peel, Castletown, or anywhere else on the island, we can come to you for residential and commercial installations.",
+    response: `Our vetted local installers cover the ${site.areasServed}. Pop your postcode into the quote page and we'll confirm availability and dates for your area.`,
   },
   {
     keywords: ["contact", "phone", "call", "email", "reach", "address", "hours"],
@@ -74,7 +75,7 @@ const knowledgeBase = [
   },
   {
     keywords: ["book", "appointment", "schedule", "consultation", "visit"],
-    response: "Booking is easy! You can:\n\n1. Request a free home visit through our quote page\n2. Use our DIY Calculator for an instant 10% off quote\n3. Call us at +44 7624 331401\n4. Email manxtints@gmail.com\n\nWe offer free, no-obligation consultations and quotes!",
+    response: "Booking is easy! You can:\n\n1. Use our DIY Calculator for an instant 10% off quote\n2. Send photos through Quote Enquiry — no visit needed\n3. Call us at +44 7624 331401\n4. Email manxtints@gmail.com\n\nFree quotes online, usually the same day.",
   },
   {
     keywords: ["remove", "take off", "undo", "peel"],
@@ -91,7 +92,7 @@ const knowledgeBase = [
   // },
   {
     keywords: ["dark", "darkness", "shade", "level", "light", "tint level"],
-    response: "You can choose your preferred level of darkness! During the consultation, we'll guide you through all available options including different levels of darkness and shades.",
+    response: "You can choose your preferred level of darkness! Send photos or use the calculator and we'll guide you through the options, including different levels of darkness and shades.",
   },
   {
     keywords: ["energy", "heat", "cold", "insulation", "temperature", "saving"],
@@ -99,7 +100,7 @@ const knowledgeBase = [
   },
   {
     keywords: ["why", "choose", "different", "special", "best", "better"],
-    response: "Why choose ManxTints?\n\n⭐ Professional & friendly staff\n💰 Competitive, transparent pricing\n📅 Hassle-free booking process\n✅ Satisfaction guaranteed\n🇮🇲 Island-wide service, 7 days a week\n🏆 IOM Government contractor\n🛡️ Extended guarantee up to 10 years (+£19)\n\nWe use only premium materials and stand behind every installation!",
+    response: `Why choose ManxTints?\n\n${site.badges.map((b) => `✅ ${b}`).join("\n")}\n💰 Instant online quotes with 10% off\n📍 Installers across the ${site.areasServed}\n🛡️ Extended guarantee up to 10 years (+£19)\n\n${site.guarantee.satisfactionPromise}`,
   },
   {
     keywords: ["thank", "thanks", "cheers", "appreciate", "great", "helpful"],
@@ -134,7 +135,7 @@ function findResponse(input: string): string {
     }
   }
 
-  return "I'd be happy to help with that! For specific questions, you can:\n\n📞 Call us: +44 7624 331401\n📧 Email: manxtints@gmail.com\n\nOr ask me about our services, pricing, guarantees, coverage areas, or anything else about window tinting!"
+  return "We'd be happy to help with that! For specific questions, you can:\n\n📞 Call us: +44 7624 331401\n📧 Email: manxtints@gmail.com\n\nOr ask about our services, pricing, guarantees, coverage areas, or anything else about window film!"
 }
 
 const quickReplies = [
@@ -149,7 +150,7 @@ export function FloatingWidgets() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Hi there! 👋 I'm the ManxTints assistant. Ask me anything about our window tinting services, pricing, or booking!",
+      text: "Hi there! 👋 This is the ManxTints assistant. Ask us anything about our window film services, pricing, or booking!",
       sender: "bot",
       timestamp: new Date(),
     },
@@ -449,7 +450,7 @@ export function FloatingWidgets() {
                       handleSend()
                     }
                   }}
-                  placeholder="Ask me anything..."
+                  placeholder="Ask us anything..."
                   className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all placeholder:text-slate-400"
                 />
                 <button

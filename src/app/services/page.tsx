@@ -171,7 +171,7 @@ export default function ServicesPage() {
           <Stagger className="grid gap-5 md:grid-cols-2 lg:grid-cols-3" staggerDelay={0.07}>
             {products.map((product) => (
               <StaggerItem key={product.id}>
-                <Link href={"quoteHref" in product ? product.quoteHref : "/quote"} className="block h-full">
+                <Link href={product.quoteHref ?? "/quote"} className="block h-full">
                 <motion.article
                   id={product.id}
                   whileHover={{ y: -6 }}

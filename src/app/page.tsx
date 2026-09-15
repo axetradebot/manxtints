@@ -83,42 +83,61 @@ const faqs: Faq[] = [
 export default function Home() {
   return (
     <div className="relative bg-white">
-      {/* Hero */}
-      <section className="relative isolate flex min-h-[100svh] flex-col justify-start overflow-hidden sm:min-h-[88vh] sm:justify-end md:min-h-[92vh]">
-        <Image
-          src={site.hero.image}
-          alt={site.hero.alt}
-          fill
-          priority
-          fetchPriority="high"
-          sizes="100vw"
-          quality={60}
-          className="object-cover object-[center_40%]"
-        />
-        {/* Legibility scrims: darker at the bottom and left where the copy sits */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/60 to-slate-900/25" />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/60 via-slate-950/20 to-transparent" />
+      {/* Hero
+          The photo is portrait. On a wide desktop, covering the viewport crops it
+          into a cheap close-up — so lg+ shows the full house at its native ratio.
+          On phones the copy sits just above the floating quote bar. */}
+      <section className="relative isolate overflow-hidden bg-slate-950">
+        <div className="absolute inset-0 lg:hidden">
+          <Image
+            src={site.hero.image}
+            alt={site.hero.alt}
+            fill
+            priority
+            fetchPriority="high"
+            sizes="(min-width: 1024px) 1px, 100vw"
+            quality={60}
+            className="object-cover object-[center_32%]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/45 to-slate-900/20" />
+        </div>
 
-        <div className="container relative z-10 mx-auto w-full px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-20 sm:pb-16 sm:pt-32 md:pb-24 md:pt-40">
-          <div className="max-w-3xl">
+        <div className="pointer-events-none absolute inset-y-0 right-0 hidden h-full aspect-[9/16] lg:block">
+          <Image
+            src={site.hero.image}
+            alt={site.hero.alt}
+            fill
+            priority
+            sizes="(min-width: 1024px) 40vw, 1px"
+            quality={75}
+            className="object-cover object-center"
+          />
+        </div>
+        <div
+          className="absolute inset-0 hidden bg-gradient-to-r from-slate-950 from-40% via-slate-950/80 via-55% to-transparent lg:block"
+          aria-hidden
+        />
+
+        <div className="container relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] w-full flex-col justify-end px-4 pb-[calc(5.75rem+env(safe-area-inset-bottom))] pt-6 sm:pb-16 md:min-h-[calc(100svh-7.25rem)] md:justify-center md:py-16 lg:max-w-6xl xl:max-w-7xl">
+          <div className="max-w-xl lg:max-w-2xl">
             <FadeIn immediate delay={0.1}>
-              <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-sm font-medium text-white backdrop-blur sm:mb-4">
+              <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-sm font-medium text-white backdrop-blur sm:mb-5">
                 Free quotes online — no visit needed
               </p>
             </FadeIn>
             <FadeIn immediate delay={0.2}>
-              <h1 className="font-display text-[2rem] font-extrabold leading-[1.08] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
+              <h1 className="font-display text-[1.75rem] font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl md:text-5xl xl:text-[3.25rem] xl:leading-[1.12]">
                 {site.hero.headline}
               </h1>
             </FadeIn>
             <FadeIn immediate delay={0.3}>
-              <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-100 [@media(max-width:639px)_and_(max-height:700px)]:hidden sm:mt-6 sm:text-lg md:text-xl">
+              <p className="mt-3 max-w-lg text-[0.95rem] leading-relaxed text-slate-200 [@media(max-width:639px)_and_(max-height:700px)]:hidden sm:mt-5 sm:text-lg">
                 ManxTints quotes, books and guarantees your window film. Vetted local installers fit it — across
                 the {site.areasServed}.
               </p>
             </FadeIn>
             <FadeIn immediate delay={0.4}>
-              <div className="mt-4 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:gap-4">
+              <div className="mt-5 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:gap-4">
                 <Link href="/quote">
                   <Button size="xl" className="group w-full gap-2 bg-primary text-white shadow-xl shadow-blue-900/30 hover:bg-blue-700 sm:w-auto">
                     Get an instant quote
@@ -133,7 +152,7 @@ export default function Home() {
               </div>
             </FadeIn>
             <FadeIn immediate delay={0.5}>
-              <HeroProof className="mt-4 sm:mt-9" />
+              <HeroProof className="mt-5 sm:mt-8" />
             </FadeIn>
           </div>
         </div>

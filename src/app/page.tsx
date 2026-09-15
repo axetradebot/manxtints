@@ -142,12 +142,12 @@ export default function Home() {
       {/* Trust bar — hidden entirely until config has real figures */}
       <TrustBar />
 
-      <HowItWorks />
-
       {/* The centrepiece */}
       <div className="bg-gradient-to-b from-white via-blue-50/40 to-white py-20 md:py-28">
         <WindowExplainer />
       </div>
+
+      <HowItWorks />
 
       {/* Guarantee */}
       <section className="bg-white pb-20 md:pb-28">

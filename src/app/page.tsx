@@ -83,10 +83,7 @@ const faqs: Faq[] = [
 export default function Home() {
   return (
     <div className="relative bg-white">
-      {/* Hero
-          The photo is portrait. On a wide desktop, covering the viewport crops it
-          into a cheap close-up — so lg+ shows the full house at its native ratio.
-          On phones the copy sits just above the floating quote bar. */}
+      {/* Hero — mobile treatment is locked; lg+ is the original full-bleed overlay. */}
       <section className="relative isolate overflow-hidden bg-slate-950">
         <div className="absolute inset-0 lg:hidden">
           <Image
@@ -102,36 +99,34 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/45 to-slate-900/20" />
         </div>
 
-        <div className="pointer-events-none absolute inset-y-0 right-0 hidden h-full aspect-[9/16] lg:block">
+        <div className="absolute inset-0 hidden lg:block">
           <Image
             src={site.hero.image}
             alt={site.hero.alt}
             fill
             priority
-            sizes="(min-width: 1024px) 40vw, 1px"
+            sizes="100vw"
             quality={75}
-            className="object-cover object-center"
+            className="object-cover object-[center_40%]"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/60 to-slate-900/25" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/60 via-slate-950/20 to-transparent" />
         </div>
-        <div
-          className="absolute inset-0 hidden bg-gradient-to-r from-slate-950 from-40% via-slate-950/80 via-55% to-transparent lg:block"
-          aria-hidden
-        />
 
-        <div className="container relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] w-full flex-col justify-end px-4 pb-[calc(5.75rem+env(safe-area-inset-bottom))] pt-6 sm:pb-16 md:min-h-[calc(100svh-7.25rem)] md:justify-center md:py-16 lg:max-w-6xl xl:max-w-7xl">
-          <div className="max-w-xl lg:max-w-2xl">
+        <div className="container relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] w-full flex-col justify-end px-4 pb-[calc(5.75rem+env(safe-area-inset-bottom))] pt-6 sm:pb-16 md:min-h-[calc(100svh-7.25rem)] md:justify-center md:py-16 lg:min-h-[92vh] lg:justify-end lg:pb-24 lg:pt-40">
+          <div className="max-w-xl lg:max-w-3xl">
             <FadeIn immediate delay={0.1}>
               <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-sm font-medium text-white backdrop-blur sm:mb-5">
                 Free quotes online — no visit needed
               </p>
             </FadeIn>
             <FadeIn immediate delay={0.2}>
-              <h1 className="font-display text-[1.75rem] font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl md:text-5xl xl:text-[3.25rem] xl:leading-[1.12]">
+              <h1 className="font-display text-[1.75rem] font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl lg:leading-[1.05] xl:text-7xl">
                 {site.hero.headline}
               </h1>
             </FadeIn>
             <FadeIn immediate delay={0.3}>
-              <p className="mt-3 max-w-lg text-[0.95rem] leading-relaxed text-slate-200 [@media(max-width:639px)_and_(max-height:700px)]:hidden sm:mt-5 sm:text-lg">
+              <p className="mt-3 max-w-lg text-[0.95rem] leading-relaxed text-slate-200 [@media(max-width:639px)_and_(max-height:700px)]:hidden sm:mt-5 sm:text-lg lg:mt-6 lg:max-w-2xl lg:text-xl">
                 ManxTints quotes, books and guarantees your window film. Vetted local installers fit it — across
                 the {site.areasServed}.
               </p>
@@ -152,7 +147,7 @@ export default function Home() {
               </div>
             </FadeIn>
             <FadeIn immediate delay={0.5}>
-              <HeroProof className="mt-5 sm:mt-8" />
+              <HeroProof className="mt-5 sm:mt-8 lg:mt-9" />
             </FadeIn>
           </div>
         </div>

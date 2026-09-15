@@ -4,7 +4,7 @@ import { useState } from "react"
 import { ArrowRight, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { FadeIn, Stagger, StaggerItem } from "@/components/motion"
+import { FadeIn } from "@/components/motion"
 import { platformRatings, reviews } from "@/content/reviews"
 import { site } from "@/site.config"
 import { FacebookIcon, GoogleIcon } from "@/components/trust/trust-icons"
@@ -76,9 +76,9 @@ export function ReviewsSection() {
           </div>
         </FadeIn>
 
-        <Stagger className="grid gap-5 md:grid-cols-2 lg:grid-cols-3" staggerDelay={0.06}>
+        <ul className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {shown.map((review, index) => (
-            <StaggerItem key={`${review.name}-${index}`}>
+            <li key={`${review.name}-${index}`}>
               <Card className="h-full border-slate-200 bg-white shadow-sm card-hover">
                 <CardContent className="p-6">
                   <div className="mb-3 flex items-center justify-between">
@@ -104,14 +104,14 @@ export function ReviewsSection() {
                   </div>
                 </CardContent>
               </Card>
-            </StaggerItem>
+            </li>
           ))}
-        </Stagger>
+        </ul>
 
         {reviews.length > INITIAL && (
           <div className="mt-10 text-center">
             <Button variant="outline" size="lg" onClick={() => setExpanded((v) => !v)}>
-              {expanded ? "Show fewer reviews" : `Show all ${reviews.length} reviews`}
+              {expanded ? "Show fewer reviews" : "Show all reviews"}
             </Button>
           </div>
         )}

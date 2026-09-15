@@ -343,7 +343,7 @@ function DIYCalculator() {
   // Price per square meter for property types
   const propertyPrices: Record<string, number> = {
     house: 99,        // Residential: £99 per m²
-    conservatory: 100, // Conservatory: £100 per m²
+    conservatory: 120, // Conservatory: £120 per m²
     commercial: 98,   // Commercial: £98 per m²
   }
 

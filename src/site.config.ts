@@ -81,7 +81,7 @@ export const site = {
   /** Film performance claims. Set to 0 to hide the related caption. */
   filmSpec: {
     uvBlockPercent: 99 as number,
-    heatRejectionPercent: 97 as number,
+    heatRejectionPercent: 91 as number,
   },
 
   founder: {

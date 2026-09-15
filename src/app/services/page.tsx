@@ -31,7 +31,7 @@ const products = [
     title: "Solar & heat control film",
     benefit: `Rejects heat and glare${hasStat(site.filmSpec.heatRejectionPercent) ? ` — up to ${site.filmSpec.heatRejectionPercent}% of solar heat` : ""} — so rooms stay usable in summer.`,
     bestFor: "South- and west-facing rooms, home offices, big glazed extensions.",
-    price: "From £150/m² (ceramic)",
+    price: "From £99/m²",
   },
   {
     id: "frosted",
@@ -47,7 +47,7 @@ const products = [
     title: "Safety & security film",
     benefit: "Holds broken glass together so it stays in the frame instead of falling in.",
     bestFor: "Doors, low-level glazing, shopfronts and anywhere children play.",
-    price: "From £89/m²",
+    price: "From £99/m²",
   },
   {
     id: "conservatory",
@@ -55,7 +55,7 @@ const products = [
     title: "Conservatory roof film",
     benefit: "Turns a greenhouse back into a room by reflecting heat and glare from the roof.",
     bestFor: "Glass and polycarbonate conservatory roofs, roof lanterns, skylights.",
-    price: "From £100/m²",
+    price: "From £120/m²",
   },
   {
     id: "commercial",
@@ -73,6 +73,7 @@ const products = [
     benefit: "Energy-saving, anti-fog, data-jammer and blast-mitigation films for specific problems.",
     bestFor: "Listed buildings, server rooms, government and high-security sites.",
     price: "Quoted per project",
+    quoteHref: "/quote?tab=enquiry",
   },
 ]
 
@@ -80,12 +81,12 @@ const products = [
 const priceGuide = [
   { name: "Privacy film (one-way mirror)", price: "£99/m²" },
   { name: "Decorative / frosted film", price: "£99/m²" },
-  { name: "Ceramic heat-control film", price: "£150–£200/m²" },
-  { name: "Conservatory roof film", price: "£100/m²" },
+  { name: "Solar / heat-control film", price: "£99/m²" },
+  { name: "Conservatory roof film", price: "£120/m²" },
   { name: "Commercial privacy film", price: "£98/m²" },
   { name: "UV blocking film (retail stock protection)", price: "£119/m²" },
   { name: "Security film (commercial)", price: "£119/m²" },
-  { name: "Security film (residential)", price: "£89/m²" },
+  { name: "Security film (residential)", price: "£99/m²" },
   { name: "Energy saving film", price: "£90/m²" },
   { name: "Anti-fog film", price: "£200/m²" },
   { name: "Data jammer film", price: "£900/m²" },
@@ -96,7 +97,7 @@ const faqs: Faq[] = [
   {
     question: "Which film do I need?",
     answer:
-      "Tell us the problem — privacy, heat, glare, fading or safety — on the quote page and we'll recommend the film. Most homes choose one-way mirror film for privacy, ceramic film where heat is the issue, and frosted film for bathrooms and doors.",
+      "Tell us the problem — privacy, heat, glare, fading or safety — on the quote page and we'll recommend the film. Most homes choose one-way mirror film for privacy and heat, and frosted film for bathrooms and doors.",
   },
   {
     question: "Does one-way mirror film work at night?",
@@ -170,6 +171,7 @@ export default function ServicesPage() {
           <Stagger className="grid gap-5 md:grid-cols-2 lg:grid-cols-3" staggerDelay={0.07}>
             {products.map((product) => (
               <StaggerItem key={product.id}>
+                <Link href={"quoteHref" in product ? product.quoteHref : "/quote"} className="block h-full">
                 <motion.article
                   id={product.id}
                   whileHover={{ y: -6 }}
@@ -198,14 +200,12 @@ export default function ServicesPage() {
                       {product.price}
                       {product.price.includes("£") && <span className="ml-1 font-normal text-slate-500">inc. VAT</span>}
                     </span>
-                    <Link
-                      href="/quote"
-                      className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
-                    >
+                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
                       Get a quote <ArrowRight className="h-4 w-4" />
-                    </Link>
+                    </span>
                   </div>
                 </motion.article>
+                </Link>
               </StaggerItem>
             ))}
           </Stagger>

@@ -84,7 +84,7 @@ export default function Home() {
   return (
     <div className="relative bg-white">
       {/* Hero */}
-      <section className="relative isolate flex min-h-[88vh] items-end overflow-hidden md:min-h-[92vh]">
+      <section className="relative isolate flex min-h-[100svh] flex-col justify-start overflow-hidden sm:min-h-[88vh] sm:justify-end md:min-h-[92vh]">
         <Image
           src={site.hero.image}
           alt={site.hero.alt}
@@ -99,26 +99,26 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/60 to-slate-900/25" />
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/60 via-slate-950/20 to-transparent" />
 
-        <div className="container relative mx-auto px-4 pb-16 pt-32 md:pb-24 md:pt-40">
+        <div className="container relative z-10 mx-auto w-full px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-20 sm:pb-16 sm:pt-32 md:pb-24 md:pt-40">
           <div className="max-w-3xl">
             <FadeIn immediate delay={0.1}>
-              <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-sm font-medium text-white backdrop-blur">
+              <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-sm font-medium text-white backdrop-blur sm:mb-4">
                 Free quotes online — no visit needed
               </p>
             </FadeIn>
             <FadeIn immediate delay={0.2}>
-              <h1 className="font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
+              <h1 className="font-display text-[2rem] font-extrabold leading-[1.08] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
                 {site.hero.headline}
               </h1>
             </FadeIn>
             <FadeIn immediate delay={0.3}>
-              <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-100 md:text-xl">
+              <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-100 [@media(max-width:639px)_and_(max-height:700px)]:hidden sm:mt-6 sm:text-lg md:text-xl">
                 ManxTints quotes, books and guarantees your window film. Vetted local installers fit it — across
                 the {site.areasServed}.
               </p>
             </FadeIn>
             <FadeIn immediate delay={0.4}>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
+              <div className="mt-4 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:gap-4">
                 <Link href="/quote">
                   <Button size="xl" className="group w-full gap-2 bg-primary text-white shadow-xl shadow-blue-900/30 hover:bg-blue-700 sm:w-auto">
                     Get an instant quote
@@ -133,7 +133,7 @@ export default function Home() {
               </div>
             </FadeIn>
             <FadeIn immediate delay={0.5}>
-              <HeroProof className="mt-9" />
+              <HeroProof className="mt-4 sm:mt-9" />
             </FadeIn>
           </div>
         </div>

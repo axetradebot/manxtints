@@ -2,40 +2,43 @@
 
 import { hasStat, site } from "@/site.config"
 import { FadeIn } from "@/components/motion"
-import { DepositIcon, GuaranteeIcon, ShieldTickIcon } from "./trust-icons"
+import { CalendarTickIcon, FilmIcon, VettedIcon } from "./trust-icons"
 
 /**
- * The satisfaction promise verbatim from config, the workmanship guarantee and
- * deposit-protected booking. One calm line each.
+ * The standard we hold every job to: premium film, experienced installers,
+ * and service that turns up on time. Figures come from site.config.
  */
 export function GuaranteePanel({ compact = false }: { compact?: boolean }) {
-  const { guarantee } = site
+  const years = site.stats.installerMinYears
+
   const lines = [
     {
-      icon: ShieldTickIcon,
-      title: "Guaranteed satisfaction",
-      text: guarantee.satisfactionPromise,
-    },
-    hasStat(guarantee.workmanshipYears) && {
-      icon: GuaranteeIcon,
-      title: `${guarantee.workmanshipYears}-year workmanship warranty`,
-      text: "Written, in your name, and honoured by ManxTints — whichever installer fitted your film.",
+      icon: FilmIcon,
+      title: "Highest quality films",
+      text: "We specify premium window films that last, reject heat and keep a clean, even finish.",
     },
     {
-      icon: DepositIcon,
-      title: "Deposit-protected booking",
-      text: guarantee.depositLine,
+      icon: VettedIcon,
+      title: "Highest-standard installers",
+      text: hasStat(years)
+        ? `Every ManxTints installer is vetted, insured and has at least ${years} years of tinting experience.`
+        : "Every ManxTints installer is vetted, insured and held to our written fitting standard.",
     },
-  ].filter(Boolean) as { icon: typeof ShieldTickIcon; title: string; text: string }[]
+    {
+      icon: CalendarTickIcon,
+      title: "Top-tier service",
+      text: "Clear communication, fast replies and punctual arrivals. We treat your time the way we treat the glass.",
+    },
+  ]
 
   return (
     <FadeIn>
       <div className="rounded-3xl border border-trust/20 bg-trust-soft/60 p-6 md:p-10">
         {!compact && (
           <div className="mb-8 max-w-2xl">
-            <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-trust">Our promise</p>
+            <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-trust">Our standard</p>
             <h2 className="font-display text-3xl font-bold text-slate-900 md:text-4xl">
-              Booked with ManxTints. Guaranteed by ManxTints.
+              Highest quality. Highest standard.
             </h2>
           </div>
         )}

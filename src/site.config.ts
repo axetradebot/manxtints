@@ -35,6 +35,8 @@ export const site = {
     facebookRating: 0,
     facebookReviewCount: 14, // live total on Facebook (Sep 2026)
     installersInNetwork: 0,
+    /** Minimum years of tinting experience required of every installer. Hidden if 0. */
+    installerMinYears: 5,
   } as Record<
     | "projectsCompleted"
     | "yearsTrading"
@@ -42,7 +44,8 @@ export const site = {
     | "googleReviewCount"
     | "facebookRating"
     | "facebookReviewCount"
-    | "installersInNetwork",
+    | "installersInNetwork"
+    | "installerMinYears",
     number
   >,
 

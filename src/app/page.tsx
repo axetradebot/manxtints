@@ -15,12 +15,16 @@ import { ReviewsSection } from "@/components/sections/reviews-section"
 import { ProjectsGrid } from "@/components/sections/projects-grid"
 import { FaqSection, type Faq } from "@/components/sections/faq-section"
 import { CtaBand } from "@/components/sections/cta-band"
+import { ZoneChip } from "@/components/zone/zone-chip"
+import { useZone } from "@/components/zone/zone-provider"
+import { MIN_JOB } from "@/lib/pricing"
+import type { Zone } from "@/lib/pricing.zones"
 import { hasStat, site } from "@/site.config"
 
 const years = site.guarantee.workmanshipYears
 const extended = site.guarantee.extendedYears
 
-const faqs: Faq[] = [
+const buildFaqs = (zone: Zone): Faq[] => [
   {
     question: "Does one-way mirror film work at night?",
     answer:
@@ -36,9 +40,9 @@ const faqs: Faq[] = [
     question: "What does the guarantee cover?",
     answer: `${site.guarantee.satisfactionPromise} ${
       hasStat(years)
-        ? `Our ${years}-year workmanship warranty covers peeling, bubbling, discolouration and delamination under normal use. `
+        ? `Our ${years}-year guarantee covers peeling, bubbling, discolouration and delamination under normal use. `
         : ""
-    }It's issued and honoured by ManxTints, whichever installer fitted your film. Full terms are on the Terms & Conditions page.`,
+    }Premium film includes a ${extended}-year guarantee, and on Standard film you can extend to ${extended} years as an add-on in the calculator. It's issued and honoured by ManxTints, whichever installer fitted your film. Full terms are on the Terms & Conditions page.`,
   },
   {
     question: "What happens on install day?",
@@ -60,8 +64,7 @@ const faqs: Faq[] = [
   },
   {
     question: "How much does window film cost?",
-    answer:
-      "It depends on the film, the number of windows and their size. As a guide, residential privacy film is around £99 per square metre including VAT, with a minimum job charge of £100. The calculator gives you an exact figure in about a minute — and 10% off automatically.",
+    answer: `It depends on the film, the number of windows, their size and your area. As a guide, residential privacy film in the ${zone.label} area is from £${zone.pricePerM2.standard} per square metre including VAT (Standard film) or £${zone.pricePerM2.premium} per square metre for Premium, with a minimum job charge of £${MIN_JOB}. Prices vary by area — you can change yours above. The calculator gives you an exact figure in about a minute, and 10% off automatically.`,
   },
   {
     question: "Can I choose how dark the film is?",
@@ -81,6 +84,9 @@ const faqs: Faq[] = [
 ]
 
 export default function Home() {
+  const { zone } = useZone()
+  const faqs = buildFaqs(zone)
+
   return (
     <div className="relative bg-white">
       {/* Hero — mobile treatment is locked; lg+ is the original full-bleed overlay. */}
@@ -176,7 +182,12 @@ export default function Home() {
 
       <ProjectsGrid />
 
-      <FaqSection faqs={faqs} className="bg-slate-50" intro="Straight answers on privacy, guarantees and what happens on the day." />
+      <FaqSection
+        faqs={faqs}
+        className="bg-slate-50"
+        intro="Straight answers on privacy, guarantees and what happens on the day."
+        aside={<ZoneChip />}
+      />
 
       <CtaBand />
     </div>

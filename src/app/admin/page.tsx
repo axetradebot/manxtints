@@ -2,7 +2,15 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { ADMIN_COOKIE, adminToken, isValidAdminCookie } from "@/lib/adminAuth"
-import { buildReport, type Report } from "@/lib/analyticsReport"
+import {
+  buildReport,
+  parseTierFilter,
+  parseZoneFilter,
+  type Report,
+  type TierFilter,
+  type ZoneFilter,
+} from "@/lib/analyticsReport"
+import { tierKeys, tiers, zoneKeys, zones } from "@/lib/pricing.zones"
 
 export const dynamic = "force-dynamic"
 
@@ -68,7 +76,7 @@ function Sparkline({
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ days?: string; error?: string }>
+  searchParams: Promise<{ days?: string; zone?: string; tier?: string; error?: string }>
 }) {
   const params = await searchParams
   const store = await cookies()
@@ -107,7 +115,11 @@ export default async function AdminPage({
   }
 
   const days = [7, 30, 90].includes(Number(params.days)) ? Number(params.days) : 30
-  const report = await buildReport(days)
+  const zoneFilter = parseZoneFilter(params.zone)
+  const tierFilter = parseTierFilter(params.tier)
+  const report = await buildReport(days, zoneFilter, tierFilter)
+  const hrefFor = (d: number, z: ZoneFilter, t: TierFilter = tierFilter) =>
+    `/admin?days=${d}${z === "all" ? "" : `&zone=${z}`}${t === "all" ? "" : `&tier=${t}`}`
 
   return (
     <div className="container mx-auto px-4 py-24 space-y-10 max-w-5xl">
@@ -123,7 +135,7 @@ export default async function AdminPage({
           {[7, 30, 90].map((d) => (
             <Link
               key={d}
-              href={`/admin?days=${d}`}
+              href={hrefFor(d, zoneFilter)}
               className={`rounded-md px-3 py-1.5 text-sm border ${
                 d === days
                   ? "bg-primary text-primary-foreground border-primary"
@@ -176,9 +188,105 @@ export default async function AdminPage({
         </p>
       </section>
 
+      {/* Conversion per pricing zone */}
+      <section className="rounded-xl border border-border bg-card p-6 space-y-4">
+        <h2 className="text-lg font-semibold">Conversion by pricing zone</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-left text-muted-foreground">
+                <th className="py-2 pr-4 font-medium">Zone</th>
+                <th className="py-2 pr-4 font-medium text-right">From £/m²</th>
+                <th className="py-2 pr-4 font-medium text-right">Quotes shown</th>
+                <th className="py-2 pr-4 font-medium text-right">Submitted</th>
+                <th className="py-2 pr-4 font-medium text-right">Submit rate</th>
+                <th className="py-2 font-medium text-right">Avg shown price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {report.zoneRows.map((row) => (
+                <tr key={row.zone} className="border-b border-border/50">
+                  <td className="py-2 pr-4">{row.label}</td>
+                  <td className="py-2 pr-4 text-right">
+                    {row.zone === "unknown" ? "—" : `£${zones[row.zone].pricePerM2.standard} / £${zones[row.zone].pricePerM2.premium}`}
+                  </td>
+                  <td className="py-2 pr-4 text-right">{row.shown}</td>
+                  <td className="py-2 pr-4 text-right">{row.submitted}</td>
+                  <td className="py-2 pr-4 text-right font-medium">{fmtPct(row.submitRate)}</td>
+                  <td className="py-2 text-right">{fmtGBP(row.avgShown)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Zone is recorded on calc_price_shown / calc_submitted. Sessions from before zones went live show as
+          &ldquo;Unknown&rdquo;.
+        </p>
+      </section>
+
       {/* Price drop-off */}
       <section className="rounded-xl border border-border bg-card p-6 space-y-4">
-        <h2 className="text-lg font-semibold">Price drop-off</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">
+            Price drop-off
+            {zoneFilter !== "all" && (
+              <span className="ml-2 text-sm font-normal text-muted-foreground">· {zones[zoneFilter].label}</span>
+            )}
+            {tierFilter !== "all" && (
+              <span className="ml-2 text-sm font-normal text-muted-foreground">· {tiers[tierFilter].label} film</span>
+            )}
+          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2" aria-label="Filter by pricing zone">
+              {(["all", ...zoneKeys] as ZoneFilter[]).map((z) => (
+                <Link
+                  key={z}
+                  href={hrefFor(days, z)}
+                  className={`rounded-md px-3 py-1.5 text-xs border ${
+                    z === zoneFilter
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {z === "all" ? "All zones" : zones[z].label}
+                </Link>
+              ))}
+            </div>
+            <span className="hidden sm:inline text-muted-foreground/50">|</span>
+            <div className="flex items-center gap-2" aria-label="Filter by film tier">
+              {(["all", ...tierKeys] as TierFilter[]).map((t) => (
+                <Link
+                  key={t}
+                  href={hrefFor(days, zoneFilter, t)}
+                  className={`rounded-md px-3 py-1.5 text-xs border ${
+                    t === tierFilter
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t === "all" ? "All films" : tiers[t].label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="rounded-lg bg-background p-4">
+            <p className="text-xs text-muted-foreground mb-1">Premium take rate</p>
+            <p className="text-2xl font-bold">{fmtPct(report.takeRates.premiumTakeRate)}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {report.takeRates.premiumShown} of {report.takeRates.tieredShown} tiered quotes shown
+            </p>
+          </div>
+          <div className="rounded-lg bg-background p-4">
+            <p className="text-xs text-muted-foreground mb-1">Guarantee take rate</p>
+            <p className="text-2xl font-bold">{fmtPct(report.takeRates.guaranteeTakeRate)}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {report.takeRates.guaranteeAdded} of {report.takeRates.guaranteeEligible} submitted non-Premium jobs added 10 years
+            </p>
+          </div>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

@@ -44,6 +44,18 @@ describe("assembleEnquiryMessage", () => {
     })
     expect(message).toBe("Looking for: Not sure, advise me\nPhotos: photo upload failed")
   })
+
+  it("records the film preference between property and description", () => {
+    const message = assembleEnquiryMessage({
+      needs: [],
+      propertyType: "Home",
+      filmPreference: "Premium",
+      description: "Lounge bay",
+      photoUrls: [],
+      photoUploadFailed: false,
+    })
+    expect(message).toBe("Property: Home\nFilm preference: Premium\nDescription: Lounge bay")
+  })
 })
 
 describe("enquiryServiceLabel", () => {

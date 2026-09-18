@@ -118,11 +118,94 @@ Update contact details in:
 
 ### Form Submissions
 
-Currently forms show success messages without actual submission. To connect to a real backend:
+Leads are posted as JSON to `NEXT_PUBLIC_LEAD_ENDPOINT` (StartMyPatch) with a Formspree
+fallback at `NEXT_PUBLIC_LEAD_FALLBACK` — see `src/lib/submitLead.ts` and `.env.example`.
 
-1. **Formspree**: Replace form action with your Formspree endpoint
-2. **API Route**: Create `/api/contact` endpoint
-3. **Email Service**: Integrate with SendGrid, Resend, etc.
+## 📍 Regional pricing (zones)
+
+Installer rates differ by region, so every price on the site is read from a **pricing zone**
+in `src/lib/pricing.zones.ts` — the single place to edit rates:
+
+| Zone key   | Label                 | Standard £/m² | Premium £/m² | Postcode areas                                                     |
+|------------|-----------------------|---------------|--------------|--------------------------------------------------------------------|
+| `standard` | Isle of Man & North   | £99           | £125         | everything not listed below (incl. IM)                             |
+| `se`       | South East & London   | £135          | £165         | SL RG GU KT SM TW HA UB WD AL HP OX RH CR BR DA EN IG RM SW W NW N E EC WC SE |
+
+Conservatory has its own per-tier rates (`rates.conservatory`) and commercial a single rate
+(`rates.commercial`). The calculator maths is zone-independent and lives in `src/lib/pricing.ts`:
+
+> window prices at the tier's zone rate → £10 window floor → sum → 10% DIY discount → voucher
+> (if any) → £100 job floor → **10-year guarantee = max(£29, 10% of that total)** → final.
+
+### Film tiers (Standard / Premium)
+
+Residential and conservatory jobs choose between two films, defined in `tiers` in
+`src/lib/pricing.zones.ts` (label, film name, tagline, bullets, guarantee years, badge):
+
+- **Standard — Silver 20.** Mirror privacy by day, 5-year guarantee included. The 10-year
+  guarantee is offered as an add-on on the quote screen, always as a pound figure
+  ("Extend your guarantee to 10 years — £37.42").
+- **Premium — Reflective Privacy 20.** Clear view from inside, higher heat rejection,
+  10-year guarantee included (no upsell). Carries the "Most popular" badge.
+
+The calculator's **film step** sits after the window measurements and before any total is shown
+(commercial skips it). `?tier=premium|standard` pre-selects a card but never skips the step.
+The same `TierCards` component renders the "Two films. One simple choice." section on
+`/services`, whose CTAs link to `/quote?tier=premium` and `/quote?tier=standard`.
+
+Leads record the tier in the service (`DIY Calculator — Residential (Premium)`) and the quote
+line, e.g. `Quote: £411.64 incl. 10% DIY discount + 10-year guarantee £37.42. 1 window(s),
+4.20m² @ £99/m² (Isle of Man & North). Film: Standard (Silver 20).`
+
+### How the zone is resolved
+
+Implemented once in `src/proxy.ts` (server) + `src/components/zone/zone-provider.tsx` (client, `useZone()`):
+
+1. **URL param** `?zone=se|standard` — wins, and is saved to the 30-day functional cookie `mt_zone`.
+2. **Stored choice** — the `mt_zone` cookie (set by a param, the zone chip, or the postcode check).
+3. **IP default** — Vercel geo headers (`x-vercel-ip-country/-region/-city/-latitude/-longitude`)
+   mapped via `zoneFromGeo()`. Only a default: it is flagged `source: "ip"` and the chip is always shown.
+4. **Fallback** — `standard`.
+
+The **zone chip** ("Prices for {area} · Change") appears wherever a price is displayed: calculator
+header and summary, services cards and price guide, pricing FAQ, and the chat assistant's answers.
+Changing it re-renders every price and recalculates an open quote live.
+
+### Postcode reconfirmation (legal keystone)
+
+At the final quote step the postcode's outward code is mapped with `zoneFromPostcode()`. If it
+differs from the displayed zone, the customer sees "Your postcode is in the {area} area — prices
+updated." with the old total struck through and the new total shown, and **Book Installation is
+disabled until the new total has rendered**. The corrected zone is persisted. Unmapped/invalid
+postcodes keep the displayed zone and add "We'll confirm your area's pricing with your quote."
+to the lead. Every lead's quote line ends with the zone, e.g.
+`Quote: £412.00 incl. 10% DIY discount. 2 window(s), 4.20m² @ £99/m² (Isle of Man & North)`.
+
+### Ad links per region
+
+Use these as the landing URL for each regional ad set — the zone is applied before first paint:
+
+- **Slough / South East ad set:** `https://manxtints.com/quote?zone=se`
+- **North West / Isle of Man ad set:** `https://manxtints.com/quote?zone=standard`
+
+Any page accepts the param (e.g. `/services?zone=se`).
+
+### Analytics
+
+`calc_price_shown` and `calc_submitted` carry `zone`, `zoneSource`, `tier` (null for commercial),
+`guarantee_added` and `guarantee_included`; `tier_selected` fires when the film is changed. The
+`/admin` dashboard has a "Conversion by pricing zone" table, zone and film-tier filters on the price
+drop-off report (`/admin?days=30&zone=se&tier=premium`), and "Premium take rate" / "Guarantee take
+rate" stats.
+
+### Local testing of the IP default
+
+```bash
+# SE default (chip visible, source "ip")
+curl -s -H "x-vercel-ip-country: GB" -H "x-vercel-ip-city: Slough" http://localhost:3000/quote | grep -o 'Prices for [^<]*'
+# Non-SE → standard
+curl -s -H "x-vercel-ip-country: GB" -H "x-vercel-ip-city: Manchester" http://localhost:3000/quote | grep -o 'Prices for [^<]*'
+```
 
 ## 🌐 Deployment to Vercel
 

@@ -136,6 +136,16 @@ export default function TermsPage() {
                     upon satisfactory completion of the installation unless
                     alternative arrangements have been agreed in writing.
                   </p>
+                  <p>
+                    <strong className="text-slate-800">Pricing by area.</strong>{" "}
+                    Installer rates differ by region, so our website prices are
+                    shown for a named pricing area which is displayed next to
+                    every price and can be changed at any time. Before you
+                    submit a quote we reconfirm the area from your postcode; if
+                    it differs, the updated total is shown to you first. The
+                    total you see for your address is the total you pay &mdash;
+                    there are no regional surcharges added afterwards.
+                  </p>
                   <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 sm:p-5 flex items-start gap-3">
                     <Sparkles className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
                     <p className="text-emerald-800 text-sm font-medium">

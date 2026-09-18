@@ -5,6 +5,9 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { Phone, MessageCircle, X, Send, ArrowRight, Bot, User } from "lucide-react"
 import { site } from "@/site.config"
+import { guaranteeUpsell } from "@/lib/pricing"
+import type { Zone } from "@/lib/pricing.zones"
+import { useZone } from "@/components/zone/zone-provider"
 
 interface Message {
   id: number
@@ -15,14 +18,17 @@ interface Message {
 
 const PHONE_NUMBER = "+447624331401"
 
-const knowledgeBase = [
+// Any answer that quotes a £ figure is a function of the pricing zone so the
+// chat never contradicts the calculator or the services page.
+const knowledgeBase: Array<{ keywords: string[]; response: string | ((zone: Zone) => string) }> = [
   {
     keywords: ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "howdy", "hiya"],
     response: "Hello! Welcome to ManxTints 👋 We're here to help with any questions about our window film services. What can we help you with today?",
   },
   {
     keywords: ["price", "cost", "how much", "pricing", "expensive", "cheap", "afford", "quote", "estimate"],
-    response: "Our pricing varies by service:\n\n🏠 Residential: From £99/m²\n🏢 Commercial: From £98/m²\n🛡️ Security Film: From £99/m²\n\nWe offer free, no-obligation quotes! Would you like to request one?",
+    response: (zone) =>
+      `Prices vary by area — these are for ${zone.label}:\n\n🏠 Residential: Standard film from £${zone.pricePerM2.standard}/m², Premium from £${zone.pricePerM2.premium}/m²\n🏢 Commercial: From £${zone.rates.commercial}/m²\n🛡️ Security Film: From £${zone.guide.securityResidential}/m²\n\nYou can change your area next to any price on the site. We offer free, no-obligation quotes! Would you like to request one?`,
   },
   {
     // Automotive enquiries — temporarily redirect customers since we've paused the service.
@@ -31,15 +37,18 @@ const knowledgeBase = [
   },
   {
     keywords: ["home", "house", "residential", "window", "flat", "apartment"],
-    response: "Our residential tinting services include:\n\n• Privacy / heat-control film — £99/m² (one-way mirror)\n• Decorative Film — £99/m² (frosted & patterned)\n\nBenefits: Blocks 99% UV rays, reduces energy costs, enhances privacy, and protects furniture from fading.",
+    response: (zone) =>
+      `Our residential tinting services include (${zone.label} prices):\n\n• Privacy / heat-control film — £${zone.guide.privacy}/m² (one-way mirror)\n• Decorative Film — £${zone.guide.frosted}/m² (frosted & patterned)\n\nBenefits: Blocks 99% UV rays, reduces energy costs, enhances privacy, and protects furniture from fading.`,
   },
   {
     keywords: ["commercial", "business", "office", "shop", "store", "workplace"],
-    response: "Commercial tinting solutions:\n\n• Privacy Film — £98/m²\n• UV Blocking Film — £119/m²\n• Security Film — £119/m²\n\nPerfect for GDPR-compliant privacy, reducing glare on screens, energy savings, and giving your storefront a professional look.",
+    response: (zone) =>
+      `Commercial tinting solutions (${zone.label} prices):\n\n• Privacy Film — £${zone.guide.commercialPrivacy}/m²\n• UV Blocking Film — £${zone.guide.uvBlocking}/m²\n• Security Film — £${zone.guide.securityCommercial}/m²\n\nPerfect for GDPR-compliant privacy, reducing glare on screens, energy savings, and giving your storefront a professional look.`,
   },
   {
     keywords: ["security", "safety", "protect", "break-in", "bomb", "blast"],
-    response: "We offer specialty security films:\n\n• Security Film — £99/m² (break-in protection)\n• Energy Saving Film — £90/m² (27% heat loss reduction)\n• Anti-Fog Film — £200/m²\n• Data Jammer Film — £900/m² (screens black from outside)\n• Bomb Blast Protection — £100/m²\n\nIdeal for homes, businesses, and high-security environments.",
+    response: (zone) =>
+      `We offer specialty security films (${zone.label} prices):\n\n• Security Film — £${zone.guide.securityResidential}/m² (break-in protection)\n• Energy Saving Film — £${zone.guide.energySaving}/m² (27% heat loss reduction)\n• Anti-Fog Film — £${zone.guide.antiFog}/m²\n• Data Jammer Film — £${zone.guide.dataJammer}/m² (screens black from outside)\n• Bomb Blast Protection — £${zone.guide.blast}/m²\n\nIdeal for homes, businesses, and high-security environments.`,
   },
   {
     keywords: ["uv", "sun", "protect", "fade", "skin", "health", "cancer"],
@@ -59,7 +68,12 @@ const knowledgeBase = [
   },
   {
     keywords: ["guarantee", "warranty", "last", "lifespan", "durability"],
-    response: "Our premium films last 15-25 years with proper care. We offer:\n\n• Standard guarantee: 5 years (included)\n• Extended guarantee: 10 years (just +£19)\n\nWe only use trusted, premium brands that won't fade or bubble.",
+    response: `Our films last 15-25 years with proper care. Guarantee:\n\n• Standard film: 5 years included\n• Premium film: 10 years included\n• On Standard you can extend to 10 years in the calculator for 10% of the job total (minimum £${guaranteeUpsell.minPounds})\n\nWe only use trusted, premium brands that won't fade or bubble.`,
+  },
+  {
+    keywords: ["difference", "standard vs", "premium", "which film", "tier", "silver 20", "reflective privacy"],
+    response: (zone) =>
+      `Two films for homes and conservatories:\n\n• Standard (Silver 20) — one-way mirror privacy by day, 5-year guarantee. From £${zone.pricePerM2.standard}/m² in ${zone.label}.\n• Premium (Reflective Privacy 20) — same daytime privacy but a clear, non-reflective view from inside, higher heat rejection and a 10-year guarantee. From £${zone.pricePerM2.premium}/m².\n\nBoth reverse at night with the lights on. Most customers pick Premium for living rooms and Standard for bathrooms, garages and outbuildings.`,
   },
   {
     keywords: ["payment", "pay", "finance", "installment", "credit"],
@@ -100,7 +114,7 @@ const knowledgeBase = [
   },
   {
     keywords: ["why", "choose", "different", "special", "best", "better"],
-    response: `Why choose ManxTints?\n\n${site.badges.map((b) => `✅ ${b}`).join("\n")}\n💰 Instant online quotes with 10% off\n📍 Installers across the ${site.areasServed}\n🛡️ Extended guarantee up to 10 years (+£19)\n\n${site.guarantee.satisfactionPromise}`,
+    response: `Why choose ManxTints?\n\n${site.badges.map((b) => `✅ ${b}`).join("\n")}\n💰 Instant online quotes with 10% off\n📍 Installers across the ${site.areasServed}\n🛡️ 5-year guarantee included, 10 years with Premium film\n\n${site.guarantee.satisfactionPromise}`,
   },
   {
     keywords: ["thank", "thanks", "cheers", "appreciate", "great", "helpful"],
@@ -116,21 +130,23 @@ const knowledgeBase = [
   },
   {
     keywords: ["fog", "condensation", "mist", "moisture"],
-    response: "We offer Anti-Fog Film at £200/m² that prevents condensation and fogging on your windows. Perfect for kitchens, bathrooms, or any environment prone to moisture buildup.",
+    response: (zone) =>
+      `We offer Anti-Fog Film at £${zone.guide.antiFog}/m² (${zone.label}) that prevents condensation and fogging on your windows. Perfect for kitchens, bathrooms, or any environment prone to moisture buildup.`,
   },
   {
     keywords: ["data", "jammer", "spy", "espionage", "confidential"],
-    response: "Our Data Jammer Film (£900/m²) makes screens completely black when viewed from outside, protecting sensitive data from visual espionage. Perfect for government offices, financial institutions, or any business handling confidential information.",
+    response: (zone) =>
+      `Our Data Jammer Film (£${zone.guide.dataJammer}/m² in ${zone.label}) makes screens completely black when viewed from outside, protecting sensitive data from visual espionage. Perfect for government offices, financial institutions, or any business handling confidential information.`,
   },
 ]
 
-function findResponse(input: string): string {
+function findResponse(input: string, zone: Zone): string {
   const lowerInput = input.toLowerCase()
 
   for (const entry of knowledgeBase) {
     for (const keyword of entry.keywords) {
       if (lowerInput.includes(keyword)) {
-        return entry.response
+        return typeof entry.response === "function" ? entry.response(zone) : entry.response
       }
     }
   }
@@ -159,6 +175,7 @@ export function FloatingWidgets() {
   const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { zone } = useZone()
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -192,14 +209,14 @@ export function FloatingWidgets() {
     setTimeout(() => {
       const botResponse: Message = {
         id: Date.now() + 1,
-        text: findResponse(query),
+        text: findResponse(query, zone),
         sender: "bot",
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, botResponse])
       setIsTyping(false)
     }, 600 + Math.random() * 800)
-  }, [inputValue])
+  }, [inputValue, zone])
 
   const handleQuickReply = useCallback((reply: string) => {
     const userMessage: Message = {
@@ -215,14 +232,14 @@ export function FloatingWidgets() {
     setTimeout(() => {
       const botResponse: Message = {
         id: Date.now() + 1,
-        text: findResponse(reply),
+        text: findResponse(reply, zone),
         sender: "bot",
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, botResponse])
       setIsTyping(false)
     }, 600 + Math.random() * 800)
-  }, [])
+  }, [zone])
 
   return (
     <>

@@ -8,6 +8,8 @@ import { FloatingWidgets } from "@/components/floating-widgets";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { MotionProvider } from "@/components/motion-provider";
 import { OrganizationJsonLd } from "@/components/seo/organization-json-ld";
+import { ZoneProvider } from "@/components/zone/zone-provider";
+import { getRequestZone } from "@/lib/zone.server";
 import { site } from "@/site.config";
 
 const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
@@ -67,11 +69,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Resolved by proxy.ts (URL param → cookie → IP default → standard) so the
+  // first paint already shows the right area's prices.
+  const requestZone = await getRequestZone();
+
   return (
     <html lang="en">
       <body
@@ -106,12 +112,14 @@ fbq('track', 'PageView');`}
         )}
         <OrganizationJsonLd />
         <AnalyticsTracker />
-        <MotionProvider>
-          <Navigation />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <FloatingWidgets />
-        </MotionProvider>
+        <ZoneProvider initialZone={requestZone.zone} initialSource={requestZone.source}>
+          <MotionProvider>
+            <Navigation />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <FloatingWidgets />
+          </MotionProvider>
+        </ZoneProvider>
       </body>
     </html>
   );

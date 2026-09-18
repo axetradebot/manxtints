@@ -4,6 +4,8 @@
 export function assembleEnquiryMessage(opts: {
   needs: string[]
   propertyType: string | null
+  /** "Standard" | "Premium" | "Advise me" — omitted when not chosen. */
+  filmPreference?: string | null
   description: string
   photoUrls: string[]
   photoUploadFailed: boolean
@@ -15,6 +17,9 @@ export function assembleEnquiryMessage(opts: {
   }
   if (opts.propertyType) {
     parts.push(`Property: ${opts.propertyType}`)
+  }
+  if (opts.filmPreference) {
+    parts.push(`Film preference: ${opts.filmPreference}`)
   }
   if (opts.description.trim()) {
     parts.push(`Description: ${opts.description.trim()}`)

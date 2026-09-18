@@ -36,20 +36,38 @@ import { FadeIn } from "@/components/motion"
 import { trackLead } from "@/lib/metaPixel"
 import { submitLead } from "@/lib/submitLead"
 import { track } from "@/lib/analytics"
-import { quoteProperty, quoteVehicle, MIN_JOB, GUARANTEE_PRICE } from "@/lib/pricing"
+import { quoteProperty, quoteVehicle, formatGBP, guaranteeUpsell, MIN_JOB, GUARANTEE_PRICE } from "@/lib/pricing"
+import {
+  defaultTier,
+  hasTiers,
+  isTierKey,
+  rateFor,
+  tiers,
+  zoneFromPostcode,
+  zones,
+  type PropertyRateKey,
+  type TierKey,
+  type ZoneKey,
+} from "@/lib/pricing.zones"
+import { useZone } from "@/components/zone/zone-provider"
+import { ZoneChip, ZoneNotice } from "@/components/zone/zone-chip"
+import { TierCards } from "@/components/tiers/tier-cards"
 import { QuoteEnquiryForm } from "@/components/quote-enquiry-form"
 
-// Vehicle pricing configuration
-const vehiclePricing = {
+// Vehicle packages — prices come from the pricing zone (see lib/pricing.zones.ts)
+const vehiclePackages = {
   car: {
-    "2": { price: 200, windows: "Rear 3 windows + boot", description: "Back 3 windows including boot window" },
-    "4": { price: 250, windows: "Rear 5 windows + boot", description: "All passenger windows + boot window" }
+    "2": { windows: "Rear 3 windows + boot", description: "Back 3 windows including boot window" },
+    "4": { windows: "Rear 5 windows + boot", description: "All passenger windows + boot window" }
   },
   suv: {
-    "2": { price: 250, windows: "Rear windows + boot", description: "All rear windows including boot" },
-    "4": { price: 300, windows: "Rear 4 windows + boot", description: "All passenger windows + boot window" }
+    "2": { windows: "Rear windows + boot", description: "All rear windows including boot" },
+    "4": { windows: "Rear 4 windows + boot", description: "All passenger windows + boot window" }
   }
 } as const
+
+/** Line added to the lead when the postcode could not be matched to a pricing area. */
+const UNMAPPED_POSTCODE_LINE = "We'll confirm your area's pricing with your quote."
 
 const propertyTypes = [
   { id: "house", label: "Residential", icon: Home },
@@ -291,10 +309,33 @@ function DIYCalculator() {
   const [doorCount, setDoorCount] = useState<"2" | "4" | null>(null)
   // const [selectedFilm, setSelectedFilm] = useState(filmTypes[1]) // SAVED FOR FUTURE USE
   const [windows, setWindows] = useState<Window[]>([])
+  // Film tier (Standard / Premium) for house + conservatory. Commercial has one film.
+  const [tier, setTier] = useState<TierKey>(defaultTier)
   const [extendedGuarantee, setExtendedGuarantee] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const calcStartedRef = useRef(false)
+
+  // `?tier=premium|standard` (services page CTAs, ads) pre-selects the film
+  // but never skips the tier step — the customer still sees both cards.
+  useEffect(() => {
+    const param = new URLSearchParams(window.location.search).get("tier")
+    if (!isTierKey(param)) return
+    const id = requestAnimationFrame(() => setTier(param))
+    return () => cancelAnimationFrame(id)
+  }, [])
+
+  // Regional pricing. Every rate below reads from the resolved zone so a
+  // change (chip or postcode) recalculates the open quote live.
+  const { zone, zoneKey, source: zoneSource, setZone } = useZone()
+  // Zone derived from the postcode typed at the final step:
+  //   undefined = nothing typed yet · null = does not parse as a postcode (unmapped)
+  const [postcodeZone, setPostcodeZone] = useState<ZoneKey | null | undefined>(undefined)
+  // Set when the postcode moves the customer to a different area. `pending`
+  // stays true until the recalculated total has actually rendered, and the
+  // submit button is disabled for that window — the price never changes
+  // silently after they have seen a total.
+  const [reprice, setReprice] = useState<{ from: ZoneKey; to: ZoneKey; oldTotal: number; pending: boolean } | null>(null)
 
   // Cache the window list in sessionStorage so "Add more windows" (and
   // accidental refreshes) never lose what's been typed.
@@ -340,29 +381,31 @@ function DIYCalculator() {
     setWindows(windows.filter(w => w.id !== id))
   }
 
-  // Price per square meter for property types
-  const propertyPrices: Record<string, number> = {
-    house: 99,        // Residential: £99 per m²
-    conservatory: 120, // Conservatory: £120 per m²
-    commercial: 98,   // Commercial: £98 per m²
-  }
+  // Tiers only apply to house + conservatory. Commercial is priced on its single
+  // film and still gets the guarantee upsell.
+  const tierApplies = hasTiers(selectedType)
+  const effectiveTier: TierKey = tierApplies ? tier : "standard"
+  const chosenTier = tiers[effectiveTier]
+  // Premium includes the 10-year guarantee, so there is nothing to upsell.
+  const guaranteeIncluded = tierApplies && tier === "premium"
+  const guaranteeAdded = !guaranteeIncluded && extendedGuarantee
 
-  // Get vehicle price from selected options
+  // Get vehicle price from selected options (zone-specific)
   const getVehiclePrice = () => {
     if (category !== "vehicle" || !vehicleType || !doorCount) return 0
-    return vehiclePricing[vehicleType][doorCount].price
+    return zone.vehicle[vehicleType][doorCount]
   }
 
   // Get vehicle description from selected options
   const getVehicleDescription = () => {
     if (category !== "vehicle" || !vehicleType || !doorCount) return ""
-    return vehiclePricing[vehicleType][doorCount].description
+    return vehiclePackages[vehicleType][doorCount].description
   }
 
   // Get vehicle windows info from selected options
   const getVehicleWindows = () => {
     if (category !== "vehicle" || !vehicleType || !doorCount) return ""
-    return vehiclePricing[vehicleType][doorCount].windows
+    return vehiclePackages[vehicleType][doorCount].windows
   }
 
   // Get vehicle label from selected options
@@ -376,22 +419,30 @@ function DIYCalculator() {
     return category === "vehicle" && vehicleType !== null && doorCount !== null
   }
 
-  // Extended guarantee upsell (+£19 vs standard 5 years)
-  const EXTENDED_GUARANTEE_YEARS = 10
-  const guaranteePrice = GUARANTEE_PRICE
-  const extendedGuaranteePerYear = (guaranteePrice / EXTENDED_GUARANTEE_YEARS).toFixed(2)
-
-  // All pricing rules (per-window £10 floor, £100 job floor, discount and
-  // guarantee ordering) live in src/lib/pricing.ts.
+  // All pricing rules (per-window £10 floor, £100 job floor, discount, voucher
+  // and guarantee ordering) live in src/lib/pricing.ts. The rate is the
+  // chosen tier's zone rate; the upsell is only priced when it is not included.
   const getQuote = () => {
     if (category === "vehicle") {
       return quoteVehicle(getVehiclePrice(), extendedGuarantee)
     }
-    const pricePerSqM = selectedType ? propertyPrices[selectedType] || 60 : 0
-    return quoteProperty(windows, pricePerSqM, extendedGuarantee)
+    const pricePerSqM = selectedType ? rateFor(zone, selectedType as PropertyRateKey, effectiveTier) : 0
+    return quoteProperty(windows, pricePerSqM, guaranteeAdded)
   }
 
-  // Log the funnel's price-shown moment once per arrival at the summary step
+  // Quoted as a pound figure everywhere: what the 10-year upgrade would add
+  // to the total on screen right now.
+  const guaranteeUpgradePrice = () => {
+    const base = quoteProperty(
+      windows,
+      selectedType ? rateFor(zone, selectedType as PropertyRateKey, effectiveTier) : 0,
+      true
+    )
+    return base.guaranteeCost
+  }
+
+  // Log the funnel's price-shown moment once per arrival at the summary step,
+  // and again if the area or film (and therefore the price) changes while it is shown.
   useEffect(() => {
     if (step === 4) {
       const q = getQuote()
@@ -402,17 +453,72 @@ function DIYCalculator() {
         pricePerSqM: q.pricePerSqM,
         projectType: category === "vehicle" ? "vehicle" : selectedType,
         jobFloorApplied: q.jobFloorApplied,
-        guarantee: extendedGuarantee,
+        guarantee: guaranteeAdded || guaranteeIncluded,
+        tier: tierApplies ? tier : null,
+        guarantee_added: guaranteeAdded,
+        guarantee_included: guaranteeIncluded,
+        guarantee_price: guaranteeIncluded ? 0 : guaranteeUpgradePrice(),
+        zone: zoneKey,
+        zoneSource,
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step])
+  }, [step, zoneKey, tier])
+
+  const chooseTier = (next: TierKey) => {
+    if (next !== tier) {
+      track('tier_selected', {
+        tier: next,
+        from: tier,
+        projectType: selectedType,
+        pricePerSqM: selectedType ? rateFor(zone, selectedType as PropertyRateKey, next) : null,
+        zone: zoneKey,
+        step,
+      })
+    }
+    setTier(next)
+    // Premium includes the guarantee; an upsell ticked on Standard shouldn't carry over.
+    if (next === "premium") setExtendedGuarantee(false)
+  }
+
+  // The postcode-driven reprice is "rendered" once the zone it asked for is
+  // the zone this render was computed with.
+  useEffect(() => {
+    setReprice((r) => (r && r.pending && r.to === zoneKey ? { ...r, pending: false } : r))
+  }, [zoneKey])
+
+  /**
+   * Reconfirms the pricing area from the postcode. If it differs from the
+   * area on screen, the zone switches, the total recalculates visibly (old
+   * total struck through) and submit is held until the new total has rendered.
+   * Returns true when a reprice was triggered.
+   */
+  const reconcilePostcode = (rawPostcode: string): boolean => {
+    const derived = zoneFromPostcode(rawPostcode)
+    setPostcodeZone(derived)
+    if (derived && derived !== zoneKey) {
+      const current = getQuote()
+      setReprice({ from: zoneKey, to: derived, oldTotal: current.finalTotal, pending: true })
+      setZone(derived, "postcode")
+      return true
+    }
+    return false
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setIsSubmitting(true)
-    
     const formData = new FormData(e.currentTarget)
+
+    // Belt and braces: never submit a total priced for a different area than
+    // the postcode says. If the postcode moves the zone, show the reprice and
+    // let the customer re-read the total before submitting.
+    if (category === "property") {
+      const typedPostcode = formData.get('postcode')?.toString() || ''
+      if (reconcilePostcode(typedPostcode)) return
+    }
+    if (reprice?.pending) return
+
+    setIsSubmitting(true)
     const currentQuote = getQuote()
 
     const discountAmount = currentQuote.discountAmount.toFixed(2)
@@ -440,13 +546,14 @@ function DIYCalculator() {
       const vehicleDescription = getVehicleDescription()
 
       leadService = `DIY Calculator — Vehicle (${vehicleLabel})`
-      leadQuoteSummary = `Quote: £${finalPrice} incl. 10% DIY discount${extendedGuarantee ? `, 10yr guarantee (+£${guaranteePrice})` : ''}. Package: ${vehicleDescription}`
+      leadQuoteSummary = `Quote: £${finalPrice} incl. 10% DIY discount${extendedGuarantee ? `, 10yr guarantee (+£${GUARANTEE_PRICE})` : ''}. Package: ${vehicleDescription} (${zone.label})`
 
       formData.append('_subject', `New Vehicle Quote Request - ${vehicleLabel} - £${finalPrice}${extendedGuarantee ? ' (10yr Guarantee)' : ''}`)
       formData.append('Category', 'Vehicle')
+      formData.append('Pricing Area', zone.label)
       formData.append('Vehicle Type', vehicleLabel)
       formData.append('Package', vehicleDescription)
-      formData.append('10 Year Guarantee', extendedGuarantee ? `YES (+£${guaranteePrice})` : 'No - Standard 5 Year')
+      formData.append('10 Year Guarantee', extendedGuarantee ? `YES (+£${GUARANTEE_PRICE})` : 'No - Standard 5 Year')
       formData.append('Subtotal', `£${currentQuote.subtotal.toFixed(2)}`)
       formData.append('DIY Calculator Discount (10%)', `-£${discountAmount}`)
       formData.append('Final Total (with 10% DIY discount)', `£${finalPrice}`)
@@ -456,18 +563,39 @@ function DIYCalculator() {
                              selectedType === 'conservatory' ? 'Conservatory' : 
                              selectedType === 'commercial' ? 'Commercial' : selectedType
 
-      leadService = `DIY Calculator — ${projectTypeName || 'Property'}`
+      const tierSuffix = tierApplies ? ` (${chosenTier.label})` : ''
+      leadService = `DIY Calculator — ${projectTypeName || 'Property'}${tierSuffix}`
+      const guaranteeLine = guaranteeAdded
+        ? ` + ${guaranteeUpsell.years}-year guarantee ${formatGBP(currentQuote.guaranteeCost)}`
+        : guaranteeIncluded
+          ? ` (${chosenTier.guaranteeYears}-year guarantee included)`
+          : ''
       const quoteLine = currentQuote.jobFloorApplied
-        ? `£${currentQuote.baseTotal.toFixed(2)} (minimum job charge)${extendedGuarantee ? ` + £${guaranteePrice} 10yr guarantee = £${finalPrice}` : ''}`
-        : `£${finalPrice} incl. 10% DIY discount${extendedGuarantee ? `, 10yr guarantee (+£${guaranteePrice})` : ''}`
-      leadQuoteSummary = `Quote: ${quoteLine}. ${windows.length} window(s), ${currentQuote.totalAreaSqM.toFixed(2)}m² @ £${currentQuote.pricePerSqM}/m²`
+        ? `£${currentQuote.baseTotal.toFixed(2)} (minimum job charge)${guaranteeLine}${guaranteeAdded ? ` = £${finalPrice}` : ''}`
+        : `£${finalPrice} incl. 10% DIY discount${guaranteeLine}`
+      const filmLine = tierApplies ? ` Film: ${chosenTier.label} (${chosenTier.film}).` : ''
+      leadQuoteSummary = `Quote: ${quoteLine}. ${windows.length} window(s), ${currentQuote.totalAreaSqM.toFixed(2)}m² @ £${currentQuote.pricePerSqM}/m² (${zone.label}).${filmLine}`
+      if (postcodeZone === null) {
+        leadQuoteSummary += ` ${UNMAPPED_POSTCODE_LINE}`
+      }
 
-      formData.append('_subject', `New Property Quote Request - ${projectTypeName} - £${finalPrice}${extendedGuarantee ? ' (10yr Guarantee)' : ''}`)
+      formData.append('_subject', `New Property Quote Request - ${projectTypeName}${tierSuffix} - £${finalPrice}${guaranteeAdded ? ' (10yr Guarantee)' : ''}`)
       formData.append('Category', 'Property')
       formData.append('Project Type', projectTypeName || 'Not specified')
+      if (tierApplies) {
+        formData.append('Film Tier', `${chosenTier.label} — ${chosenTier.film}`)
+      }
+      formData.append('Pricing Area', `${zone.label}${postcodeZone === null ? ' (postcode not matched — confirm pricing)' : ''}`)
       formData.append('Total Area (m²)', currentQuote.totalAreaSqM.toFixed(2))
       formData.append('Price per m²', `£${currentQuote.pricePerSqM}`)
-      formData.append('10 Year Guarantee', extendedGuarantee ? `YES (+£${guaranteePrice})` : 'No - Standard 5 Year')
+      formData.append(
+        '10 Year Guarantee',
+        guaranteeIncluded
+          ? 'Included with Premium'
+          : guaranteeAdded
+            ? `YES (+${formatGBP(currentQuote.guaranteeCost)})`
+            : 'No - Standard 5 Year'
+      )
       formData.append('Subtotal', `£${currentQuote.subtotal.toFixed(2)}`)
       formData.append('DIY Calculator Discount (10%)', `-£${discountAmount}`)
       if (currentQuote.jobFloorApplied) {
@@ -509,7 +637,18 @@ function DIYCalculator() {
     )
 
     if (success) {
-      track('calc_submitted', { total: Number(finalPrice), jobFloorApplied: currentQuote.jobFloorApplied })
+      track('calc_submitted', {
+        total: Number(finalPrice),
+        jobFloorApplied: currentQuote.jobFloorApplied,
+        projectType: category === "vehicle" ? "vehicle" : selectedType,
+        tier: category === "property" && tierApplies ? tier : null,
+        guarantee_added: category === "vehicle" ? extendedGuarantee : guaranteeAdded,
+        guarantee_included: category === "property" && guaranteeIncluded,
+        guarantee_price: Number(currentQuote.guaranteeCost.toFixed(2)),
+        zone: zoneKey,
+        zoneSource,
+        postcodeMatched: postcodeZone !== null,
+      })
       setIsSubmitted(true)
     } else {
       alert('There was an error submitting the form. Please try again.')
@@ -546,7 +685,10 @@ function DIYCalculator() {
               setVehicleType(null)
               setDoorCount(null)
               setWindows([])
+              setTier(defaultTier)
               setExtendedGuarantee(false)
+              setPostcodeZone(undefined)
+              setReprice(null)
             }} variant="outline" size="lg">
               Start New Quote
             </Button>
@@ -562,17 +704,12 @@ function DIYCalculator() {
         {/* Progress indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            {/* Show 2 steps for vehicles, 4 steps for properties */}
-            {(category === "vehicle" ? [1, 2] : [1, 2, 3, 4]).map((s, index, arr) => {
-              // For vehicles: step 1 = select, step 4 = review (displayed as step 2)
-              const displayStep = category === "vehicle" && s === 2 ? 2 : s
-              const isActive = category === "vehicle" 
-                ? (s === 1 ? step >= 1 : step >= 4)
-                : step >= s
-              const lineActive = category === "vehicle"
-                ? (s === 1 ? step >= 4 : false)
-                : step > s
-              
+            {/* Vehicles: select → review. Tiered property: type → windows → film → review.
+                Commercial has one film, so its tier step is skipped. */}
+            {(category === "vehicle" ? [1, 4] : tierApplies || !selectedType ? [1, 2, 3, 4] : [1, 2, 4]).map((s, index, arr) => {
+              const isActive = step >= s
+              const lineActive = step > s
+
               return (
                 <div key={s} className="flex items-center">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
@@ -580,7 +717,7 @@ function DIYCalculator() {
                       ? "bg-primary text-primary-foreground" 
                       : "bg-muted text-muted-foreground"
                   }`}>
-                    {displayStep}
+                    {index + 1}
                   </div>
                   {index < arr.length - 1 && (
                     <div className={`w-12 h-1 mx-1 rounded transition-all ${
@@ -594,9 +731,14 @@ function DIYCalculator() {
           <p className="text-center text-muted-foreground">
             {step === 1 && "Select what you want tinted"}
             {step === 2 && category === "property" && "Enter window measurements"}
-            {step === 3 && "Upgrade your guarantee"}
+            {step === 3 && "Choose your film"}
             {step === 4 && "Review & submit"}
           </p>
+          {/* Always visible while prices are on screen: which area, and a one-tap change */}
+          <div className="mt-4 flex flex-col items-center gap-2">
+            <ZoneChip onChange={() => setReprice(null)} />
+            {step === 1 && <ZoneNotice />}
+          </div>
         </div>
 
         <Card className="glass">
@@ -1077,7 +1219,7 @@ function DIYCalculator() {
                     <Button
                       variant="electric"
                       size="lg"
-                      onClick={() => setStep(3)}
+                      onClick={() => setStep(tierApplies ? 3 : 4)}
                       disabled={windows.some(w => w.width === 0 || w.height === 0)}
                       className="gap-2"
                     >
@@ -1088,7 +1230,8 @@ function DIYCalculator() {
                 </motion.div>
               )}
 
-              {/* Step 3: 10 Year Guarantee Upsell */}
+              {/* Step 3: Film tier — shown before any total, so the price the
+                  customer first sees is already for the film they chose. */}
               {step === 3 && (
                 <motion.div
                   key="step3"
@@ -1098,150 +1241,23 @@ function DIYCalculator() {
                   className="space-y-8"
                 >
                   <div className="text-center">
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", bounce: 0.5, delay: 0.2 }}
-                      className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/30"
-                    >
-                      <Shield className="h-10 w-10 text-white" />
-                    </motion.div>
-                    <h3 className="text-2xl font-bold mb-2">Upgrade to 10 Year Guarantee</h3>
+                    <h3 className="text-2xl font-bold mb-2">Choose your film</h3>
                     <p className="text-muted-foreground">
-                      Ultimate peace of mind for just a little extra
+                      Both give one-way privacy by day. Premium keeps the view from inside clear and doubles the guarantee.
                     </p>
                   </div>
 
-                  {/* Upsell Card */}
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="relative"
-                  >
-                    <Card 
-                      className={`cursor-pointer transition-all overflow-hidden ${
-                        extendedGuarantee 
-                          ? "border-2 border-amber-500 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-red-500/10 shadow-xl shadow-amber-500/20" 
-                          : "border-2 border-dashed border-border hover:border-amber-500/50"
-                      }`}
-                      onClick={() => setExtendedGuarantee(!extendedGuarantee)}
-                    >
-                      {extendedGuarantee && (
-                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500" />
-                      )}
-                      <CardContent className="p-6">
-                        <div className="flex items-start gap-4">
-                          {/* Checkbox */}
-                          <motion.div 
-                            className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                              extendedGuarantee 
-                                ? "bg-gradient-to-br from-amber-500 to-orange-500 border-amber-500" 
-                                : "border-muted-foreground/50"
-                            }`}
-                            whileTap={{ scale: 0.9 }}
-                          >
-                            {extendedGuarantee && (
-                              <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ type: "spring", bounce: 0.5 }}
-                              >
-                                <Check className="h-5 w-5 text-white" />
-                              </motion.div>
-                            )}
-                          </motion.div>
-
-                          {/* Content */}
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-                              <h4 className="text-xl font-bold">10 Year Guarantee</h4>
-                              <div className="flex items-center gap-2">
-                                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-lg px-3 py-1">
-                                  Just +£{guaranteePrice}
-                                </Badge>
-                              </div>
-                            </div>
-                            
-                            <p className="text-muted-foreground mb-4">
-                              Get <span className="font-semibold text-foreground">double the coverage</span> of our standard 5-year guarantee. 
-                              Any problems at all? We&apos;ve got you covered.
-                            </p>
-
-                            <div className="grid sm:grid-cols-2 gap-3">
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
-                                  <Check className="h-4 w-4 text-green-500" />
-                                </div>
-                                <span className="text-sm">Peeling? <span className="font-medium">Replaced free</span></span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
-                                  <Check className="h-4 w-4 text-green-500" />
-                                </div>
-                                <span className="text-sm">Bubbles? <span className="font-medium">Replaced free</span></span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
-                                  <Check className="h-4 w-4 text-green-500" />
-                                </div>
-                                <span className="text-sm">Discoloration? <span className="font-medium">Replaced free</span></span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
-                                  <Check className="h-4 w-4 text-green-500" />
-                                </div>
-                                <span className="text-sm">Any issues? <span className="font-medium">No questions asked</span></span>
-                              </div>
-                            </div>
-
-                            {extendedGuarantee && (
-                              <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: "auto" }}
-                                className="mt-4 pt-4 border-t border-amber-500/30"
-                              >
-                                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
-                                  <Sparkles className="h-5 w-5" />
-                                  <span className="font-semibold">You&apos;re covered for 10 years!</span>
-                                </div>
-                              </motion.div>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-
-                  {/* Value proposition */}
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="text-center"
-                  >
-                    <p className="text-sm text-muted-foreground">
-                      That&apos;s just <span className="font-semibold text-foreground">£{extendedGuaranteePerYear} per year</span> for complete peace of mind
-                    </p>
-                  </motion.div>
-
-                  {/* Skip option */}
-                  {!extendedGuarantee && (
-                    <motion.p 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.6 }}
-                      className="text-center text-sm text-muted-foreground"
-                    >
-                      Not interested? No problem — you&apos;re still covered by our standard 5-year guarantee
-                    </motion.p>
-                  )}
+                  <TierCards
+                    value={tier}
+                    onChange={chooseTier}
+                    rateType={selectedType === "conservatory" ? "conservatory" : "house"}
+                  />
 
                   <div className="flex justify-between">
                     <Button
                       variant="outline"
                       size="lg"
-                      onClick={() => setStep(category === "vehicle" ? 1 : 2)}
+                      onClick={() => setStep(2)}
                       className="gap-2"
                     >
                       <ArrowLeft className="h-5 w-5" />
@@ -1252,8 +1268,9 @@ function DIYCalculator() {
                       size="lg"
                       onClick={() => setStep(4)}
                       className="gap-2"
+                      data-tier-continue
                     >
-                      {extendedGuarantee ? "Continue with 10 Year Guarantee" : "Continue with Standard Guarantee"}
+                      Continue with {tiers[tier].label}
                       <ArrowRight className="h-5 w-5" />
                     </Button>
                   </div>
@@ -1283,6 +1300,21 @@ function DIYCalculator() {
                         <span className="text-muted-foreground">Project Type</span>
                         <span className="font-medium capitalize">{selectedType === "house" ? "Residential" : selectedType}</span>
                       </div>
+                      {tierApplies && (
+                        <div className="flex justify-between items-center gap-3">
+                          <span className="text-muted-foreground">Film</span>
+                          <span className="font-medium text-right" data-quote-tier={tier}>
+                            {chosenTier.label} <span className="text-muted-foreground font-normal">({chosenTier.film})</span>
+                            <button
+                              type="button"
+                              onClick={() => setStep(3)}
+                              className="ml-2 text-sm font-medium text-primary underline underline-offset-2 hover:text-primary/80"
+                            >
+                              Compare tiers
+                            </button>
+                          </span>
+                        </div>
+                      )}
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Windows</span>
                         <span className="font-medium">{windows.length} window{windows.length !== 1 ? 's' : ''}</span>
@@ -1291,9 +1323,13 @@ function DIYCalculator() {
                         <span className="text-muted-foreground">Total Area</span>
                         <span className="font-medium">{quote.totalAreaSqM.toFixed(2)} m²</span>
                       </div>
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-center gap-3">
                         <span className="text-muted-foreground">Price per m²</span>
                         <span className="font-medium">£{quote.pricePerSqM}</span>
+                      </div>
+                      <div className="flex justify-between items-center gap-3">
+                        <span className="text-muted-foreground">Pricing area</span>
+                        <ZoneChip size="sm" onChange={() => setReprice(null)} />
                       </div>
 
                       {/* Per-window breakdown — shows the £10 minimum transparently */}
@@ -1328,44 +1364,6 @@ function DIYCalculator() {
                       </div>
                     </div>
                   )}
-
-                  {/* Guarantee Selection */}
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className={`relative overflow-hidden rounded-xl border-2 p-4 ${
-                      extendedGuarantee 
-                        ? "border-amber-500 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-red-500/10" 
-                        : "border-border bg-card/50"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          extendedGuarantee 
-                            ? "bg-gradient-to-br from-amber-500 to-orange-500" 
-                            : "bg-primary/20"
-                        }`}>
-                          <Shield className={`h-5 w-5 ${extendedGuarantee ? "text-white" : "text-primary"}`} />
-                        </div>
-                        <div>
-                          <p className="font-semibold">
-                            {extendedGuarantee ? "10 Year Guarantee" : "Standard 5 Year Guarantee"}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {extendedGuarantee ? "Complete peace of mind" : "Included with your tint"}
-                          </p>
-                        </div>
-                      </div>
-                      {extendedGuarantee ? (
-                        <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
-                          +£{guaranteePrice}
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">Included</Badge>
-                      )}
-                    </div>
-                  </motion.div>
 
                   {/* Single Total with DIY Calculator 10% Discount */}
                   <div className="space-y-4">
@@ -1407,6 +1405,36 @@ function DIYCalculator() {
                         )}
 
                         <p className="text-sm font-medium text-muted-foreground mb-2">Your Total</p>
+
+                        {/* Postcode moved the customer to a different area — shown before they can submit */}
+                        <AnimatePresence>
+                          {reprice && (
+                            <motion.div
+                              key={`${reprice.from}-${reprice.to}`}
+                              initial={{ opacity: 0, y: -6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0 }}
+                              role="status"
+                              aria-live="polite"
+                              data-reprice-notice
+                              data-reprice-pending={reprice.pending ? "true" : "false"}
+                              className="mx-auto mb-4 max-w-md rounded-xl border border-amber-400/60 bg-amber-50 px-4 py-3 text-left text-sm text-amber-900"
+                            >
+                              <p className="font-semibold">
+                                Your postcode is in the {zones[reprice.to].label} area — prices updated.
+                              </p>
+                              <p className="mt-1 text-amber-800">
+                                <span className="line-through">£{reprice.oldTotal.toFixed(2)}</span>
+                                <span aria-hidden> → </span>
+                                <span className="sr-only">now</span>
+                                <span className="font-semibold">
+                                  {reprice.pending ? "recalculating…" : `£${quote.finalTotal.toFixed(2)}`}
+                                </span>
+                                <span className="ml-1 text-xs">(10% DIY discount and minimums reapplied)</span>
+                              </p>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
 
                         {/* Strikethrough original */}
                         {!quote.jobFloorApplied && (
@@ -1499,6 +1527,94 @@ function DIYCalculator() {
                         </motion.div>
                       </div>
                     </motion.div>
+
+                    {/* Guarantee — Premium includes 10 years; everything else can add it
+                        for max(£29, 10% of the total), always shown as a pound figure. */}
+                    {category === "property" && (guaranteeIncluded ? (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        data-guarantee-included
+                        className="flex items-center gap-3 rounded-xl border-2 border-green-500/40 bg-green-500/5 p-4"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
+                          <Shield className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-semibold">{chosenTier.guaranteeYears}-year guarantee included ✓</p>
+                          <p className="text-sm text-muted-foreground">Film and workmanship covered for a decade with {chosenTier.label}.</p>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        data-guarantee-upsell
+                        data-guarantee-added={guaranteeAdded ? "true" : "false"}
+                        className={`relative overflow-hidden rounded-xl border-2 p-4 transition-colors ${
+                          guaranteeAdded
+                            ? "border-amber-500 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-red-500/10"
+                            : "border-dashed border-amber-500/50 bg-gradient-to-r from-amber-500/5 via-orange-500/5 to-red-500/5"
+                        }`}
+                      >
+                        <div className="flex items-start gap-4">
+                          <motion.button
+                            type="button"
+                            role="checkbox"
+                            aria-checked={guaranteeAdded}
+                            aria-label={`Extend your guarantee to ${guaranteeUpsell.years} years for ${formatGBP(guaranteeUpgradePrice())}`}
+                            onClick={() => setExtendedGuarantee(!extendedGuarantee)}
+                            className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all mt-0.5 ${
+                              guaranteeAdded
+                                ? "bg-gradient-to-br from-amber-500 to-orange-500 border-amber-500"
+                                : "border-amber-500/50 hover:border-amber-500 hover:bg-amber-500/10"
+                            }`}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            {guaranteeAdded && <Check className="h-5 w-5 text-white" />}
+                          </motion.button>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <Shield className="h-5 w-5 text-amber-500" />
+                              <p className="font-semibold">
+                                {guaranteeAdded
+                                  ? `${guaranteeUpsell.years}-year guarantee added`
+                                  : `Extend your guarantee to ${guaranteeUpsell.years} years`}
+                              </p>
+                              <span className="text-amber-600 dark:text-amber-400 font-bold" data-guarantee-price>
+                                — {formatGBP(guaranteeAdded ? quote.guaranteeCost : guaranteeUpgradePrice())}
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-3">
+                              Covers film and workmanship for a decade instead of five years. Any peeling, bubbles or discolouration and we replace the film,{" "}
+                              <span className="font-medium text-foreground">no questions asked</span>.
+                            </p>
+                            {guaranteeAdded ? (
+                              <button
+                                type="button"
+                                onClick={() => setExtendedGuarantee(false)}
+                                className="text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                              >
+                                Remove — keep the {chosenTier.guaranteeYears}-year guarantee
+                              </button>
+                            ) : (
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => setExtendedGuarantee(true)}
+                                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0 gap-1"
+                              >
+                                <Check className="h-4 w-4" />
+                                Add {guaranteeUpsell.years}-year guarantee for {formatGBP(guaranteeUpgradePrice())}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
 
                     {/* Flexible payment helper note */}
                     <motion.div 
@@ -1601,9 +1717,26 @@ function DIYCalculator() {
                             id="calcPostcode"
                             name="postcode"
                             required
+                            autoComplete="postal-code"
                             placeholder="e.g. IM2 1BB"
                             className="bg-background/50"
+                            onBlur={(e) => reconcilePostcode(e.target.value)}
+                            onChange={(e) => {
+                              // Reconfirm as soon as the outward code parses, so the
+                              // customer sees any change before reaching the button.
+                              if (zoneFromPostcode(e.target.value)) reconcilePostcode(e.target.value)
+                            }}
                           />
+                          {postcodeZone === null && (
+                            <p className="text-xs text-muted-foreground" data-postcode-unmapped>
+                              We couldn&apos;t match that postcode to an area. {UNMAPPED_POSTCODE_LINE}
+                            </p>
+                          )}
+                          {postcodeZone && postcodeZone === zoneKey && (
+                            <p className="text-xs text-muted-foreground">
+                              Priced for {zone.label}.
+                            </p>
+                          )}
                         </div>
                       </div>
                     )}
@@ -1618,55 +1751,6 @@ function DIYCalculator() {
                         className="bg-background/50 resize-none"
                       />
                     </div>
-
-                    {/* Last Chance Guarantee Upsell - Only show if not already selected */}
-                    {!extendedGuarantee && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="relative overflow-hidden rounded-xl border-2 border-dashed border-amber-500/50 bg-gradient-to-r from-amber-500/5 via-orange-500/5 to-red-500/5 p-4"
-                      >
-                        <div className="absolute -top-1 -right-1">
-                          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-xs">
-                            LAST CHANCE
-                          </Badge>
-                        </div>
-                        <div className="flex items-start gap-4">
-                          <motion.button
-                            type="button"
-                            onClick={() => setExtendedGuarantee(true)}
-                            className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all mt-0.5 ${
-                              extendedGuarantee 
-                                ? "bg-gradient-to-br from-amber-500 to-orange-500 border-amber-500" 
-                                : "border-amber-500/50 hover:border-amber-500 hover:bg-amber-500/10"
-                            }`}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            {extendedGuarantee && <Check className="h-5 w-5 text-white" />}
-                          </motion.button>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Shield className="h-5 w-5 text-amber-500" />
-                              <p className="font-semibold">Add 10 Year Guarantee?</p>
-                              <span className="text-amber-600 dark:text-amber-400 font-bold">Just +£{guaranteePrice}</span>
-                            </div>
-                            <p className="text-sm text-muted-foreground mb-2">
-                              Any peeling, bubbles, or problems at all — we replace the tint <span className="font-medium text-foreground">no questions asked</span>, at no extra cost.
-                            </p>
-                            <Button
-                              type="button"
-                              size="sm"
-                              onClick={() => setExtendedGuarantee(true)}
-                              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0 gap-1"
-                            >
-                              <Check className="h-4 w-4" />
-                              Yes, add 10 Year Guarantee
-                            </Button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
 
                     <p className="text-center text-xs text-muted-foreground leading-relaxed max-w-xl mx-auto">
                       By booking ManxTints LTD you agree to our{" "}
@@ -1684,7 +1768,7 @@ function DIYCalculator() {
                         type="button"
                         variant="outline"
                         size="lg"
-                        onClick={() => setStep(3)}
+                        onClick={() => setStep(category === "vehicle" ? 1 : tierApplies ? 3 : 2)}
                         className="gap-2"
                       >
                         <ArrowLeft className="h-5 w-5" />
@@ -1695,7 +1779,8 @@ function DIYCalculator() {
                         variant="electric"
                         size="lg"
                         className="gap-2"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || Boolean(reprice?.pending)}
+                        aria-disabled={isSubmitting || Boolean(reprice?.pending)}
                       >
                         {isSubmitting ? (
                           <>

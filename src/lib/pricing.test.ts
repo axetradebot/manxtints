@@ -2,12 +2,16 @@ import { describe, it, expect } from "vitest"
 import {
   quoteProperty,
   quoteVehicle,
+  guaranteeUpsellCost,
+  formatGBP,
   MIN_JOB,
   MIN_WINDOW,
   GUARANTEE_PRICE,
+  guaranteeUpsell,
 } from "./pricing"
+import { rateFor, zones } from "./pricing.zones"
 
-const RESIDENTIAL_RATE = 99
+const RESIDENTIAL_RATE = zones.standard.rates.house.standard // £99
 
 describe("per-window £10 floor", () => {
   it("floors a tiny window to £10 before summing", () => {
@@ -75,22 +79,66 @@ describe("normal mixed job unchanged vs current maths", () => {
   })
 })
 
-describe("guarantee ordering", () => {
+describe("guarantee upsell = max(£29, 10% of post-floor total)", () => {
+  it("is 10% of the total when that beats the £29 floor", () => {
+    // 4.2m² @ £99 = £415.80 → ×0.9 = £374.22 → 10% = £37.42
+    const q = quoteProperty([{ name: "Bay", width: 300, height: 140 }], RESIDENTIAL_RATE, true)
+    expect(q.baseTotal).toBeCloseTo(374.22, 2)
+    expect(q.guaranteeCost).toBeCloseTo(37.42, 2)
+    expect(q.finalTotal).toBeCloseTo(374.22 + 37.42, 2)
+  })
+
   it("adds the guarantee AFTER discount and job floor (not discounted)", () => {
-    // 2.4m² @ £99 = £237.60 → ×0.9 = £213.84 → +£19 = £232.84
+    // 2.4m² @ £99 = £237.60 → ×0.9 = £213.84 → 10% = £21.38 → floor £29
     const windows = [
       { name: "Lounge", width: 100, height: 60 },
       { name: "Patio", width: 150, height: 120 },
     ]
     const q = quoteProperty(windows, RESIDENTIAL_RATE, true)
-    expect(q.guaranteeCost).toBe(GUARANTEE_PRICE)
-    expect(q.finalTotal).toBeCloseTo(237.6 * 0.9 + GUARANTEE_PRICE, 2)
+    expect(q.guaranteeCost).toBe(guaranteeUpsell.minPounds)
+    expect(q.finalTotal).toBeCloseTo(237.6 * 0.9 + 29, 2)
   })
 
-  it("guarantee sits on top of the £100 floor", () => {
+  it("guarantee sits on top of the £100 floor at the £29 minimum", () => {
     const q = quoteProperty([{ name: "W1", width: 30, height: 30 }], RESIDENTIAL_RATE, true)
     expect(q.baseTotal).toBe(MIN_JOB)
-    expect(q.finalTotal).toBe(MIN_JOB + GUARANTEE_PRICE)
+    expect(q.guaranteeCost).toBe(29)
+    expect(q.finalTotal).toBe(MIN_JOB + 29)
+  })
+
+  it("rounds to the penny and formats as a pound figure", () => {
+    expect(guaranteeUpsellCost(486)).toBe(48.6)
+    expect(formatGBP(48.6)).toBe("£48.60")
+    expect(formatGBP(412)).toBe("£412")
+    expect(guaranteeUpsellCost(0)).toBe(0)
+  })
+
+  it("Premium rate with the guarantee off (included) adds nothing", () => {
+    const rate = rateFor(zones.standard, "house", "premium")
+    const q = quoteProperty([{ name: "Bay", width: 300, height: 140 }], rate, false)
+    expect(q.pricePerSqM).toBe(125)
+    expect(q.guaranteeCost).toBe(0)
+  })
+})
+
+describe("voucher ordering", () => {
+  it("applies after the DIY discount and before the job floor, and the upsell follows the floored total", () => {
+    // 2.4m² @ £99 = £237.60 → ×0.9 = £213.84 → −£150 voucher = £63.84 → floor £100 → +£29
+    const windows = [
+      { name: "Lounge", width: 100, height: 60 },
+      { name: "Patio", width: 150, height: 120 },
+    ]
+    const q = quoteProperty(windows, RESIDENTIAL_RATE, true, { voucher: 150 })
+    expect(q.voucherAmount).toBe(150)
+    expect(q.jobFloorApplied).toBe(true)
+    expect(q.baseTotal).toBe(MIN_JOB)
+    expect(q.finalTotal).toBe(MIN_JOB + 29)
+  })
+
+  it("never takes off more than the discounted total", () => {
+    const q = quoteProperty([{ name: "W1", width: 100, height: 60 }], RESIDENTIAL_RATE, false, { voucher: 999 })
+    expect(q.voucherAmount).toBeCloseTo(q.discountedTotal, 2)
+    expect(q.baseTotal).toBe(MIN_JOB)
   })
 })
 

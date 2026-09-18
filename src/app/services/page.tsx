@@ -8,21 +8,36 @@ import { WindowExplainer } from "@/components/explainer/window-explainer"
 import { GuaranteePanel } from "@/components/trust/guarantee-panel"
 import { FaqSection, type Faq } from "@/components/sections/faq-section"
 import { CtaBand } from "@/components/sections/cta-band"
+import { ZoneChip } from "@/components/zone/zone-chip"
+import { useZone } from "@/components/zone/zone-provider"
+import { TierCards, TierComparison } from "@/components/tiers/tier-cards"
+import { guaranteeUpsell, MIN_JOB } from "@/lib/pricing"
+import { tiers, type GuideRateKey } from "@/lib/pricing.zones"
 import { hasStat, site } from "@/site.config"
 
 /**
  * One calm card per product actually offered. Automotive is currently paused
- * and deliberately not listed. Prices are the existing published guide prices
- * (VAT inclusive) and should be kept in step with the calculator.
+ * and deliberately not listed. Prices are read from the customer's pricing
+ * zone (src/lib/pricing.zones.ts) so they always match the calculator.
  */
-const products = [
+const products: Array<{
+  id: string
+  icon: typeof EyeOff
+  title: string
+  benefit: string
+  bestFor: string
+  /** Key into zone.guide — omitted for products quoted per project. */
+  rate?: GuideRateKey
+  note?: string
+  quoteHref?: string
+}> = [
   {
     id: "privacy",
     icon: EyeOff,
     title: "One-way mirror & privacy film",
     benefit: "Daytime privacy without curtains — a mirror from outside, a clear view from inside.",
     bestFor: "Street-facing lounges, bedrooms, bathrooms and ground-floor offices.",
-    price: "From £99/m²",
+    rate: "privacy",
     note: "Reverses at night with lights on — ask about frosted film for all-hours privacy.",
   },
   {
@@ -31,7 +46,7 @@ const products = [
     title: "Solar & heat control film",
     benefit: `Rejects heat and glare${hasStat(site.filmSpec.heatRejectionPercent) ? ` — up to ${site.filmSpec.heatRejectionPercent}% of solar heat` : ""} — so rooms stay usable in summer.`,
     bestFor: "South- and west-facing rooms, home offices, big glazed extensions.",
-    price: "From £99/m²",
+    rate: "solar",
   },
   {
     id: "frosted",
@@ -39,7 +54,7 @@ const products = [
     title: "Frosted privacy film",
     benefit: "Soft, even light with full privacy — day and night, lights on or off.",
     bestFor: "Bathrooms, front doors, meeting rooms, glass partitions.",
-    price: "From £99/m²",
+    rate: "frosted",
   },
   {
     id: "safety",
@@ -47,7 +62,7 @@ const products = [
     title: "Safety & security film",
     benefit: "Holds broken glass together so it stays in the frame instead of falling in.",
     bestFor: "Doors, low-level glazing, shopfronts and anywhere children play.",
-    price: "From £99/m²",
+    rate: "securityResidential",
   },
   {
     id: "conservatory",
@@ -55,7 +70,7 @@ const products = [
     title: "Conservatory roof film",
     benefit: "Turns a greenhouse back into a room by reflecting heat and glare from the roof.",
     bestFor: "Glass and polycarbonate conservatory roofs, roof lanterns, skylights.",
-    price: "From £120/m²",
+    rate: "conservatory",
   },
   {
     id: "commercial",
@@ -63,7 +78,7 @@ const products = [
     title: "Commercial",
     benefit: "Cooler, glare-free workspaces and discreet privacy for offices and shopfronts.",
     bestFor: "Offices, retail, clinics, schools and public buildings.",
-    price: "From £98/m²",
+    rate: "commercialPrivacy",
     note: "Installed around your opening hours with minimal disruption.",
   },
   {
@@ -72,25 +87,24 @@ const products = [
     title: "Specialist films",
     benefit: "Energy-saving, anti-fog, data-jammer and blast-mitigation films for specific problems.",
     bestFor: "Listed buildings, server rooms, government and high-security sites.",
-    price: "Quoted per project",
     quoteHref: "/quote?tab=enquiry",
   },
 ]
 
-/** Existing published price guide, kept so no pricing information is lost. */
-const priceGuide = [
-  { name: "Privacy film (one-way mirror)", price: "£99/m²" },
-  { name: "Decorative / frosted film", price: "£99/m²" },
-  { name: "Solar / heat-control film", price: "£99/m²" },
-  { name: "Conservatory roof film", price: "£120/m²" },
-  { name: "Commercial privacy film", price: "£98/m²" },
-  { name: "UV blocking film (retail stock protection)", price: "£119/m²" },
-  { name: "Security film (commercial)", price: "£119/m²" },
-  { name: "Security film (residential)", price: "£99/m²" },
-  { name: "Energy saving film", price: "£90/m²" },
-  { name: "Anti-fog film", price: "£200/m²" },
-  { name: "Data jammer film", price: "£900/m²" },
-  { name: "Bomb blast protection film", price: "£100/m²" },
+/** Published price guide — rates per zone live in src/lib/pricing.zones.ts. */
+const priceGuide: Array<{ name: string; rate: GuideRateKey }> = [
+  { name: "Privacy film (one-way mirror)", rate: "privacy" },
+  { name: "Decorative / frosted film", rate: "frosted" },
+  { name: "Solar / heat-control film", rate: "solar" },
+  { name: "Conservatory roof film", rate: "conservatory" },
+  { name: "Commercial privacy film", rate: "commercialPrivacy" },
+  { name: "UV blocking film (retail stock protection)", rate: "uvBlocking" },
+  { name: "Security film (commercial)", rate: "securityCommercial" },
+  { name: "Security film (residential)", rate: "securityResidential" },
+  { name: "Energy saving film", rate: "energySaving" },
+  { name: "Anti-fog film", rate: "antiFog" },
+  { name: "Data jammer film", rate: "dataJammer" },
+  { name: "Bomb blast protection film", rate: "blast" },
 ]
 
 const faqs: Faq[] = [
@@ -98,6 +112,10 @@ const faqs: Faq[] = [
     question: "Which film do I need?",
     answer:
       "Tell us the problem — privacy, heat, glare, fading or safety — on the quote page and we'll recommend the film. Most homes choose one-way mirror film for privacy and heat, and frosted film for bathrooms and doors.",
+  },
+  {
+    question: "What's the difference between Standard and Premium?",
+    answer: `Both give the same one-way privacy by day — the difference is what you see from inside. ${tiers.standard.label} (${tiers.standard.film}) has a slight mirror look from indoors and comes with a ${tiers.standard.guaranteeYears}-year guarantee; ${tiers.premium.label} (${tiers.premium.film}) is clear and non-reflective from inside, rejects more heat and includes a ${tiers.premium.guaranteeYears}-year guarantee.`,
   },
   {
     question: "Does one-way mirror film work at night?",
@@ -111,9 +129,7 @@ const faqs: Faq[] = [
   },
   {
     question: "How long does window film last?",
-    answer: `Quality film lasts 15–25 years indoors with normal care${
-      hasStat(site.guarantee.workmanshipYears) ? `, and every installation carries our ${site.guarantee.workmanshipYears}-year workmanship warranty` : ""
-    }${hasStat(site.guarantee.extendedYears) ? ` (upgradeable to ${site.guarantee.extendedYears} years in the calculator)` : ""}.`,
+    answer: `Quality film lasts 15–25 years indoors with normal care. Every installation includes a ${tiers.standard.guaranteeYears}-year guarantee; ${tiers.premium.label} film includes ${tiers.premium.guaranteeYears} years, and on ${tiers.standard.label} you can extend to ${guaranteeUpsell.years} years in the calculator for ${Math.round(guaranteeUpsell.pctOfTotal * 100)}% of the job total (minimum £${guaranteeUpsell.minPounds}).`,
   },
   {
     question: "Can I clean my windows after tinting?",
@@ -127,6 +143,8 @@ const faqs: Faq[] = [
 ]
 
 export default function ServicesPage() {
+  const { zone } = useZone()
+
   return (
     <div className="relative bg-white">
       {/* Hero */}
@@ -157,6 +175,49 @@ export default function ServicesPage() {
         />
       </div>
 
+      {/* Two film tiers — same cards as the calculator's tier step */}
+      <section id="tiers" className="scroll-mt-24 pb-20 md:pb-28">
+        <div className="container mx-auto px-4">
+          <FadeIn>
+            <div className="mx-auto mb-10 max-w-2xl text-center">
+              <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-primary">Residential &amp; conservatory</p>
+              <h2 className="font-display text-3xl font-bold text-slate-900 md:text-5xl">Two films. One simple choice.</h2>
+              <p className="mt-4 text-lg text-slate-600">
+                Both give you one-way privacy by day. Premium keeps the view from inside clear and doubles the
+                guarantee. Prices are per m² including VAT — the calculator gives you an exact figure.
+              </p>
+            </div>
+          </FadeIn>
+
+          <FadeIn>
+            <div className="mx-auto max-w-4xl space-y-8">
+              <TierCards linkToCalculator />
+              <TierComparison />
+              <p className="text-center text-slate-600">
+                Not sure? Most customers choose Premium for living rooms and Standard for bathrooms, garages and
+                outbuildings.
+              </p>
+              <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <Link
+                  href={`/quote?tier=premium`}
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:bg-primary/90"
+                >
+                  Quote with {tiers.premium.label}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href={`/quote?tier=standard`}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-6 py-3 font-semibold text-slate-800 transition hover:border-primary hover:text-primary"
+                >
+                  Quote with {tiers.standard.label}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          </FadeIn>
+        </div>
+      </section>
+
       {/* Product cards */}
       <section id="residential" className="scroll-mt-24 bg-slate-50 py-20 md:py-28">
         <div className="container mx-auto px-4">
@@ -165,64 +226,93 @@ export default function ServicesPage() {
               <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-primary">What we fit</p>
               <h2 className="font-display text-3xl font-bold text-slate-900 md:text-5xl">Pick the job. We&apos;ll pick the film.</h2>
               <p className="mt-4 text-lg text-slate-600">All prices include VAT. Every job is guaranteed by ManxTints.</p>
+              <div className="mt-5 flex justify-center">
+                <ZoneChip />
+              </div>
             </div>
           </FadeIn>
 
           <Stagger className="grid gap-5 md:grid-cols-2 lg:grid-cols-3" staggerDelay={0.07}>
-            {products.map((product) => (
-              <StaggerItem key={product.id}>
-                <Link href={product.quoteHref ?? "/quote"} className="block h-full">
-                <motion.article
-                  id={product.id}
-                  whileHover={{ y: -6 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 24 }}
-                  className="flex h-full scroll-mt-24 flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-sm"
-                >
-                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-primary">
-                    <product.icon className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-slate-900">{product.title}</h3>
-                  <p className="mt-3 leading-relaxed text-slate-600">{product.benefit}</p>
-                  <dl className="mt-5 space-y-2 text-sm">
-                    <div>
-                      <dt className="font-semibold text-slate-800">Best for</dt>
-                      <dd className="text-slate-600">{product.bestFor}</dd>
+            {products.map((product) => {
+              const href = product.quoteHref ?? "/quote"
+              const price = product.rate ? zone.guide[product.rate] : null
+              return (
+                <StaggerItem key={product.id}>
+                  {/* Stretched-link card: the whole card is one link, the zone chip sits above it and stays tappable. */}
+                  <motion.article
+                    id={product.id}
+                    whileHover={{ y: -6 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                    className="relative flex h-full scroll-mt-24 flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-sm"
+                  >
+                    <Link
+                      href={href}
+                      className="absolute inset-0 z-10 rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                      aria-label={`Get a quote — ${product.title}`}
+                    />
+                    <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-primary">
+                      <product.icon className="h-6 w-6" />
                     </div>
-                    {product.note && (
+                    <h3 className="text-xl font-semibold text-slate-900">{product.title}</h3>
+                    <p className="mt-3 leading-relaxed text-slate-600">{product.benefit}</p>
+                    <dl className="mt-5 space-y-2 text-sm">
                       <div>
-                        <dt className="font-semibold text-slate-800">Worth knowing</dt>
-                        <dd className="text-slate-600">{product.note}</dd>
+                        <dt className="font-semibold text-slate-800">Best for</dt>
+                        <dd className="text-slate-600">{product.bestFor}</dd>
                       </div>
-                    )}
-                  </dl>
-                  <div className="mt-auto flex items-center justify-between gap-3 pt-6">
-                    <span className="text-sm font-semibold text-slate-900">
-                      {product.price}
-                      {product.price.includes("£") && <span className="ml-1 font-normal text-slate-500">inc. VAT</span>}
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
-                      Get a quote <ArrowRight className="h-4 w-4" />
-                    </span>
-                  </div>
-                </motion.article>
-                </Link>
-              </StaggerItem>
-            ))}
+                      {product.note && (
+                        <div>
+                          <dt className="font-semibold text-slate-800">Worth knowing</dt>
+                          <dd className="text-slate-600">{product.note}</dd>
+                        </div>
+                      )}
+                    </dl>
+                    <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-6">
+                      <div className="min-w-0">
+                        <span className="block text-sm font-semibold text-slate-900" data-product-price={product.id}>
+                          {price !== null ? (
+                            <>
+                              from £{price}/m²
+                              <span className="ml-1 font-normal text-slate-500">inc. VAT</span>
+                            </>
+                          ) : (
+                            "Quoted per project"
+                          )}
+                        </span>
+                        {price !== null && (
+                          <span className="relative z-20 mt-2 inline-block">
+                            <ZoneChip size="sm" />
+                          </span>
+                        )}
+                      </div>
+                      <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
+                        Get a quote <ArrowRight className="h-4 w-4" />
+                      </span>
+                    </div>
+                  </motion.article>
+                </StaggerItem>
+              )
+            })}
           </Stagger>
 
           {/* Price guide */}
           <FadeIn delay={0.1}>
             <div className="mx-auto mt-14 max-w-3xl rounded-3xl border border-slate-200 bg-white p-6 md:p-8">
-              <h3 className="text-lg font-semibold text-slate-900">Film price guide</h3>
-              <p className="mt-1 text-sm text-slate-500">
-                Guide prices per square metre, VAT inclusive. Minimum job charge £100. Use the calculator for an exact
-                figure with 10% off.
-              </p>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">Film price guide</h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Guide prices per square metre, VAT inclusive, for {zone.label}. Minimum job charge £{MIN_JOB}. Use the
+                    calculator for an exact figure with 10% off.
+                  </p>
+                </div>
+                <ZoneChip />
+              </div>
               <ul className="mt-5 divide-y divide-slate-100">
                 {priceGuide.map((row) => (
                   <li key={row.name} className="flex items-center justify-between gap-4 py-2.5 text-sm">
                     <span className="text-slate-700">{row.name}</span>
-                    <span className="shrink-0 font-semibold text-slate-900">{row.price}</span>
+                    <span className="shrink-0 font-semibold text-slate-900">£{zone.guide[row.rate]}/m²</span>
                   </li>
                 ))}
               </ul>

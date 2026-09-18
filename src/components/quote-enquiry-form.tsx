@@ -33,6 +33,8 @@ const NEED_OPTIONS = [
 
 const PROPERTY_OPTIONS = ["Home", "Conservatory", "Commercial", "Vehicle"] as const
 
+const FILM_PREFERENCE_OPTIONS = ["Standard", "Premium", "Advise me"] as const
+
 const MAX_PHOTOS = 6
 
 interface PhotoItem {
@@ -54,6 +56,7 @@ export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculato
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [needs, setNeeds] = useState<string[]>([])
   const [propertyType, setPropertyType] = useState<string | null>(null)
+  const [filmPreference, setFilmPreference] = useState<string | null>(null)
   const [photos, setPhotos] = useState<PhotoItem[]>([])
   const [emailError, setEmailError] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -129,6 +132,7 @@ export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculato
     const message = assembleEnquiryMessage({
       needs,
       propertyType,
+      filmPreference,
       description,
       photoUrls: upload.urls,
       photoUploadFailed: upload.failed,
@@ -165,7 +169,7 @@ export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculato
     )
 
     if (success) {
-      track("enquiry_submitted", { needs, propertyType })
+      track("enquiry_submitted", { needs, propertyType, filmPreference })
       photos.forEach((photo) => URL.revokeObjectURL(photo.preview))
       setIsSubmitted(true)
     } else {
@@ -194,6 +198,7 @@ export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculato
                 setIsSubmitted(false)
                 setNeeds([])
                 setPropertyType(null)
+                setFilmPreference(null)
                 setPhotos([])
               }}
               variant="outline"
@@ -301,6 +306,37 @@ export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculato
                     )
                   })}
                 </div>
+              </div>
+
+              <div className="space-y-3">
+                <Label>
+                  Film preference <span className="text-muted-foreground font-normal">(optional)</span>
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {FILM_PREFERENCE_OPTIONS.map((option, index) => {
+                    const selected = filmPreference === option
+                    return (
+                      <motion.button
+                        key={option}
+                        type="button"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.04 }}
+                        onClick={() => setFilmPreference(selected ? null : option)}
+                        className={chipClass(selected)}
+                        aria-pressed={selected}
+                        data-film-preference={option}
+                      >
+                        {selected && <Check className="h-3.5 w-3.5" />}
+                        {option}
+                      </motion.button>
+                    )
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Standard is mirror privacy by day; Premium stays clear from inside and includes a 10-year guarantee.{" "}
+                  <a href="/services#tiers" className="underline underline-offset-2 hover:text-foreground">Compare the two</a>.
+                </p>
               </div>
 
               <div className="space-y-3">

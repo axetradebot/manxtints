@@ -6,6 +6,41 @@ import {
   pruneOldEvents,
   storageBackend,
 } from "./eventStore"
+import { isTierKey, isZoneKey, zoneKeys, zones, type TierKey, type ZoneKey } from "./pricing.zones"
+
+/** Price drop-off filter: a single pricing zone, or every session. */
+export type ZoneFilter = ZoneKey | "all"
+
+export function parseZoneFilter(value: unknown): ZoneFilter {
+  return isZoneKey(value) ? value : "all"
+}
+
+/** Price drop-off filter: a single film tier, or every session. */
+export type TierFilter = TierKey | "all"
+
+export function parseTierFilter(value: unknown): TierFilter {
+  return isTierKey(value) ? value : "all"
+}
+
+export interface TakeRates {
+  /** Premium share of price-shown sessions on tiered jobs (house/conservatory). */
+  premiumTakeRate: number | null
+  premiumShown: number
+  tieredShown: number
+  /** Share of submitted, non-Premium jobs that added the 10-year guarantee. */
+  guaranteeTakeRate: number | null
+  guaranteeAdded: number
+  guaranteeEligible: number
+}
+
+export interface ZoneRow {
+  zone: ZoneKey | "unknown"
+  label: string
+  shown: number
+  submitted: number
+  submitRate: number | null
+  avgShown: number | null
+}
 
 export interface FunnelStep {
   label: string
@@ -36,6 +71,14 @@ export interface Report {
   funnel: FunnelStep[]
   /** Index into funnel of the step with the biggest % drop from its predecessor */
   biggestDropIndex: number | null
+  /** Zone the price drop-off section is filtered to */
+  zoneFilter: ZoneFilter
+  /** Film tier the price drop-off section is filtered to */
+  tierFilter: TierFilter
+  /** Conversion per pricing zone (unfiltered) */
+  zoneRows: ZoneRow[]
+  /** Premium / guarantee take rates (respect the zone filter, not the tier filter) */
+  takeRates: TakeRates
   buckets: PriceBucket[]
   avgShownSubmitters: number | null
   avgShownAbandoners: number | null
@@ -60,7 +103,11 @@ function mean(values: number[]): number | null {
   return values.reduce((a, b) => a + b, 0) / values.length
 }
 
-export async function buildReport(days: number): Promise<Report> {
+export async function buildReport(
+  days: number,
+  zoneFilter: ZoneFilter = "all",
+  tierFilter: TierFilter = "all"
+): Promise<Report> {
   // Opportunistic retention pruning — keeps the store under 12 months of data.
   await pruneOldEvents().catch(() => {})
 
@@ -110,21 +157,84 @@ export async function buildReport(days: number): Promise<Report> {
     total: number
     areaSqM: number
     submitted: boolean
+    zone: ZoneKey | "unknown"
+    /** Film tier at the last price shown; null for commercial / pre-tier sessions */
+    tier: TierKey | null
+    /** From calc_submitted when present (final choice), else the last price shown */
+    guaranteeAdded: boolean
+    guaranteeIncluded: boolean
   }
-  const shownSessions: Shown[] = []
+  const allShownSessions: Shown[] = []
   for (const list of all) {
     const shows = list.filter((e) => e.event === "calc_price_shown")
     if (shows.length === 0) continue
     const last = shows[shows.length - 1]
-    const total = Number((last.payload as { total?: unknown } | null)?.total)
+    const payload = last.payload as {
+      total?: unknown
+      areaSqM?: unknown
+      zone?: unknown
+      tier?: unknown
+      guarantee_added?: unknown
+      guarantee_included?: unknown
+    } | null
+    const total = Number(payload?.total)
     if (!Number.isFinite(total)) continue
-    const areaSqM = Number((last.payload as { areaSqM?: unknown } | null)?.areaSqM)
-    shownSessions.push({
+    const areaSqM = Number(payload?.areaSqM)
+    const submits = list.filter((e) => e.event === "calc_submitted")
+    const submitPayload = (submits[submits.length - 1]?.payload ?? null) as {
+      tier?: unknown
+      guarantee_added?: unknown
+      guarantee_included?: unknown
+    } | null
+    const final = submitPayload ?? payload
+    allShownSessions.push({
       total,
       areaSqM: Number.isFinite(areaSqM) ? areaSqM : 0,
-      submitted: has(list, "calc_submitted"),
+      submitted: submits.length > 0,
+      zone: isZoneKey(payload?.zone) ? payload.zone : "unknown",
+      tier: isTierKey(final?.tier) ? final.tier : null,
+      guaranteeAdded: final?.guarantee_added === true,
+      guaranteeIncluded: final?.guarantee_included === true,
     })
   }
+
+  // Conversion per zone is always computed over every session so the two
+  // areas can be compared side by side regardless of the filter.
+  const zoneRows: ZoneRow[] = [...zoneKeys, "unknown" as const]
+    .map((key) => {
+      const rows = allShownSessions.filter((s) => s.zone === key)
+      const submittedCount = rows.filter((s) => s.submitted).length
+      return {
+        zone: key,
+        label: key === "unknown" ? "Unknown (pre-zone events)" : zones[key].label,
+        shown: rows.length,
+        submitted: submittedCount,
+        submitRate: rows.length > 0 ? (submittedCount / rows.length) * 100 : null,
+        avgShown: mean(rows.map((s) => s.total)),
+      }
+    })
+    .filter((row) => row.zone !== "unknown" || row.shown > 0)
+
+  const zoneScoped =
+    zoneFilter === "all" ? allShownSessions : allShownSessions.filter((s) => s.zone === zoneFilter)
+
+  // Take rates: Premium share of tiered quotes shown; guarantee add-on share of
+  // submitted jobs where it was on offer (everything but Premium).
+  const tiered = zoneScoped.filter((s) => s.tier !== null)
+  const premiumShown = tiered.filter((s) => s.tier === "premium").length
+  const guaranteeEligibleRows = zoneScoped.filter((s) => s.submitted && !s.guaranteeIncluded)
+  const guaranteeAddedCount = guaranteeEligibleRows.filter((s) => s.guaranteeAdded).length
+  const takeRates: TakeRates = {
+    premiumTakeRate: tiered.length > 0 ? (premiumShown / tiered.length) * 100 : null,
+    premiumShown,
+    tieredShown: tiered.length,
+    guaranteeTakeRate:
+      guaranteeEligibleRows.length > 0 ? (guaranteeAddedCount / guaranteeEligibleRows.length) * 100 : null,
+    guaranteeAdded: guaranteeAddedCount,
+    guaranteeEligible: guaranteeEligibleRows.length,
+  }
+
+  const shownSessions = tierFilter === "all" ? zoneScoped : zoneScoped.filter((s) => s.tier === tierFilter)
 
   const buckets: PriceBucket[] = BUCKET_EDGES.map(({ label, min, max }) => {
     const inBucket = shownSessions.filter((s) => s.total >= min && (max === null || s.total < max))
@@ -197,6 +307,10 @@ export async function buildReport(days: number): Promise<Report> {
     totalEvents: events.length,
     funnel,
     biggestDropIndex,
+    zoneFilter,
+    tierFilter,
+    zoneRows,
+    takeRates,
     buckets,
     avgShownSubmitters,
     avgShownAbandoners,

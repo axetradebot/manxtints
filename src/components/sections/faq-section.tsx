@@ -1,5 +1,6 @@
 "use client"
 
+import type { ReactNode } from "react"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -19,6 +20,8 @@ interface FaqSectionProps {
   className?: string
   /** Emit FAQPage JSON-LD for this list. */
   schema?: boolean
+  /** Rendered under the intro — e.g. the pricing-zone chip when answers quote prices. */
+  aside?: ReactNode
 }
 
 export function FaqSection({
@@ -28,6 +31,7 @@ export function FaqSection({
   intro,
   className = "bg-white",
   schema = true,
+  aside,
 }: FaqSectionProps) {
   const jsonLd = {
     "@context": "https://schema.org",
@@ -50,6 +54,7 @@ export function FaqSection({
             <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-primary">FAQ</p>
             <h2 className="font-display text-3xl font-bold text-slate-900 md:text-5xl">{heading}</h2>
             {intro && <p className="mt-4 text-lg text-slate-600">{intro}</p>}
+            {aside && <div className="mt-5 flex justify-center">{aside}</div>}
           </div>
         </FadeIn>
 

@@ -674,8 +674,7 @@ function DIYCalculator() {
             </motion.div>
             <h3 className="text-3xl font-bold mb-4">Quote Request Sent!</h3>
             <p className="text-lg text-muted-foreground mb-8">
-              Thank you! We&apos;ll review your measurements and send you an 
-              accurate quote within 24 hours.
+              Thank you! We&apos;ll get back to you with an installation date shortly.
             </p>
             <Button onClick={() => {
               setIsSubmitted(false)

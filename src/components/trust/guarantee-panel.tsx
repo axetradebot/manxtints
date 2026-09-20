@@ -21,8 +21,8 @@ export function GuaranteePanel({ compact = false }: { compact?: boolean }) {
       icon: VettedIcon,
       title: "Highest-standard installers",
       text: hasStat(years)
-        ? `Every ManxTints installer is vetted, insured and has at least ${years} years of tinting experience.`
-        : "Every ManxTints installer is vetted, insured and held to our written fitting standard.",
+        ? `We only work with insured installers who have at least ${years} years of tinting behind them and fit to our written standard.`
+        : "We only work with insured installers who fit to our written standard — and we check their work.",
     },
     {
       icon: CalendarTickIcon,

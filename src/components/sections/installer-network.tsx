@@ -24,7 +24,7 @@ export function InstallerNetwork() {
               {hasStat(installers) && (
                 <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm ring-1 ring-slate-200">
                   <VettedIcon className="h-4 w-4 text-trust" />
-                  {installers} vetted installers in the network
+                  {installers} installers in the network
                 </span>
               )}
               <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm ring-1 ring-slate-200">

@@ -20,8 +20,8 @@ const steps = [
     icon: InstallerIcon,
     title: "Your local ManxTints installer fits it, guaranteed",
     text: hasStat(site.guarantee.workmanshipYears)
-      ? `A vetted, insured installer re-measures on the day, fits the agreed film and leaves it spotless — backed by our ${site.guarantee.workmanshipYears}-year workmanship warranty.`
-      : "A vetted, insured installer re-measures on the day, fits the agreed film and leaves it spotless — backed by our workmanship guarantee.",
+      ? `Your installer re-measures on the day, fits the agreed film and leaves the room spotless — all backed by our ${site.guarantee.workmanshipYears}-year workmanship warranty.`
+      : "Your installer re-measures on the day, fits the agreed film and leaves the room spotless — all backed by our workmanship guarantee.",
   },
 ]
 

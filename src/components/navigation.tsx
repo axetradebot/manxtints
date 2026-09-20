@@ -61,7 +61,7 @@ export function Navigation() {
             </a>
           </div>
           <span className="text-blue-100">
-            Free quotes online · Vetted local installers · {site.areasServed}
+            Free quotes online · No visit needed · {site.areasServed}
           </span>
         </div>
       </motion.div>

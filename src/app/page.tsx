@@ -52,7 +52,7 @@ const buildFaqs = (zone: Zone): Faq[] => [
   {
     question: "Who actually fits the film?",
     answer:
-      "A vetted, insured installer from the ManxTints network who works to our written installation standard. ManxTints handles your quote, booking, deposit, guarantee and customer care — so you always have one company to talk to.",
+      "An insured installer from the ManxTints network, checked by us and working to our written installation standard. ManxTints handles your quote, booking, deposit, guarantee and customer care — so you always have one company to talk to.",
   },
   {
     question: "How do deposits and cancellations work?",
@@ -105,18 +105,34 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/45 to-slate-900/20" />
         </div>
 
+        {/* lg+: the photo is portrait (9:16), so covering a landscape viewport would crop it to a
+            third of its height. A blurred copy fills the frame; the sharp photo is right-anchored
+            and sized from the hero height so the whole house stays in view. */}
         <div className="absolute inset-0 hidden lg:block">
           <Image
             src={site.hero.image}
-            alt={site.hero.alt}
+            alt=""
+            aria-hidden
             fill
             priority
             sizes="100vw"
-            quality={75}
-            className="object-cover object-[center_40%]"
+            quality={40}
+            className="scale-110 object-cover object-[center_40%] blur-2xl saturate-[.85]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/60 to-slate-900/25" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/60 via-slate-950/20 to-transparent" />
+          <div className="absolute inset-0 bg-slate-950/50" />
+          <div className="absolute inset-y-0 right-0 w-[min(62vw,calc(92vh*0.92))] [mask-image:linear-gradient(to_right,transparent,black_30%)]">
+            <Image
+              src={site.hero.image}
+              alt={site.hero.alt}
+              fill
+              priority
+              sizes="62vw"
+              quality={80}
+              className="object-cover object-[center_42%]"
+            />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/45 to-slate-900/15" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/70 via-slate-950/25 to-transparent" />
         </div>
 
         <div className="container relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] w-full flex-col justify-end px-4 pb-[calc(5.75rem+env(safe-area-inset-bottom))] pt-6 sm:pb-16 md:min-h-[calc(100svh-7.25rem)] md:justify-center md:py-16 lg:min-h-[92vh] lg:justify-end lg:pb-24 lg:pt-40">
@@ -133,8 +149,8 @@ export default function Home() {
             </FadeIn>
             <FadeIn immediate delay={0.3}>
               <p className="mt-3 max-w-lg text-[0.95rem] leading-relaxed text-slate-200 [@media(max-width:639px)_and_(max-height:700px)]:hidden sm:mt-5 sm:text-lg lg:mt-6 lg:max-w-2xl lg:text-xl">
-                ManxTints quotes, books and guarantees your window film. Vetted local installers fit it — across
-                the {site.areasServed}.
+                One company quotes, books and guarantees your window film. An experienced installer near you
+                fits it — across the {site.areasServed}.
               </p>
             </FadeIn>
             <FadeIn immediate delay={0.4}>

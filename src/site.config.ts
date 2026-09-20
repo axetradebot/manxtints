@@ -66,7 +66,7 @@ export const site = {
     "Fully insured installers",
     "5-year workmanship warranty",
     "Deposit-protected booking",
-    "Vetted local installers",
+    "Experienced local installers",
   ] as string[],
 
   /** Real film-brand logos if permitted, else empty (nothing renders). */

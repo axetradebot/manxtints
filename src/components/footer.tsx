@@ -43,7 +43,7 @@ export function Footer() {
             <Wordmark tone="dark" size="sm" />
             <p className="text-slate-400 text-sm leading-relaxed">
               Window film for homes and businesses across the {site.areasServed}. Quoted online, booked
-              with a protected deposit and fitted by vetted local ManxTints installers
+              with a protected deposit and fitted by a ManxTints-approved installer near you
               {hasStat(guarantee.workmanshipYears) ? ` — with a ${guarantee.workmanshipYears}-year workmanship warranty.` : "."}
             </p>
             <div className="flex gap-3">

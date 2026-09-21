@@ -9,7 +9,6 @@ const ALLOWED_EVENTS = new Set([
   "calc_price_shown",
   "tier_selected",
   "calc_submitted",
-  "visit_form_submitted",
   "enquiry_submitted",
 ])
 

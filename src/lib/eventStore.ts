@@ -99,6 +99,12 @@ async function pgPrune() {
   await sql`DELETE FROM analytics_events WHERE ts < ${new Date(Date.now() - RETENTION_MS).toISOString()}`
 }
 
+async function pgClear() {
+  await ensureTable()
+  const sql = await getSql()
+  await sql`TRUNCATE TABLE analytics_events RESTART IDENTITY`
+}
+
 // ---------------------------------------------------------------------------
 // File backend (local dev)
 // ---------------------------------------------------------------------------
@@ -139,6 +145,10 @@ async function filePrune() {
   await fs.writeFile(FILE_PATH, keep.map((e) => JSON.stringify(e)).join("\n") + (keep.length ? "\n" : ""), "utf8")
 }
 
+async function fileClear() {
+  await fs.rm(FILE_PATH, { force: true })
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -160,4 +170,10 @@ export async function getEventsSince(sinceMs: number): Promise<AnalyticsEvent[]>
 export async function pruneOldEvents(): Promise<void> {
   if (PG_URL) return pgPrune()
   return filePrune()
+}
+
+/** Deletes every stored event. Used by the admin "clear all data" action. */
+export async function clearAllEvents(): Promise<void> {
+  if (PG_URL) return pgClear()
+  return fileClear()
 }

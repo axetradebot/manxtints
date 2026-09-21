@@ -68,6 +68,8 @@ export interface Report {
   days: number
   backend: "postgres" | "file"
   totalEvents: number
+  /** Distinct sessions with at least one event in the window */
+  totalSessions: number
   funnel: FunnelStep[]
   /** Index into funnel of the step with the biggest % drop from its predecessor */
   biggestDropIndex: number | null
@@ -84,9 +86,10 @@ export interface Report {
   avgShownAbandoners: number | null
   daily: DailyPoint[]
   deviceSplit: { mobile: number; desktop: number }
-  visitFormSubmits: number
   enquiryFormSubmits: number
   enquiryNeeds: Array<{ need: string; count: number }>
+  /** Sum of calculator totals that were submitted (respects zone + tier filters) */
+  submittedValue: number
 }
 
 const BUCKET_EDGES: Array<{ label: string; min: number; max: number | null }> = [
@@ -206,7 +209,7 @@ export async function buildReport(
       const submittedCount = rows.filter((s) => s.submitted).length
       return {
         zone: key,
-        label: key === "unknown" ? "Unknown (pre-zone events)" : zones[key].label,
+        label: key === "unknown" ? "Unknown area" : zones[key].label,
         shown: rows.length,
         submitted: submittedCount,
         submitRate: rows.length > 0 ? (submittedCount / rows.length) * 100 : null,
@@ -250,8 +253,10 @@ export async function buildReport(
     }
   })
 
-  const avgShownSubmitters = mean(shownSessions.filter((s) => s.submitted).map((s) => s.total))
+  const submittedTotals = shownSessions.filter((s) => s.submitted).map((s) => s.total)
+  const avgShownSubmitters = mean(submittedTotals)
   const avgShownAbandoners = mean(shownSessions.filter((s) => !s.submitted).map((s) => s.total))
+  const submittedValue = submittedTotals.reduce((a, b) => a + b, 0)
 
   // Daily volume
   const dayKey = (ts: number) => new Date(ts).toISOString().slice(0, 10)
@@ -285,7 +290,6 @@ export async function buildReport(
     else desktop++
   }
 
-  const visitFormSubmits = events.filter((e) => e.event === "visit_form_submitted").length
   const enquiryEvents = events.filter((e) => e.event === "enquiry_submitted")
   const enquiryFormSubmits = enquiryEvents.length
   const needCounts = new Map<string, number>()
@@ -305,6 +309,7 @@ export async function buildReport(
     days,
     backend: storageBackend(),
     totalEvents: events.length,
+    totalSessions: sessions.size,
     funnel,
     biggestDropIndex,
     zoneFilter,
@@ -316,8 +321,8 @@ export async function buildReport(
     avgShownAbandoners,
     daily,
     deviceSplit: { mobile, desktop },
-    visitFormSubmits,
     enquiryFormSubmits,
     enquiryNeeds,
+    submittedValue,
   }
 }

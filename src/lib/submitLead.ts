@@ -1,8 +1,13 @@
 // Lead submission with cutover fallback.
-// Primary: StartMyPatch external-lead endpoint (JSON POST).
+// Primary: StartMyPatch external-lead endpoint (JSON POST). The 8 string keys
+// are the fixed contract; `job_details` is an optional 9th key carrying the
+// structured job (see leadPayload.ts) for the installer brief.
 // Fallback: legacy Formspree endpoint (FormData POST) — used whenever the
 // primary request fails (network error, non-200, or missing { ok: true }),
-// so no lead is lost during the cutover.
+// so no lead is lost during the cutover. It receives the same `message`
+// (and job_details as JSON) so nothing is dropped on the fallback path.
+
+import type { JobDetails } from "./leadPayload"
 
 export interface LeadFields {
   name: string
@@ -13,6 +18,8 @@ export interface LeadFields {
   message: string
   /** Honeypot value — empty for real users */
   gotcha: string
+  /** Optional structured job data (installer brief). Omitted from the POST when absent. */
+  jobDetails?: JobDetails
 }
 
 /**
@@ -66,6 +73,7 @@ export async function submitLead(
           message: fields.message,
           source_page: window.location.pathname,
           _gotcha: fields.gotcha,
+          ...(fields.jobDetails ? { job_details: fields.jobDetails } : {}),
         }),
       })
 
@@ -78,6 +86,13 @@ export async function submitLead(
   }
 
   if (!LEAD_FALLBACK) return { accepted: false, via: null, honeypotTripped }
+
+  // Same message as the primary so the owner's email loses nothing; the
+  // structured job is flattened to JSON since Formspree only takes strings.
+  fallbackFormData.set("message", fields.message)
+  if (fields.jobDetails) {
+    fallbackFormData.set("job_details", JSON.stringify(fields.jobDetails, null, 2))
+  }
 
   try {
     const response = await fetch(LEAD_FALLBACK, {

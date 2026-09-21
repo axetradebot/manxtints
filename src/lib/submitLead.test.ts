@@ -70,6 +70,38 @@ describe("submitLead", () => {
     expect(result).toEqual({ accepted: false, via: null, honeypotTripped: false })
   })
 
+  it("posts the 8-key contract unchanged, with job_details as the optional 9th key", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ ok: true }))
+    const submitLead = await load()
+
+    await submitLead(fields, new FormData())
+    const bare = JSON.parse(fetchMock.mock.calls[0][1]?.body as string)
+    expect(Object.keys(bare).sort()).toEqual(
+      ["_gotcha", "address", "email", "message", "name", "phone", "service", "source_page"].sort()
+    )
+
+    fetchMock.mockResolvedValueOnce(jsonResponse({ ok: true }))
+    const jobDetails = { measured_by: "customer" as const, window_count: 1, windows: [{ label: "Window 1", width_cm: 120, height_cm: 100, m2: 1.2 }] }
+    await submitLead({ ...fields, jobDetails }, new FormData())
+    const withJob = JSON.parse(fetchMock.mock.calls[1][1]?.body as string)
+    expect(withJob.job_details).toEqual(jobDetails)
+    expect(withJob.source_page).toBe("/quote")
+  })
+
+  it("gives the Formspree fallback the same message plus job_details as JSON", async () => {
+    fetchMock.mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(jsonResponse({ ok: true }))
+    const submitLead = await load()
+    const formData = new FormData()
+    formData.set("message", "just the customer's raw notes")
+    const jobDetails = { measured_by: "customer" as const, total_m2: 4.2 }
+
+    await submitLead({ ...fields, message: "notes\n\nQuote: £267.50\nWindow 1: 120 x 100 cm = 1.20 m²", jobDetails }, formData)
+
+    const sent = fetchMock.mock.calls[1][1]?.body as FormData
+    expect(sent.get("message")).toBe("notes\n\nQuote: £267.50\nWindow 1: 120 x 100 cm = 1.20 m²")
+    expect(JSON.parse(sent.get("job_details") as string)).toEqual(jobDetails)
+  })
+
   it("flags a filled honeypot even when the endpoint pretends success", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse({ ok: true }))
     const submitLead = await load()

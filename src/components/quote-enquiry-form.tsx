@@ -20,6 +20,7 @@ import { trackEnquiryStarted, trackLead } from "@/lib/metaPixel"
 import { submitLead } from "@/lib/submitLead"
 import { track } from "@/lib/analytics"
 import { assembleEnquiryMessage, enquiryServiceLabel } from "@/lib/assembleEnquiry"
+import { buildEnquiryJobDetails } from "@/lib/leadPayload"
 import { resizeImageForUpload } from "@/lib/resizeImage"
 
 const NEED_OPTIONS = [
@@ -157,6 +158,12 @@ export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculato
         service,
         message,
         gotcha,
+        jobDetails: buildEnquiryJobDetails({
+          propertyType,
+          filmPreference,
+          description,
+          hasPhotos: upload.urls.length > 0,
+        }),
       },
       formData
     )

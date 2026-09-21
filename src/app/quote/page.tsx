@@ -35,6 +35,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { FadeIn } from "@/components/motion"
 import { trackCalculatorPriceShown, trackEnquiryStarted, trackLead, trackViewContent } from "@/lib/metaPixel"
 import { submitLead } from "@/lib/submitLead"
+import { buildPropertyLead, buildVehicleLead, UNMAPPED_POSTCODE_LINE, type BuiltLead } from "@/lib/leadPayload"
 import { track } from "@/lib/analytics"
 import { quoteProperty, quoteVehicle, formatGBP, guaranteeUpsell, MIN_JOB, GUARANTEE_PRICE } from "@/lib/pricing"
 import {
@@ -65,9 +66,6 @@ const vehiclePackages = {
     "4": { windows: "Rear 4 windows + boot", description: "All passenger windows + boot window" }
   }
 } as const
-
-/** Line added to the lead when the postcode could not be matched to a pricing area. */
-const UNMAPPED_POSTCODE_LINE = "We'll confirm your area's pricing with your quote."
 
 const propertyTypes = [
   { id: "house", label: "Residential", icon: Home },
@@ -539,17 +537,24 @@ function DIYCalculator() {
     const discountAmount = currentQuote.discountAmount.toFixed(2)
     const finalPrice = currentQuote.finalTotal.toFixed(2)
     const calcName = formData.get('name')?.toString().trim()
+    const customerNotes = formData.get('message')?.toString().trim() || ''
 
-    let leadService = ''
-    let leadQuoteSummary = ''
+    let lead: BuiltLead
 
     if (category === "vehicle") {
       // Vehicle submission
       const vehicleLabel = getVehicleLabel()
       const vehicleDescription = getVehicleDescription()
 
-      leadService = `DIY Calculator — Vehicle (${vehicleLabel})`
-      leadQuoteSummary = `Quote: £${finalPrice} incl. 10% DIY discount${extendedGuarantee ? `, 10yr guarantee (+£${GUARANTEE_PRICE})` : ''}. Package: ${vehicleDescription} (${zone.label})`
+      lead = buildVehicleLead({
+        quote: currentQuote,
+        zone,
+        vehicleLabel,
+        vehicleDescription,
+        extendedGuarantee,
+        guaranteePrice: GUARANTEE_PRICE,
+        customerNotes,
+      })
 
       formData.append('_subject', `New Vehicle Quote Request - ${vehicleLabel} - £${finalPrice}${extendedGuarantee ? ' (10yr Guarantee)' : ''}`)
       formData.append('Category', 'Vehicle')
@@ -567,20 +572,16 @@ function DIYCalculator() {
                              selectedType === 'commercial' ? 'Commercial' : selectedType
 
       const tierSuffix = tierApplies ? ` (${chosenTier.label})` : ''
-      leadService = `DIY Calculator — ${projectTypeName || 'Property'}${tierSuffix}`
-      const guaranteeLine = guaranteeAdded
-        ? ` + ${guaranteeUpsell.years}-year guarantee ${formatGBP(currentQuote.guaranteeCost)}`
-        : guaranteeIncluded
-          ? ` (${chosenTier.guaranteeYears}-year guarantee included)`
-          : ''
-      const quoteLine = currentQuote.jobFloorApplied
-        ? `£${currentQuote.baseTotal.toFixed(2)} (minimum job charge)${guaranteeLine}${guaranteeAdded ? ` = £${finalPrice}` : ''}`
-        : `£${finalPrice} incl. 10% DIY discount${guaranteeLine}`
-      const filmLine = tierApplies ? ` Film: ${chosenTier.label} (${chosenTier.film}).` : ''
-      leadQuoteSummary = `Quote: ${quoteLine}. ${windows.length} window(s), ${currentQuote.totalAreaSqM.toFixed(2)}m² @ £${currentQuote.pricePerSqM}/m² (${zone.label}).${filmLine}`
-      if (postcodeZone === null) {
-        leadQuoteSummary += ` ${UNMAPPED_POSTCODE_LINE}`
-      }
+      lead = buildPropertyLead({
+        quote: currentQuote,
+        zone,
+        projectTypeName: projectTypeName || 'Property',
+        tier: tierApplies ? chosenTier : null,
+        guaranteeAdded,
+        guaranteeIncluded,
+        postcodeUnmapped: postcodeZone === null,
+        customerNotes,
+      })
 
       formData.append('_subject', `New Property Quote Request - ${projectTypeName}${tierSuffix} - £${finalPrice}${guaranteeAdded ? ' (10yr Guarantee)' : ''}`)
       formData.append('Category', 'Property')
@@ -622,8 +623,6 @@ function DIYCalculator() {
       if (postcode) formData.append('Postcode', postcode.toString())
     }
     
-    const userMessage = formData.get('message')?.toString().trim() || ''
-
     const result = await submitLead(
       {
         name: calcName || '',
@@ -632,9 +631,10 @@ function DIYCalculator() {
         address: [formData.get('houseName')?.toString(), formData.get('postcode')?.toString()]
           .filter(Boolean)
           .join(', '),
-        service: leadService,
-        message: userMessage ? `${userMessage}\n\n${leadQuoteSummary}` : leadQuoteSummary,
+        service: lead.service,
+        message: lead.message,
         gotcha: formData.get('_gotcha')?.toString() || '',
+        jobDetails: lead.jobDetails,
       },
       formData
     )

@@ -33,7 +33,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { FadeIn } from "@/components/motion"
-import { trackLead } from "@/lib/metaPixel"
+import { trackCalculatorPriceShown, trackEnquiryStarted, trackLead, trackViewContent } from "@/lib/metaPixel"
 import { submitLead } from "@/lib/submitLead"
 import { track } from "@/lib/analytics"
 import { quoteProperty, quoteVehicle, formatGBP, guaranteeUpsell, MIN_JOB, GUARANTEE_PRICE } from "@/lib/pricing"
@@ -145,6 +145,11 @@ export default function QuotePage() {
     // Deferred so the deep-link alias doesn't force a synchronous cascading render.
     const id = requestAnimationFrame(() => setActiveTab("enquiry"))
     return () => cancelAnimationFrame(id)
+  }, [])
+
+  // Upper-funnel signal for Meta: the quote page was opened. Not a Lead.
+  useEffect(() => {
+    trackViewContent({ contentName: "quote_page", contentCategory: "quote" })
   }, [])
   
   return (
@@ -315,6 +320,7 @@ function DIYCalculator() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const calcStartedRef = useRef(false)
+  const contactStartedRef = useRef(false)
 
   // `?tier=premium|standard` (services page CTAs, ads) pre-selects the film
   // but never skips the tier step — the customer still sees both cards.
@@ -446,6 +452,15 @@ function DIYCalculator() {
   useEffect(() => {
     if (step === 4) {
       const q = getQuote()
+      const projectType = category === "vehicle" ? "vehicle" : selectedType
+      // Meta upper-funnel event (custom, never Lead) so the ad account can
+      // still optimise towards people who reach a price.
+      trackCalculatorPriceShown({
+        value: Number(q.finalTotal.toFixed(2)),
+        contentName: projectType ?? 'property',
+        tier: tierApplies ? tier : null,
+        zone: zoneKey,
+      })
       track('calc_price_shown', {
         total: Number(q.finalTotal.toFixed(2)),
         windows: windows.length,
@@ -523,19 +538,7 @@ function DIYCalculator() {
 
     const discountAmount = currentQuote.discountAmount.toFixed(2)
     const finalPrice = currentQuote.finalTotal.toFixed(2)
-
-    // Fire Meta Lead event (Pixel + CAPI) BEFORE submitting so the browser
-    // Pixel beacon is sent while the page is still alive. Awaited so fbq has
-    // fired; trackLead never throws and is internally time-capped.
     const calcName = formData.get('name')?.toString().trim()
-    await trackLead({
-      contentName: 'diy_calculator',
-      value: 10,
-      email: formData.get('email')?.toString() || undefined,
-      phone: formData.get('phone')?.toString() || undefined,
-      firstName: calcName ? calcName.split(' ')[0] : undefined,
-      zip: formData.get('postcode')?.toString() || undefined,
-    })
 
     let leadService = ''
     let leadQuoteSummary = ''
@@ -621,7 +624,7 @@ function DIYCalculator() {
     
     const userMessage = formData.get('message')?.toString().trim() || ''
 
-    const success = await submitLead(
+    const result = await submitLead(
       {
         name: calcName || '',
         phone: formData.get('phone')?.toString() || '',
@@ -636,7 +639,18 @@ function DIYCalculator() {
       formData
     )
 
-    if (success) {
+    if (result.accepted) {
+      // Meta Lead only now — after the endpoint confirmed it. trackLead itself
+      // refuses honeypot submissions, so a bot that gets the "success" screen
+      // never becomes a reported lead.
+      void trackLead(result, {
+        contentName: 'diy_calculator',
+        value: Number(finalPrice),
+        email: formData.get('email')?.toString() || undefined,
+        phone: formData.get('phone')?.toString() || undefined,
+        firstName: calcName ? calcName.split(' ')[0] : undefined,
+        zip: formData.get('postcode')?.toString() || undefined,
+      })
       track('calc_submitted', {
         total: Number(finalPrice),
         jobFloorApplied: currentQuote.jobFloorApplied,
@@ -1655,7 +1669,15 @@ function DIYCalculator() {
                   )}
 
                   {/* Contact Form */}
-                  <form onSubmit={handleSubmit} className="space-y-6">
+                  <form
+                    onSubmit={handleSubmit}
+                    onFocusCapture={() => {
+                      if (contactStartedRef.current) return
+                      contactStartedRef.current = true
+                      trackEnquiryStarted('diy_calculator')
+                    }}
+                    className="space-y-6"
+                  >
                     {/* Honeypot — hidden from real users; bots that fill it are filtered out */}
                     <input type="text" name="_gotcha" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
                     <p className="text-center text-muted-foreground">

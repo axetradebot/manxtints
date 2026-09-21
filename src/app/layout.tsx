@@ -85,7 +85,10 @@ export default async function RootLayout({
       >
         {META_PIXEL_ID && (
           <>
-            {/* Loaded after window.onload so the 250KB pixel bundle doesn't block first interaction; PageView still fires and trackLead awaits fbq. */}
+            {/* Loaded after window.onload so the 250KB pixel bundle doesn't block first interaction; PageView still fires and trackLead awaits fbq.
+                autoConfig=false switches off Meta's "automatic configuration": Event Setup Tool button-click rules and
+                automatic events defined in Events Manager are ignored, so the only events this site sends are the ones
+                in src/lib/metaPixel.ts. (A codeless rule on the calculator's step-1 Continue button was firing Lead.) */}
             <Script id="meta-pixel" strategy="lazyOnload">
               {`!function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -95,6 +98,7 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
+fbq('set', 'autoConfig', false, '${META_PIXEL_ID}');
 fbq('init', '${META_PIXEL_ID}');
 fbq('track', 'PageView');`}
             </Script>

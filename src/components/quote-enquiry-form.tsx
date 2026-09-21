@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { FadeIn } from "@/components/motion"
-import { trackLead } from "@/lib/metaPixel"
+import { trackEnquiryStarted, trackLead } from "@/lib/metaPixel"
 import { submitLead } from "@/lib/submitLead"
 import { track } from "@/lib/analytics"
 import { assembleEnquiryMessage, enquiryServiceLabel } from "@/lib/assembleEnquiry"
@@ -61,6 +61,7 @@ export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculato
   const [emailError, setEmailError] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLLabelElement>(null)
+  const startedRef = useRef(false)
 
   const toggleNeed = (need: string) => {
     setNeeds((current) =>
@@ -147,15 +148,7 @@ export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculato
     formData.set("email", email)
     formData.set("address", address)
 
-    await trackLead({
-      contentName: "quote_enquiry",
-      value: 50,
-      email,
-      phone: phone || undefined,
-      firstName: name ? name.split(" ")[0] : undefined,
-    })
-
-    const success = await submitLead(
+    const result = await submitLead(
       {
         name,
         phone,
@@ -168,7 +161,15 @@ export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculato
       formData
     )
 
-    if (success) {
+    if (result.accepted) {
+      // Meta Lead only after the endpoint confirmed it; trackLead drops
+      // honeypot submissions itself. No value — there is no price yet.
+      void trackLead(result, {
+        contentName: "quote_enquiry",
+        email,
+        phone: phone || undefined,
+        firstName: name ? name.split(" ")[0] : undefined,
+      })
       track("enquiry_submitted", { needs, propertyType, filmPreference })
       photos.forEach((photo) => URL.revokeObjectURL(photo.preview))
       setIsSubmitted(true)
@@ -252,7 +253,15 @@ export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculato
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6 sm:p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form
+              onSubmit={handleSubmit}
+              onFocusCapture={() => {
+                if (startedRef.current) return
+                startedRef.current = true
+                trackEnquiryStarted("quote_enquiry")
+              }}
+              className="space-y-6"
+            >
               <input type="text" name="_gotcha" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
 
               <div className="space-y-3">

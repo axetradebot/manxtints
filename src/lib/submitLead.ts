@@ -15,17 +15,43 @@ export interface LeadFields {
   gotcha: string
 }
 
+/**
+ * What happened to a submission. Consumers must treat "a lead exists" as
+ * `accepted && !honeypotTripped` — both endpoints deliberately answer OK to
+ * honeypot submissions so bots see a success screen, but nothing was stored.
+ */
+export interface SubmitLeadResult {
+  /** An endpoint confirmed it: primary `{ ok: true }` or Formspree `{ ok: true }`. */
+  accepted: boolean
+  via: "primary" | "fallback" | null
+  /** The hidden `_gotcha` field had a value at submit time (bot). */
+  honeypotTripped: boolean
+}
+
 const LEAD_ENDPOINT = (process.env.NEXT_PUBLIC_LEAD_ENDPOINT || "").trim()
 const LEAD_FALLBACK = (process.env.NEXT_PUBLIC_LEAD_FALLBACK || "").trim()
 
+/** True when a submission should count as a real lead (for Meta, analytics, admin). */
+export function isRealLead(result: SubmitLeadResult): boolean {
+  return result.accepted && !result.honeypotTripped
+}
+
+async function readOkFlag(response: Response): Promise<boolean> {
+  if (!response.ok) return false
+  const data = (await response.json().catch(() => null)) as { ok?: unknown } | null
+  return data?.ok === true
+}
+
 /**
- * Submits a lead. Returns true if either the primary endpoint accepted it
- * with { ok: true } or the Formspree fallback accepted it.
+ * Submits a lead. `accepted` is true only when an endpoint explicitly
+ * confirmed the submission — never on a bare 2xx without `{ ok: true }`.
  */
 export async function submitLead(
   fields: LeadFields,
   fallbackFormData: FormData
-): Promise<boolean> {
+): Promise<SubmitLeadResult> {
+  const honeypotTripped = fields.gotcha.trim().length > 0
+
   if (LEAD_ENDPOINT) {
     try {
       const response = await fetch(LEAD_ENDPOINT, {
@@ -43,18 +69,15 @@ export async function submitLead(
         }),
       })
 
-      if (response.ok) {
-        const data = await response.json().catch(() => null)
-        if (data && data.ok === true) {
-          return true
-        }
+      if (await readOkFlag(response)) {
+        return { accepted: true, via: "primary", honeypotTripped }
       }
     } catch {
       // Network failure — fall through to the Formspree fallback below.
     }
   }
 
-  if (!LEAD_FALLBACK) return false
+  if (!LEAD_FALLBACK) return { accepted: false, via: null, honeypotTripped }
 
   try {
     const response = await fetch(LEAD_FALLBACK, {
@@ -62,8 +85,11 @@ export async function submitLead(
       body: fallbackFormData,
       headers: { Accept: "application/json" },
     })
-    return response.ok
+    if (await readOkFlag(response)) {
+      return { accepted: true, via: "fallback", honeypotTripped }
+    }
+    return { accepted: false, via: null, honeypotTripped }
   } catch {
-    return false
+    return { accepted: false, via: null, honeypotTripped }
   }
 }

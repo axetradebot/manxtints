@@ -6,9 +6,16 @@ import {
   Calculator,
   Check,
   CheckCircle2,
+  CircleHelp,
+  EyeOff,
+  Glasses,
   ImagePlus,
+  ShieldCheck,
+  Sofa,
   Sparkles,
+  ThermometerSun,
   X,
+  type LucideIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,19 +29,17 @@ import { track } from "@/lib/analytics"
 import { assembleEnquiryMessage, enquiryServiceLabel } from "@/lib/assembleEnquiry"
 import { buildEnquiryJobDetails } from "@/lib/leadPayload"
 import { resizeImageForUpload } from "@/lib/resizeImage"
+import { useRevealOnMount } from "@/lib/useRevealOnMount"
 
-const NEED_OPTIONS = [
-  "Privacy",
-  "Heat reduction",
-  "Sun fading protection",
-  "Shatter protection",
-  "Glare reduction",
-  "Not sure, advise me",
-] as const
-
-const PROPERTY_OPTIONS = ["Home", "Conservatory", "Commercial", "Vehicle"] as const
-
-const FILM_PREFERENCE_OPTIONS = ["Standard", "Premium", "Advise me"] as const
+// The label is what goes into the lead ("Looking for: Privacy, …").
+const NEED_OPTIONS: { label: string; hint: string; icon: LucideIcon }[] = [
+  { label: "Privacy", hint: "Stop people seeing in by day", icon: EyeOff },
+  { label: "Heat reduction", hint: "Cooler rooms in summer", icon: ThermometerSun },
+  { label: "Sun fading protection", hint: "Protect floors & furniture", icon: Sofa },
+  { label: "Shatter protection", hint: "Holds glass together", icon: ShieldCheck },
+  { label: "Glare reduction", hint: "Easier on screens & eyes", icon: Glasses },
+  { label: "Not sure, advise me", hint: "We'll recommend a film", icon: CircleHelp },
+]
 
 const MAX_PHOTOS = 6
 
@@ -44,20 +49,11 @@ interface PhotoItem {
   preview: string
 }
 
-function chipClass(selected: boolean) {
-  return `inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition-all ${
-    selected
-      ? "border-primary bg-primary text-primary-foreground shadow-md shadow-primary/20"
-      : "border-border bg-card/50 text-foreground hover:border-primary/50"
-  }`
-}
-
 export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculator: () => void }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const successCardRef = useRevealOnMount<HTMLDivElement>(isSubmitted)
   const [needs, setNeeds] = useState<string[]>([])
-  const [propertyType, setPropertyType] = useState<string | null>(null)
-  const [filmPreference, setFilmPreference] = useState<string | null>(null)
   const [photos, setPhotos] = useState<PhotoItem[]>([])
   const [emailError, setEmailError] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -133,15 +129,14 @@ export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculato
     const upload = await uploadPhotos()
     const message = assembleEnquiryMessage({
       needs,
-      propertyType,
-      filmPreference,
+      propertyType: null,
       description,
       photoUrls: upload.urls,
       photoUploadFailed: upload.failed,
     })
-    const service = enquiryServiceLabel(propertyType)
+    const service = enquiryServiceLabel(null)
 
-    formData.set("_subject", `New Quote Enquiry — ${propertyType || "Property"}`)
+    formData.set("_subject", "New Quote Enquiry")
     formData.set("service", service)
     formData.set("message", message)
     formData.set("name", name)
@@ -159,8 +154,8 @@ export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculato
         message,
         gotcha,
         jobDetails: buildEnquiryJobDetails({
-          propertyType,
-          filmPreference,
+          propertyType: null,
+          filmPreference: null,
           description,
           hasPhotos: upload.urls.length > 0,
         }),
@@ -177,7 +172,7 @@ export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculato
         phone: phone || undefined,
         firstName: name ? name.split(" ")[0] : undefined,
       })
-      track("enquiry_submitted", { needs, propertyType, filmPreference })
+      track("enquiry_submitted", { needs })
       photos.forEach((photo) => URL.revokeObjectURL(photo.preview))
       setIsSubmitted(true)
     } else {
@@ -190,7 +185,7 @@ export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculato
   if (isSubmitted) {
     return (
       <FadeIn>
-        <Card className="max-w-2xl mx-auto glass">
+        <Card ref={successCardRef} className="max-w-2xl mx-auto glass scroll-mt-24">
           <CardContent className="p-12 text-center">
             <motion.div
               initial={{ scale: 0 }}
@@ -205,8 +200,6 @@ export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculato
               onClick={() => {
                 setIsSubmitted(false)
                 setNeeds([])
-                setPropertyType(null)
-                setFilmPreference(null)
                 setPhotos([])
               }}
               variant="outline"
@@ -274,85 +267,58 @@ export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculato
               <div className="space-y-3">
                 <Label>
                   What are you looking for?{" "}
-                  <span className="text-muted-foreground font-normal">(optional)</span>
+                  <span className="text-muted-foreground font-normal">(pick any that apply)</span>
                 </Label>
-                <div className="flex flex-wrap gap-2">
-                  {NEED_OPTIONS.map((need, index) => {
-                    const selected = needs.includes(need)
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {NEED_OPTIONS.map(({ label, hint, icon: Icon }, index) => {
+                    const selected = needs.includes(label)
                     return (
                       <motion.button
-                        key={need}
+                        key={label}
                         type="button"
-                        initial={{ opacity: 0, y: 8 }}
+                        initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.04 }}
-                        onClick={() => toggleNeed(need)}
-                        className={chipClass(selected)}
+                        transition={{ delay: index * 0.05, type: "spring", stiffness: 260, damping: 22 }}
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => toggleNeed(label)}
                         aria-pressed={selected}
+                        className={`group relative flex flex-col items-start gap-3 rounded-2xl border-2 p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                          selected
+                            ? "border-primary bg-primary/10 shadow-lg shadow-primary/15"
+                            : "border-border bg-card/40 hover:border-primary/50 hover:bg-card/70"
+                        }`}
                       >
-                        {selected && <Check className="h-3.5 w-3.5" />}
-                        {need}
+                        <span
+                          className={`flex h-11 w-11 items-center justify-center rounded-xl transition-colors ${
+                            selected
+                              ? "bg-gradient-to-br from-primary to-cyan-400 text-background"
+                              : "bg-primary/10 text-primary group-hover:bg-primary/15"
+                          }`}
+                        >
+                          <Icon className="h-5 w-5" strokeWidth={2.2} />
+                        </span>
+                        <span className="space-y-0.5">
+                          <span className="block text-sm font-semibold leading-tight">{label}</span>
+                          <span className="block text-xs text-muted-foreground leading-snug">{hint}</span>
+                        </span>
+                        <AnimatePresence>
+                          {selected && (
+                            <motion.span
+                              initial={{ scale: 0, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0, opacity: 0 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                              className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md shadow-primary/30"
+                            >
+                              <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
                       </motion.button>
                     )
                   })}
                 </div>
-              </div>
-
-              <div className="space-y-3">
-                <Label>
-                  Property type <span className="text-muted-foreground font-normal">(optional)</span>
-                </Label>
-                <div className="flex flex-wrap gap-2">
-                  {PROPERTY_OPTIONS.map((option, index) => {
-                    const selected = propertyType === option
-                    return (
-                      <motion.button
-                        key={option}
-                        type="button"
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.04 }}
-                        onClick={() => setPropertyType(selected ? null : option)}
-                        className={chipClass(selected)}
-                        aria-pressed={selected}
-                      >
-                        {selected && <Check className="h-3.5 w-3.5" />}
-                        {option}
-                      </motion.button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <Label>
-                  Film preference <span className="text-muted-foreground font-normal">(optional)</span>
-                </Label>
-                <div className="flex flex-wrap gap-2">
-                  {FILM_PREFERENCE_OPTIONS.map((option, index) => {
-                    const selected = filmPreference === option
-                    return (
-                      <motion.button
-                        key={option}
-                        type="button"
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.04 }}
-                        onClick={() => setFilmPreference(selected ? null : option)}
-                        className={chipClass(selected)}
-                        aria-pressed={selected}
-                        data-film-preference={option}
-                      >
-                        {selected && <Check className="h-3.5 w-3.5" />}
-                        {option}
-                      </motion.button>
-                    )
-                  })}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Standard is mirror privacy by day; Premium stays clear from inside and includes a 10-year guarantee.{" "}
-                  <a href="/services#tiers" className="underline underline-offset-2 hover:text-foreground">Compare the two</a>.
-                </p>
               </div>
 
               <div className="space-y-3">

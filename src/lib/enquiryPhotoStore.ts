@@ -28,6 +28,12 @@ export async function putEnquiryPhoto(
     return { id, publicUrl: blob.url }
   }
 
+  // Vercel's filesystem is read-only and per-invocation, so the local
+  // fallback can never work there — say so instead of failing on mkdir.
+  if (process.env.VERCEL) {
+    throw new Error("BLOB_READ_WRITE_TOKEN is not set — link a Vercel Blob store to this project")
+  }
+
   await fs.mkdir(LOCAL_DIR, { recursive: true })
   await fs.writeFile(path.join(LOCAL_DIR, `${id}.jpg`), bytes)
   return { id, publicUrl: null }

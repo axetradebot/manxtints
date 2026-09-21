@@ -37,6 +37,7 @@ import { trackCalculatorPriceShown, trackEnquiryStarted, trackLead, trackViewCon
 import { submitLead } from "@/lib/submitLead"
 import { buildPropertyLead, buildVehicleLead, UNMAPPED_POSTCODE_LINE, type BuiltLead } from "@/lib/leadPayload"
 import { track } from "@/lib/analytics"
+import { useRevealOnMount } from "@/lib/useRevealOnMount"
 import { quoteProperty, quoteVehicle, formatGBP, guaranteeUpsell, MIN_JOB, GUARANTEE_PRICE } from "@/lib/pricing"
 import {
   defaultTier,
@@ -317,6 +318,7 @@ function DIYCalculator() {
   const [extendedGuarantee, setExtendedGuarantee] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const successCardRef = useRevealOnMount<HTMLDivElement>(isSubmitted)
   const calcStartedRef = useRef(false)
   const contactStartedRef = useRef(false)
 
@@ -676,7 +678,7 @@ function DIYCalculator() {
   if (isSubmitted) {
     return (
       <FadeIn>
-        <Card className="max-w-2xl mx-auto glass">
+        <Card ref={successCardRef} className="max-w-2xl mx-auto glass scroll-mt-24">
           <CardContent className="p-12 text-center">
             <motion.div
               initial={{ scale: 0 }}

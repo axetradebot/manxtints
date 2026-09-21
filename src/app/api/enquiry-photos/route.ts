@@ -52,8 +52,9 @@ export async function POST(request: NextRequest) {
       const bytes = Buffer.from(await file.arrayBuffer())
       const stored = await putEnquiryPhoto(bytes, "image/jpeg")
       urls.push(stored.publicUrl || signedPhotoUrl(origin, stored.id))
-    } catch {
+    } catch (error) {
       // Skip a single failed file; caller treats an empty list as upload failure.
+      console.error("enquiry photo upload failed:", error instanceof Error ? error.message : error)
     }
   }
 

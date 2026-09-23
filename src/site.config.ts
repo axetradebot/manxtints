@@ -84,6 +84,17 @@ export const site = {
     heatRejectionPercent: 91 as number,
   },
 
+  /**
+   * Claims about cheap film in the "Why ManxTints" section. The
+   * "fail up to {n}x faster" sentence renders ONLY when both a figure and
+   * its source are set; leave unset until there is evidence to cite.
+   */
+  filmClaims: {
+    failureMultiplier: undefined as number | undefined,
+    /** Where the figure comes from, e.g. a manufacturer's technical bulletin. */
+    source: undefined as string | undefined,
+  },
+
   founder: {
     name: "Axel Vinthagen",
     line: "Founder · Window tinter since 2020",
@@ -117,4 +128,18 @@ export const lockupSubline = `${site.tagline} · ${site.areasServed}`
 /** True when a stat is a real, positive number. */
 export function hasStat(value: number | undefined | null): value is number {
   return typeof value === "number" && Number.isFinite(value) && value > 0
+}
+
+/**
+ * The substantiated "{n}x faster" sentence, or null when the config has no
+ * figure or no source. Never renders a number we cannot back up.
+ */
+export function filmFailureClaim(
+  claims: { failureMultiplier?: number; source?: string } = site.filmClaims
+): string | null {
+  const n = claims.failureMultiplier
+  const hasSource = typeof claims.source === "string" && claims.source.trim().length > 0
+  if (!hasStat(n) || !hasSource) return null
+  const shown = Number.isInteger(n) ? String(n) : n.toFixed(1)
+  return `Some films can cause units to fail up to ${shown}x faster.`
 }

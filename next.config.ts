@@ -17,6 +17,9 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      // Instagram media CDN (feed on /gallery)
+      { protocol: 'https', hostname: '**.cdninstagram.com' },
+      { protocol: 'https', hostname: '**.fbcdn.net' },
     ],
   },
 };

@@ -6,10 +6,12 @@ import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { FadeIn } from "@/components/motion"
 import { TrustBar } from "@/components/trust/trust-bar"
+import { ClientLogos } from "@/components/trust/client-logos"
 import { HeroProof } from "@/components/trust/hero-proof"
 import { GuaranteePanel } from "@/components/trust/guarantee-panel"
 import { WindowExplainer } from "@/components/explainer/window-explainer"
 import { HowItWorks } from "@/components/sections/how-it-works"
+import { WhyManxTints } from "@/components/sections/why-manxtints"
 import { InstallerNetwork } from "@/components/sections/installer-network"
 import { ReviewsSection } from "@/components/sections/reviews-section"
 import { ProjectsGrid } from "@/components/sections/projects-grid"
@@ -17,9 +19,10 @@ import { FaqSection, type Faq } from "@/components/sections/faq-section"
 import { CtaBand } from "@/components/sections/cta-band"
 import { ZoneChip } from "@/components/zone/zone-chip"
 import { useZone } from "@/components/zone/zone-provider"
-import { MIN_JOB } from "@/lib/pricing"
 import type { Zone } from "@/lib/pricing.zones"
+import { fromPrice, zoneHasTierChoice } from "@/lib/pricing.zones"
 import { hasStat, site } from "@/site.config"
+import { DOUBLE_GLAZING_FAQ } from "@/content/film-quality"
 
 const years = site.guarantee.workmanshipYears
 const extended = site.guarantee.extendedYears
@@ -30,6 +33,7 @@ const buildFaqs = (zone: Zone): Faq[] => [
     answer:
       "Honestly: not in the same way. One-way mirror film reflects whichever side is brighter. By day that's outside, so passers-by see a mirror. At night with your lights on, the inside is brighter and the effect reverses — people can see in. If you need privacy around the clock, we'll recommend a frosted film or a combination instead.",
   },
+  DOUBLE_GLAZING_FAQ,
   {
     question: "How long does window film last?",
     answer: `The premium films we fit typically last 15–25 years indoors with normal care${
@@ -64,7 +68,9 @@ const buildFaqs = (zone: Zone): Faq[] => [
   },
   {
     question: "How much does window film cost?",
-    answer: `It depends on the film, the number of windows, their size and your area. As a guide, residential privacy film in the ${zone.label} area is from £${zone.pricePerM2.standard} per square metre including VAT (Standard film) or £${zone.pricePerM2.premium} per square metre for Premium, with a minimum job charge of £${MIN_JOB}. Prices vary by area — you can change yours above. The calculator gives you an exact figure in about a minute, and 10% off automatically.`,
+    answer: zoneHasTierChoice(zone)
+      ? `It depends on the film, the number of windows, their size and your area. As a guide, residential privacy film in the ${zone.label} area is from £${zone.pricePerM2.standard} per square metre including VAT (Standard film) or £${zone.pricePerM2.premium} per square metre for Premium, with a minimum job charge of £${zone.minJob}. Prices vary by area — you can change yours above. The calculator gives you an exact figure in about a minute, and 10% off automatically.`
+      : `It depends on the number of windows and their size. On the ${zone.label} we fit one dual-reflective privacy film at £${fromPrice(zone)} per square metre including VAT, with a minimum job charge of £${zone.minJob}. The calculator gives you an exact figure in about a minute, and 10% off automatically.`,
   },
   {
     question: "Can I choose how dark the film is?",
@@ -175,6 +181,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Social proof first: the businesses we've fitted for, straight under the hero CTA */}
+      <ClientLogos />
+
       {/* Trust bar — hidden entirely until config has real figures */}
       <TrustBar />
 
@@ -182,6 +191,9 @@ export default function Home() {
       <div className="bg-gradient-to-b from-white via-blue-50/40 to-white py-20 md:py-28">
         <WindowExplainer />
       </div>
+
+      {/* Why our film, not the cheapest quote */}
+      <WhyManxTints />
 
       <HowItWorks />
 

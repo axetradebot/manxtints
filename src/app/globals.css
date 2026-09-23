@@ -40,6 +40,13 @@
   --animate-float: float 6s ease-in-out infinite;
   --animate-shimmer: shimmer 2s linear infinite;
   --animate-gradient: gradient 8s ease infinite;
+  --animate-marquee: marquee 45s linear infinite;
+  
+  /* Two identical tracks sit side by side; sliding exactly one track-width loops seamlessly. */
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
   
   @keyframes pulse-glow {
     0%, 100% {

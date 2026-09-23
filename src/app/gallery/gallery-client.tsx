@@ -33,6 +33,8 @@ import { FadeIn } from "@/components/motion"
  * 
  * Video/image type is auto-detected from the file extension.
  * 
+ * Latest Instagram posts are pulled in separately — see src/lib/instagram.ts.
+ * 
  * Supported image formats: JPG, PNG, WebP
  * Supported video formats: MP4, WebM, MOV
  * Recommended image size: 1200x800 or similar aspect ratio
@@ -178,7 +180,12 @@ function LazyVideo({ src, className }: { src: string; className?: string }) {
   )
 }
 
-export default function GalleryPage() {
+/**
+ * Interactive gallery (filters + lightbox). Rendered by the server `page.tsx`,
+ * which passes the Instagram section in as a slot so the feed can be fetched
+ * server-side and still sit between the hero and the project grid.
+ */
+export function GalleryClient({ instagram }: { instagram?: React.ReactNode }) {
   const [selectedImage, setSelectedImage] = useState<number | null>(null)
   const [activeTab, setActiveTab] = useState("all")
   const filterScrollRef = useRef<HTMLDivElement>(null)
@@ -278,8 +285,10 @@ export default function GalleryPage() {
         </div>
       </section>
 
+      {instagram}
+
       {/* Gallery Section */}
-      <section className="pb-12 md:py-16">
+      <section className="py-12 md:py-16">
         <div className="container mx-auto px-4">
           {/* Filter Pills */}
           <FadeIn>

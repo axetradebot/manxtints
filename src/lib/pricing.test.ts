@@ -11,7 +11,7 @@ import {
 } from "./pricing"
 import { rateFor, zones } from "./pricing.zones"
 
-const RESIDENTIAL_RATE = zones.standard.rates.house.standard // £99
+const RESIDENTIAL_RATE = zones.north.rates.house.standard as number // £99
 
 describe("per-window £10 floor", () => {
   it("floors a tiny window to £10 before summing", () => {
@@ -114,7 +114,7 @@ describe("guarantee upsell = max(£29, 10% of post-floor total)", () => {
   })
 
   it("Premium rate with the guarantee off (included) adds nothing", () => {
-    const rate = rateFor(zones.standard, "house", "premium")
+    const rate = rateFor(zones.north, "house", "premium")
     const q = quoteProperty([{ name: "Bay", width: 300, height: 140 }], rate, false)
     expect(q.pricePerSqM).toBe(125)
     expect(q.guaranteeCost).toBe(0)

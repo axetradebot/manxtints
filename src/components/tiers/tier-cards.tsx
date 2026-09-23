@@ -5,8 +5,10 @@ import { Check, Moon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   NIGHT_TIME_NOTE,
-  tierKeys,
+  filmPresentation,
+  rateFor,
   tiers,
+  zoneHasTierChoice,
   type PropertyRateKey,
   type TierKey,
 } from "@/lib/pricing.zones"
@@ -41,6 +43,7 @@ export function TierCards({
 }: TierCardsProps) {
   const { zone } = useZone()
   const selectable = typeof onChange === "function"
+  const choice = zoneHasTierChoice(zone)
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -52,17 +55,18 @@ export function TierCards({
       <div
         role={selectable ? "radiogroup" : undefined}
         aria-label={selectable ? "Choose your film" : undefined}
-        className="grid gap-4 sm:grid-cols-2"
+        className={cn("grid gap-4", choice ? "sm:grid-cols-2" : "mx-auto max-w-md")}
       >
-        {tierKeys.map((key) => {
+        {zone.tiers.map((key) => {
           const tier = tiers[key]
-          const price = zone.rates[rateType][key]
-          const isPremium = key === "premium"
+          const presented = filmPresentation(zone, key)
+          const price = rateFor(zone, rateType, key)
+          const isPremium = choice && key === "premium"
           const selected = value === key
 
           const body = (
             <>
-              {tier.badge && (
+              {choice && tier.badge && (
                 <span className="absolute -top-3 left-5 rounded-full bg-gradient-to-r from-primary to-cyan-400 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-background shadow-md">
                   {tier.badge}
                 </span>
@@ -79,16 +83,18 @@ export function TierCards({
                 </span>
               )}
               <div className="mb-3 pr-8">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{tier.film}</p>
-                <h4 className="text-xl font-bold">{tier.label}</h4>
-                <p className="mt-1 text-sm text-muted-foreground">{tier.tagline}</p>
+                {choice && (
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{tier.film}</p>
+                )}
+                <h4 className="text-xl font-bold">{choice ? tier.label : presented.name}</h4>
+                {choice && <p className="mt-1 text-sm text-muted-foreground">{tier.tagline}</p>}
               </div>
               <p className="mb-4 flex items-baseline gap-1" data-tier-price={key}>
                 <span className="text-3xl font-bold">£{price}</span>
                 <span className="text-sm text-muted-foreground">/m² inc VAT · {zone.label}</span>
               </p>
               <ul className="space-y-2 text-sm">
-                {tier.bullets.map((bullet) => (
+                {presented.bullets.map((bullet) => (
                   <li key={bullet} className="flex items-start gap-2">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
                     <span>{bullet}</span>
@@ -128,10 +134,10 @@ export function TierCards({
 
           if (linkToCalculator) {
             return (
-              <Link key={key} href={`/quote?tier=${key}`} data-tier-card={key} className={cardClass}>
+              <Link key={key} href={choice ? `/quote?tier=${key}` : "/quote"} data-tier-card={key} className={cardClass}>
                 {body}
                 <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
-                  Get a {tier.label} quote →
+                  {choice ? `Get a ${tier.label} quote →` : "Get a quote →"}
                 </span>
               </Link>
             )

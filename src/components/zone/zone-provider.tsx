@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { isZoneKey, zones, type Zone, type ZoneKey } from "@/lib/pricing.zones"
+import { canonicalZone, zones, type Zone, type ZoneKey } from "@/lib/pricing.zones"
 import {
   ZONE_PARAM,
   ZONE_SESSION_KEY,
@@ -45,7 +45,8 @@ function ZoneParamSync({ onParam }: { onParam: (zone: ZoneKey) => void }) {
   const params = useSearchParams()
   const param = params.get(ZONE_PARAM)
   React.useEffect(() => {
-    if (isZoneKey(param)) onParam(param)
+    const zone = canonicalZone(param)
+    if (zone) onParam(zone)
   }, [param, onParam])
   return null
 }

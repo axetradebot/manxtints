@@ -38,14 +38,21 @@ import { submitLead } from "@/lib/submitLead"
 import { buildPropertyLead, buildVehicleLead, UNMAPPED_POSTCODE_LINE, type BuiltLead } from "@/lib/leadPayload"
 import { track } from "@/lib/analytics"
 import { useRevealOnMount } from "@/lib/useRevealOnMount"
-import { quoteProperty, quoteVehicle, formatGBP, guaranteeUpsell, MIN_JOB, GUARANTEE_PRICE } from "@/lib/pricing"
+import { quoteProperty, quoteVehicle, formatGBP, guaranteeUpsell, GUARANTEE_PRICE } from "@/lib/pricing"
 import {
   defaultTier,
+  defaultTierFor,
+  filmPresentation,
+  guaranteeIncludedFor,
   hasTiers,
+  includedGuaranteeYears,
   isTierKey,
   rateFor,
+  tierAfterZoneChange,
+  tierAvailable,
   tiers,
   zoneFromPostcode,
+  zoneHasTierChoice,
   zones,
   type PropertyRateKey,
   type TierKey,
@@ -322,18 +329,22 @@ function DIYCalculator() {
   const calcStartedRef = useRef(false)
   const contactStartedRef = useRef(false)
 
-  // `?tier=premium|standard` (services page CTAs, ads) pre-selects the film
-  // but never skips the tier step — the customer still sees both cards.
-  useEffect(() => {
-    const param = new URLSearchParams(window.location.search).get("tier")
-    if (!isTierKey(param)) return
-    const id = requestAnimationFrame(() => setTier(param))
-    return () => cancelAnimationFrame(id)
-  }, [])
-
   // Regional pricing. Every rate below reads from the resolved zone so a
   // change (chip or postcode) recalculates the open quote live.
   const { zone, zoneKey, source: zoneSource, setZone } = useZone()
+
+  // `?tier=premium|standard` pre-selects a film the zone actually offers.
+  // A single-film zone ignores a tier it does not sell.
+  const tierParamApplied = useRef(false)
+  useEffect(() => {
+    const param = new URLSearchParams(window.location.search).get("tier")
+    if (!isTierKey(param) || !tierAvailable(zone, param) || tierParamApplied.current) return
+    const id = requestAnimationFrame(() => {
+      tierParamApplied.current = true
+      setTier(param)
+    })
+    return () => cancelAnimationFrame(id)
+  }, [zone])
   // Zone derived from the postcode typed at the final step:
   //   undefined = nothing typed yet · null = does not parse as a postcode (unmapped)
   const [postcodeZone, setPostcodeZone] = useState<ZoneKey | null | undefined>(undefined)
@@ -387,13 +398,21 @@ function DIYCalculator() {
     setWindows(windows.filter(w => w.id !== id))
   }
 
-  // Tiers only apply to house + conservatory. Commercial is priced on its single
-  // film and still gets the guarantee upsell.
+  // House and conservatory can choose a film. A zone with one film skips that step.
+  // Commercial is priced on its single film and still gets the guarantee upsell.
   const tierApplies = hasTiers(selectedType)
-  const effectiveTier: TierKey = tierApplies ? tier : "standard"
+  const tierChoice = tierApplies && zoneHasTierChoice(zone)
+  // Quote is always derived from the zone's offered film, never a tier the zone dropped.
+  const effectiveTier: TierKey = tierApplies
+    ? tierAvailable(zone, tier)
+      ? tier
+      : defaultTierFor(zone)
+    : "standard"
   const chosenTier = tiers[effectiveTier]
-  // Premium includes the 10-year guarantee, so there is nothing to upsell.
-  const guaranteeIncluded = tierApplies && tier === "premium"
+  const film = tierApplies ? filmPresentation(zone, effectiveTier) : null
+  // Premium includes 10 years only in a two-tier zone. Isle of Man keeps the
+  // 5-year cover with the 10-year upsell, same as before tiers existed.
+  const guaranteeIncluded = tierApplies && guaranteeIncludedFor(zone, effectiveTier)
   const guaranteeAdded = !guaranteeIncluded && extendedGuarantee
 
   // Get vehicle price from selected options (zone-specific)
@@ -433,7 +452,7 @@ function DIYCalculator() {
       return quoteVehicle(getVehiclePrice(), extendedGuarantee)
     }
     const pricePerSqM = selectedType ? rateFor(zone, selectedType as PropertyRateKey, effectiveTier) : 0
-    return quoteProperty(windows, pricePerSqM, guaranteeAdded)
+    return quoteProperty(windows, pricePerSqM, guaranteeAdded, { minJob: zone.minJob })
   }
 
   // Quoted as a pound figure everywhere: what the 10-year upgrade would add
@@ -442,7 +461,8 @@ function DIYCalculator() {
     const base = quoteProperty(
       windows,
       selectedType ? rateFor(zone, selectedType as PropertyRateKey, effectiveTier) : 0,
-      true
+      true,
+      { minJob: zone.minJob }
     )
     return base.guaranteeCost
   }
@@ -458,7 +478,7 @@ function DIYCalculator() {
       trackCalculatorPriceShown({
         value: Number(q.finalTotal.toFixed(2)),
         contentName: projectType ?? 'property',
-        tier: tierApplies ? tier : null,
+        tier: tierChoice ? effectiveTier : null,
         zone: zoneKey,
       })
       track('calc_price_shown', {
@@ -469,7 +489,7 @@ function DIYCalculator() {
         projectType: category === "vehicle" ? "vehicle" : selectedType,
         jobFloorApplied: q.jobFloorApplied,
         guarantee: guaranteeAdded || guaranteeIncluded,
-        tier: tierApplies ? tier : null,
+        tier: tierChoice ? effectiveTier : null,
         guarantee_added: guaranteeAdded,
         guarantee_included: guaranteeIncluded,
         guarantee_price: guaranteeIncluded ? 0 : guaranteeUpgradePrice(),
@@ -493,8 +513,31 @@ function DIYCalculator() {
     }
     setTier(next)
     // Premium includes the guarantee; an upsell ticked on Standard shouldn't carry over.
-    if (next === "premium") setExtendedGuarantee(false)
+    if (guaranteeIncludedFor(zone, next)) setExtendedGuarantee(false)
   }
+
+  // Zone changes (chip or postcode) re-derive the film and, when the tier step
+  // appears or disappears, move the calculator so there is no half-chosen film.
+  const stepRef = useRef(step)
+  const tierRef = useRef(tier)
+  stepRef.current = step
+  tierRef.current = tier
+  const prevZoneKey = useRef(zoneKey)
+  useEffect(() => {
+    if (prevZoneKey.current === zoneKey) return
+    const from = zones[prevZoneKey.current]
+    prevZoneKey.current = zoneKey
+    const next = tierAfterZoneChange({
+      from,
+      to: zone,
+      tier: tierRef.current,
+      propertyHasTiers: hasTiers(selectedType),
+      step: stepRef.current,
+    })
+    if (next.tier !== tierRef.current) setTier(next.tier)
+    if (next.step !== stepRef.current) setStep(next.step)
+    if (guaranteeIncludedFor(zone, next.tier)) setExtendedGuarantee(false)
+  }, [zoneKey, zone, selectedType])
 
   // The postcode-driven reprice is "rendered" once the zone it asked for is
   // the zone this render was computed with.
@@ -573,12 +616,14 @@ function DIYCalculator() {
                              selectedType === 'conservatory' ? 'Conservatory' : 
                              selectedType === 'commercial' ? 'Commercial' : selectedType
 
-      const tierSuffix = tierApplies ? ` (${chosenTier.label})` : ''
+      const tierSuffix = tierChoice ? ` (${chosenTier.label})` : ''
       lead = buildPropertyLead({
         quote: currentQuote,
         zone,
         projectTypeName: projectTypeName || 'Property',
-        tier: tierApplies ? chosenTier : null,
+        tier: tierChoice ? chosenTier : null,
+        filmName: film?.name,
+        includedGuaranteeYears: tierApplies ? includedGuaranteeYears(zone, effectiveTier) : undefined,
         guaranteeAdded,
         guaranteeIncluded,
         postcodeUnmapped: postcodeZone === null,
@@ -588,8 +633,8 @@ function DIYCalculator() {
       formData.append('_subject', `New Property Quote Request - ${projectTypeName}${tierSuffix} - £${finalPrice}${guaranteeAdded ? ' (10yr Guarantee)' : ''}`)
       formData.append('Category', 'Property')
       formData.append('Project Type', projectTypeName || 'Not specified')
-      if (tierApplies) {
-        formData.append('Film Tier', `${chosenTier.label} — ${chosenTier.film}`)
+      if (film) {
+        formData.append('Film Tier', film.name)
       }
       formData.append('Pricing Area', `${zone.label}${postcodeZone === null ? ' (postcode not matched — confirm pricing)' : ''}`)
       formData.append('Total Area (m²)', currentQuote.totalAreaSqM.toFixed(2))
@@ -605,7 +650,7 @@ function DIYCalculator() {
       formData.append('Subtotal', `£${currentQuote.subtotal.toFixed(2)}`)
       formData.append('DIY Calculator Discount (10%)', `-£${discountAmount}`)
       if (currentQuote.jobFloorApplied) {
-        formData.append('Minimum Job Charge', `Applied — total floored to £${MIN_JOB}`)
+        formData.append('Minimum Job Charge', `Applied — total floored to £${currentQuote.minJob}`)
       }
       formData.append('Final Total (with 10% DIY discount)', `£${finalPrice}${currentQuote.jobFloorApplied ? ' (minimum job charge)' : ''}`)
       formData.append('Number of Windows', windows.length.toString())
@@ -657,7 +702,7 @@ function DIYCalculator() {
         total: Number(finalPrice),
         jobFloorApplied: currentQuote.jobFloorApplied,
         projectType: category === "vehicle" ? "vehicle" : selectedType,
-        tier: category === "property" && tierApplies ? tier : null,
+        tier: category === "property" && tierChoice ? effectiveTier : null,
         guarantee_added: category === "vehicle" ? extendedGuarantee : guaranteeAdded,
         guarantee_included: category === "property" && guaranteeIncluded,
         guarantee_price: Number(currentQuote.guaranteeCost.toFixed(2)),
@@ -721,7 +766,7 @@ function DIYCalculator() {
           <div className="flex items-center justify-center gap-2 mb-4">
             {/* Vehicles: select → review. Tiered property: type → windows → film → review.
                 Commercial has one film, so its tier step is skipped. */}
-            {(category === "vehicle" ? [1, 4] : tierApplies || !selectedType ? [1, 2, 3, 4] : [1, 2, 4]).map((s, index, arr) => {
+            {(category === "vehicle" ? [1, 4] : tierChoice || !selectedType ? [1, 2, 3, 4] : [1, 2, 4]).map((s, index, arr) => {
               const isActive = step >= s
               const lineActive = step > s
 
@@ -1234,7 +1279,7 @@ function DIYCalculator() {
                     <Button
                       variant="electric"
                       size="lg"
-                      onClick={() => setStep(tierApplies ? 3 : 4)}
+                      onClick={() => setStep(tierChoice ? 3 : 4)}
                       disabled={windows.some(w => w.width === 0 || w.height === 0)}
                       className="gap-2"
                     >
@@ -1261,6 +1306,15 @@ function DIYCalculator() {
                       Both give one-way privacy by day. Premium keeps the view from inside clear and doubles the guarantee.
                     </p>
                   </div>
+
+                  {reprice && (
+                    <p
+                      role="status"
+                      className="mx-auto max-w-md rounded-xl border border-amber-400/60 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+                    >
+                      Your postcode is in the {zones[reprice.to].label} area — prices updated. Choose a film to see the new total.
+                    </p>
+                  )}
 
                   <TierCards
                     value={tier}
@@ -1315,18 +1369,27 @@ function DIYCalculator() {
                         <span className="text-muted-foreground">Project Type</span>
                         <span className="font-medium capitalize">{selectedType === "house" ? "Residential" : selectedType}</span>
                       </div>
-                      {tierApplies && (
-                        <div className="flex justify-between items-center gap-3">
+                      {film && (
+                        <div className="flex justify-between items-start gap-3">
                           <span className="text-muted-foreground">Film</span>
-                          <span className="font-medium text-right" data-quote-tier={tier}>
-                            {chosenTier.label} <span className="text-muted-foreground font-normal">({chosenTier.film})</span>
-                            <button
-                              type="button"
-                              onClick={() => setStep(3)}
-                              className="ml-2 text-sm font-medium text-primary underline underline-offset-2 hover:text-primary/80"
-                            >
-                              Compare tiers
-                            </button>
+                          <span className="text-right" data-quote-tier={tierChoice ? effectiveTier : "single"}>
+                            <span className="font-medium">{film.name}</span>
+                            {tierChoice && (
+                              <button
+                                type="button"
+                                onClick={() => setStep(3)}
+                                className="ml-2 text-sm font-medium text-primary underline underline-offset-2 hover:text-primary/80"
+                              >
+                                Compare tiers
+                              </button>
+                            )}
+                            {!tierChoice && (
+                              <ul className="mt-2 space-y-1 text-sm font-normal text-muted-foreground">
+                                {film.bullets.map((bullet) => (
+                                  <li key={bullet}>{bullet}</li>
+                                ))}
+                              </ul>
+                            )}
                           </span>
                         </div>
                       )}
@@ -1491,7 +1554,7 @@ function DIYCalculator() {
                             className="mb-6 space-y-3"
                           >
                             <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                              Minimum job size is £{MIN_JOB} — want to add some extra windows to get full value?
+                              Minimum job size for {zone.label} is £{quote.minJob} — want to add some extra windows to get full value?
                             </p>
                             <Button
                               type="button"
@@ -1791,7 +1854,7 @@ function DIYCalculator() {
                         type="button"
                         variant="outline"
                         size="lg"
-                        onClick={() => setStep(category === "vehicle" ? 1 : tierApplies ? 3 : 2)}
+                        onClick={() => setStep(category === "vehicle" ? 1 : tierChoice ? 3 : 2)}
                         className="gap-2"
                       >
                         <ArrowLeft className="h-5 w-5" />

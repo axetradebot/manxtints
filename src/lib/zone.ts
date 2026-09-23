@@ -1,7 +1,7 @@
 // Shared zone-resolution plumbing used by proxy.ts (server) and the
 // ZoneProvider (client). Pure helpers only — no React, no Next imports.
 
-import { defaultZone, isZoneKey, type ZoneKey } from "./pricing.zones"
+import { canonicalZone, defaultZone, isZoneKey, type ZoneKey } from "./pricing.zones"
 
 /** Functional cookie holding the customer's pricing area. 30 days. */
 export const ZONE_COOKIE = "mt_zone"
@@ -22,7 +22,7 @@ export const ZONE_SOURCE_HEADER = "x-mt-zone-source"
  *  - postcode: reconfirmed from the postcode at the quote step
  *  - stored:   a previous param/user/postcode choice read back from the cookie
  *  - ip:       Vercel geolocation default — only a guess, chip always visible
- *  - default:  nothing known, `standard`
+ *  - default:  nothing known, North West
  */
 export type ZoneSource = "param" | "user" | "postcode" | "stored" | "ip" | "default"
 
@@ -44,15 +44,18 @@ export interface ResolvedZone {
 
 /**
  * Resolution order shared by server and client:
- *   URL param → stored choice → IP default → `standard`.
+ *   URL param → stored choice → IP default → North West.
+ * `?zone=standard` is the legacy alias for North West.
  */
 export function resolveZone(input: {
   param?: string | null
   stored?: string | null
   ipZone?: ZoneKey | null
 }): ResolvedZone {
-  if (isZoneKey(input.param)) return { zone: input.param, source: "param" }
-  if (isZoneKey(input.stored)) return { zone: input.stored, source: "stored" }
+  const param = canonicalZone(input.param)
+  if (param) return { zone: param, source: "param" }
+  const stored = canonicalZone(input.stored)
+  if (stored) return { zone: stored, source: "stored" }
   if (input.ipZone && isZoneKey(input.ipZone)) return { zone: input.ipZone, source: "ip" }
   return { zone: defaultZone, source: "default" }
 }

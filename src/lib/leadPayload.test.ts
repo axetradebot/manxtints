@@ -4,7 +4,7 @@ import { buildEnquiryJobDetails, buildPropertyLead, buildVehicleLead, UNMAPPED_P
 import { quoteProperty, quoteVehicle } from "./pricing"
 import { rateFor, tiers, zones } from "./pricing.zones"
 
-const iom = zones.standard
+const north = zones.north
 
 const threeWindows = [
   { name: "Window 1", width: 120, height: 100 },
@@ -13,11 +13,11 @@ const threeWindows = [
 ]
 
 describe("buildPropertyLead — 3-window Premium job", () => {
-  const rate = rateFor(iom, "house", "premium") // £125/m² on IoM
+  const rate = rateFor(north, "house", "premium") // £125/m² on IoM
   const quote = quoteProperty(threeWindows, rate, false)
   const lead = buildPropertyLead({
     quote,
-    zone: iom,
+    zone: north,
     projectTypeName: "Residential",
     tier: tiers.premium,
     guaranteeAdded: false,
@@ -30,7 +30,7 @@ describe("buildPropertyLead — 3-window Premium job", () => {
     expect(lead.jobDetails).toEqual({
       measured_by: "customer",
       property_type: "Residential",
-      zone: "Isle of Man & North",
+      zone: "North West",
       film_tier: "Premium — Reflective Privacy 20",
       guarantee_years: 10,
       total_m2: 4.2,
@@ -53,7 +53,7 @@ describe("buildPropertyLead — 3-window Premium job", () => {
     expect(notes).toBe("Side gate is unlocked, dog is friendly.")
     expect(blank).toBe("")
     expect(quoteLine).toBe(
-      `Quote: £${quote.finalTotal.toFixed(2)} incl. 10% DIY discount (10-year guarantee included). 3 window(s), 4.20m² @ £125/m² (Isle of Man & North)`
+      `Quote: £${quote.finalTotal.toFixed(2)} incl. 10% DIY discount (10-year guarantee included). 3 window(s), 4.20m² @ £125/m² (North West)`
     )
     expect(filmLine).toBe("Film: Premium — Reflective Privacy 20 · 10yr guarantee")
     expect(w1).toBe("Window 1: 120 x 100 cm = 1.20 m²")
@@ -73,10 +73,10 @@ describe("buildPropertyLead — 3-window Premium job", () => {
 })
 
 describe("buildPropertyLead — Standard + upsell, unmapped postcode, no notes", () => {
-  const quote = quoteProperty(threeWindows, rateFor(iom, "house", "standard"), true)
+  const quote = quoteProperty(threeWindows, rateFor(north, "house", "standard"), true)
   const lead = buildPropertyLead({
     quote,
-    zone: iom,
+    zone: north,
     projectTypeName: "Residential",
     tier: tiers.standard,
     guaranteeAdded: true,
@@ -88,8 +88,8 @@ describe("buildPropertyLead — Standard + upsell, unmapped postcode, no notes",
   it("reports 10yr when the upsell was taken and 5yr otherwise", () => {
     expect(lead.jobDetails.guarantee_years).toBe(10)
     const noUpsell = buildPropertyLead({
-      quote: quoteProperty(threeWindows, rateFor(iom, "house", "standard"), false),
-      zone: iom,
+      quote: quoteProperty(threeWindows, rateFor(north, "house", "standard"), false),
+      zone: north,
       projectTypeName: "Residential",
       tier: tiers.standard,
       guaranteeAdded: false,
@@ -109,10 +109,10 @@ describe("buildPropertyLead — Standard + upsell, unmapped postcode, no notes",
 })
 
 describe("buildPropertyLead — commercial (single film)", () => {
-  const quote = quoteProperty(threeWindows, rateFor(iom, "commercial", "standard"), false)
+  const quote = quoteProperty(threeWindows, rateFor(north, "commercial", "standard"), false)
   const lead = buildPropertyLead({
     quote,
-    zone: iom,
+    zone: north,
     projectTypeName: "Commercial",
     tier: null,
     guaranteeAdded: false,
@@ -132,7 +132,7 @@ describe("buildVehicleLead", () => {
   it("sends the vehicle block instead of windows", () => {
     const lead = buildVehicleLead({
       quote: quoteVehicle(250, true),
-      zone: iom,
+      zone: north,
       vehicleLabel: "4 Door SUV",
       vehicleDescription: "All passenger windows + boot window",
       extendedGuarantee: true,
@@ -142,7 +142,7 @@ describe("buildVehicleLead", () => {
     expect(lead.jobDetails).toEqual({
       measured_by: "customer",
       property_type: "Vehicle",
-      zone: "Isle of Man & North",
+      zone: "North West",
       guarantee_years: 10,
       vehicle: { type: "4 Door SUV", package: "All passenger windows + boot window" },
     })

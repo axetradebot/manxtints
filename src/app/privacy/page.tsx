@@ -62,7 +62,7 @@ export default function PrivacyPage() {
               <li>
                 <strong className="text-foreground">mt_zone</strong> (functional cookie, 30 days) — remembers the
                 pricing area you chose or that an ad link set, so the prices you see stay consistent between
-                visits. It contains only the area name (for example &quot;standard&quot; or &quot;se&quot;), never
+                visits. It contains only the area name (for example &quot;iom&quot;, &quot;north&quot; or &quot;se&quot;), never
                 your address. We may also use your approximate location from your IP address to pick a sensible
                 default area; this is always shown to you and can be changed with one tap next to any price.
               </li>

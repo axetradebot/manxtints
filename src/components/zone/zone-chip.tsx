@@ -4,7 +4,7 @@ import * as React from "react"
 import * as Dialog from "@radix-ui/react-dialog"
 import { Check, MapPin, X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { zoneKeys, zones, type ZoneKey } from "@/lib/pricing.zones"
+import { fromPrice, zoneHasTierChoice, zoneKeys, zones, type ZoneKey } from "@/lib/pricing.zones"
 import { useZone } from "./zone-provider"
 
 interface ZoneChipProps {
@@ -94,6 +94,7 @@ export function ZoneChip({ className, tone = "light", size = "md", onChange }: Z
             {zoneKeys.map((key) => {
               const z = zones[key]
               const selected = key === zoneKey
+              const choice = zoneHasTierChoice(z)
               return (
                 <li key={key}>
                   <button
@@ -120,12 +121,16 @@ export function ZoneChip({ className, tone = "light", size = "md", onChange }: Z
                       </span>
                       <span>
                         <span className="block font-semibold">{z.label}</span>
-                        <span className="block text-xs text-slate-500">Standard / Premium film, VAT inclusive</span>
+                        <span className="block text-xs text-slate-500">
+                          {choice ? "Standard / Premium film, VAT inclusive" : "One film, VAT inclusive"}
+                        </span>
                       </span>
                     </span>
                     <span className="shrink-0 text-right">
-                      <span className="block text-base font-bold">£{z.pricePerM2.standard}/m²</span>
-                      <span className="block text-[11px] text-slate-500">Premium £{z.pricePerM2.premium}/m²</span>
+                      <span className="block text-base font-bold">£{fromPrice(z)}/m²</span>
+                      {choice && (
+                        <span className="block text-[11px] text-slate-500">Premium £{z.pricePerM2.premium}/m²</span>
+                      )}
                     </span>
                   </button>
                 </li>

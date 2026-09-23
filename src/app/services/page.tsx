@@ -11,8 +11,8 @@ import { CtaBand } from "@/components/sections/cta-band"
 import { ZoneChip } from "@/components/zone/zone-chip"
 import { useZone } from "@/components/zone/zone-provider"
 import { TierCards, TierComparison } from "@/components/tiers/tier-cards"
-import { guaranteeUpsell, MIN_JOB } from "@/lib/pricing"
-import { tiers, type GuideRateKey } from "@/lib/pricing.zones"
+import { guaranteeUpsell } from "@/lib/pricing"
+import { filmPresentation, tiers, zoneHasTierChoice, type GuideRateKey } from "@/lib/pricing.zones"
 import { hasStat, site } from "@/site.config"
 
 /**
@@ -107,15 +107,11 @@ const priceGuide: Array<{ name: string; rate: GuideRateKey }> = [
   { name: "Bomb blast protection film", rate: "blast" },
 ]
 
-const faqs: Faq[] = [
+const sharedFaqs: Faq[] = [
   {
     question: "Which film do I need?",
     answer:
       "Tell us the problem — privacy, heat, glare, fading or safety — on the quote page and we'll recommend the film. Most homes choose one-way mirror film for privacy and heat, and frosted film for bathrooms and doors.",
-  },
-  {
-    question: "What's the difference between Standard and Premium?",
-    answer: `Both give the same one-way privacy by day — the difference is what you see from inside. ${tiers.standard.label} (${tiers.standard.film}) has a slight mirror look from indoors and comes with a ${tiers.standard.guaranteeYears}-year guarantee; ${tiers.premium.label} (${tiers.premium.film}) is clear and non-reflective from inside, rejects more heat and includes a ${tiers.premium.guaranteeYears}-year guarantee.`,
   },
   {
     question: "Does one-way mirror film work at night?",
@@ -144,6 +140,25 @@ const faqs: Faq[] = [
 
 export default function ServicesPage() {
   const { zone } = useZone()
+  const twoTiers = zoneHasTierChoice(zone)
+  const singleFilm = filmPresentation(zone, zone.tiers[0])
+  const filmFaq: Faq = twoTiers
+    ? {
+        question: "What's the difference between Standard and Premium?",
+        answer: `Both give the same one-way privacy by day — the difference is what you see from inside. ${tiers.standard.label} (${tiers.standard.film}) has a slight mirror look from indoors and comes with a ${tiers.standard.guaranteeYears}-year guarantee; ${tiers.premium.label} (${tiers.premium.film}) is clear and non-reflective from inside, rejects more heat and includes a ${tiers.premium.guaranteeYears}-year guarantee.`,
+      }
+    : {
+        question: "Which film do you fit?",
+        answer: `On the Isle of Man we fit one film: ${singleFilm.name}. ${singleFilm.bullets.join(". ")}. You can extend the guarantee to ${guaranteeUpsell.years} years in the calculator.`,
+      }
+  const faqs = [sharedFaqs[0], filmFaq, ...sharedFaqs.slice(1)].map((faq) =>
+    !twoTiers && faq.question === "How long does window film last?"
+      ? {
+          ...faq,
+          answer: `Quality film lasts 15–25 years indoors with normal care. Every installation includes a ${tiers.standard.guaranteeYears}-year guarantee, and you can extend to ${guaranteeUpsell.years} years in the calculator for ${Math.round(guaranteeUpsell.pctOfTotal * 100)}% of the job total (minimum £${guaranteeUpsell.minPounds}).`,
+        }
+      : faq
+  )
 
   return (
     <div className="relative bg-white">
@@ -175,44 +190,41 @@ export default function ServicesPage() {
         />
       </div>
 
-      {/* Two film tiers — same cards as the calculator's tier step */}
       <section id="tiers" className="scroll-mt-24 pb-20 md:pb-28">
         <div className="container mx-auto px-4">
           <FadeIn>
             <div className="mx-auto mb-10 max-w-2xl text-center">
-              <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-primary">Residential &amp; conservatory</p>
-              <h2 className="font-display text-3xl font-bold text-slate-900 md:text-5xl">Two films. One simple choice.</h2>
-              <p className="mt-4 text-lg text-slate-600">
-                Both give you one-way privacy by day. Premium keeps the view from inside clear and doubles the
-                guarantee. Prices are per m² including VAT — the calculator gives you an exact figure.
-              </p>
+              {twoTiers ? (
+                <>
+                  <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-primary">Residential &amp; conservatory</p>
+                  <h2 className="font-display text-3xl font-bold text-slate-900 md:text-5xl">Two films. One simple choice.</h2>
+                  <p className="mt-4 text-lg text-slate-600">
+                    Both give you one-way privacy by day. Premium keeps the view from inside clear and doubles the
+                    guarantee. Prices are per m² including VAT — the calculator gives you an exact figure.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-primary">Our film</p>
+                  <h2 className="font-display text-3xl font-bold text-slate-900 md:text-5xl">{singleFilm.name}</h2>
+                  <p className="mt-4 text-lg text-slate-600">
+                    One film for homes and conservatories on the {zone.label}, at £{zone.pricePerM2.premium} per m²
+                    including VAT. The calculator gives you an exact figure.
+                  </p>
+                </>
+              )}
             </div>
           </FadeIn>
-
           <FadeIn>
             <div className="mx-auto max-w-4xl space-y-8">
               <TierCards linkToCalculator />
-              <TierComparison />
-              <p className="text-center text-slate-600">
-                Not sure? Most customers choose Premium for living rooms and Standard for bathrooms, garages and
-                outbuildings.
-              </p>
-              <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <Link
-                  href={`/quote?tier=premium`}
-                  className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:bg-primary/90"
-                >
-                  Quote with {tiers.premium.label}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href={`/quote?tier=standard`}
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-6 py-3 font-semibold text-slate-800 transition hover:border-primary hover:text-primary"
-                >
-                  Quote with {tiers.standard.label}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
+              {twoTiers && <TierComparison />}
+              {twoTiers && (
+                <p className="text-center text-slate-600">
+                  Not sure? Most customers choose Premium for living rooms and Standard for bathrooms, garages and
+                  outbuildings.
+                </p>
+              )}
             </div>
           </FadeIn>
         </div>
@@ -302,7 +314,7 @@ export default function ServicesPage() {
                 <div>
                   <h3 className="text-lg font-semibold text-slate-900">Film price guide</h3>
                   <p className="mt-1 text-sm text-slate-500">
-                    Guide prices per square metre, VAT inclusive, for {zone.label}. Minimum job charge £{MIN_JOB}. Use the
+                    Guide prices per square metre, VAT inclusive, for {zone.label}. Minimum job charge £{zone.minJob}. Use the
                     calculator for an exact figure with 10% off.
                   </p>
                 </div>

@@ -14,10 +14,11 @@ import {
  * root layout as request headers, so the first server render already shows
  * the right area's prices (no client-side flash from one price to another).
  *
- *   ?zone=se|standard  → wins, and is persisted to the 30-day mt_zone cookie
+ *   ?zone=iom|north|se (or the legacy alias standard → north)
+ *                      → wins, and is persisted to the 30-day mt_zone cookie
  *   mt_zone cookie     → a choice the visitor (or an ad link) made earlier
  *   Vercel geo headers → only a DEFAULT; the chip stays visible for it
- *   otherwise          → standard
+ *   otherwise          → north
  */
 export function proxy(request: NextRequest) {
   const param = request.nextUrl.searchParams.get(ZONE_PARAM)

@@ -9,7 +9,22 @@
 // The zone is resolved early (URL → stored choice → IP default → standard) and
 // reconfirmed from the postcode before submission — see ./zone.ts.
 
-export type ZoneKey = "standard" | "se"
+export type ZoneKey = "iom" | "north" | "se"
+
+/**
+ * Old ad links and cookies used `standard` for the combined Isle of Man & North
+ * zone. It now means North West. This is the only place that string is accepted.
+ */
+export const ZONE_ALIASES: Record<string, ZoneKey> = { standard: "north" }
+
+/** A real zone key, or the `standard` → `north` alias. Junk returns null. */
+export function canonicalZone(value: unknown): ZoneKey | null {
+  if (isZoneKey(value)) return value
+  if (typeof value === "string" && Object.prototype.hasOwnProperty.call(ZONE_ALIASES, value)) {
+    return ZONE_ALIASES[value]
+  }
+  return null
+}
 
 export type PropertyRateKey = "house" | "conservatory" | "commercial"
 
@@ -85,12 +100,23 @@ export type GuideRateKey =
 export interface Zone {
   /** Customer-facing area name, shown in the zone chip and on every price. */
   label: string
-  /** Residential £/m² per film tier, VAT inclusive. `standard` is the "from" price. */
-  pricePerM2: Record<TierKey, number>
-  /** Calculator rates per project type, VAT inclusive. Tiered types are per tier. */
+  /** £ minimum job charge in this zone, applied after the DIY discount and voucher. */
+  minJob: number
+  /**
+   * Films offered here. One entry means no tier step: the film is shown under
+   * `filmDisplayName` (or the tier's own name) with no Standard/Premium comparison.
+   */
+  tiers: readonly TierKey[]
+  /** Plain name for a single-film zone. Hides the tier label. */
+  filmDisplayName?: string
+  /** Bullets for a single-film zone. Two-tier zones use `tiers[key].bullets`. */
+  filmBullets?: readonly string[]
+  /** Residential £/m² per film offered, VAT inclusive. */
+  pricePerM2: Partial<Record<TierKey, number>>
+  /** Calculator rates per project type, VAT inclusive. Tiered types are per offered tier. */
   rates: {
-    house: Record<TierKey, number>
-    conservatory: Record<TierKey, number>
+    house: Partial<Record<TierKey, number>>
+    conservatory: Partial<Record<TierKey, number>>
     commercial: number
   }
   /** Services page price guide, VAT inclusive. */
@@ -99,9 +125,48 @@ export interface Zone {
   vehicle: Record<"car" | "suv", Record<"2" | "4", number>>
 }
 
+const IOM_FILM_BULLETS = [
+  "One-way privacy by day",
+  "Clear view from inside",
+  "Heat and glare reduction",
+  "5-year guarantee",
+] as const
+
 export const zones: Record<ZoneKey, Zone> = {
-  standard: {
-    label: "Isle of Man & North",
+  iom: {
+    label: "Isle of Man",
+    minJob: 100,
+    // The film itself is the dual-reflective one, but it is not sold as "Premium"
+    // and the 10-year guarantee is an upsell, not included.
+    tiers: ["premium"],
+    filmDisplayName: "Dual-reflective privacy film",
+    filmBullets: IOM_FILM_BULLETS,
+    pricePerM2: { premium: 99 },
+    rates: {
+      house: { premium: 99 },
+      conservatory: { premium: 120 },
+      commercial: 98,
+    },
+    guide: {
+      privacy: 99,
+      frosted: 99,
+      solar: 99,
+      conservatory: 120,
+      commercialPrivacy: 98,
+      uvBlocking: 119,
+      securityCommercial: 119,
+      securityResidential: 99,
+      energySaving: 90,
+      antiFog: 200,
+      dataJammer: 900,
+      blast: 100,
+    },
+    vehicle: { car: { "2": 200, "4": 250 }, suv: { "2": 250, "4": 300 } },
+  },
+  north: {
+    label: "North West",
+    minJob: 100,
+    tiers: ["standard", "premium"],
     pricePerM2: { standard: 99, premium: 125 },
     rates: {
       house: { standard: 99, premium: 125 },
@@ -126,6 +191,8 @@ export const zones: Record<ZoneKey, Zone> = {
   },
   se: {
     label: "South East & London",
+    minJob: 350,
+    tiers: ["standard", "premium"],
     pricePerM2: { standard: 135, premium: 165 },
     rates: {
       house: { standard: 135, premium: 165 },
@@ -150,7 +217,7 @@ export const zones: Record<ZoneKey, Zone> = {
   },
 }
 
-export const defaultZone: ZoneKey = "standard"
+export const defaultZone: ZoneKey = "north"
 
 export const zoneKeys = Object.keys(zones) as ZoneKey[]
 
@@ -158,13 +225,102 @@ export function isZoneKey(value: unknown): value is ZoneKey {
   return typeof value === "string" && Object.prototype.hasOwnProperty.call(zones, value)
 }
 
+/** True when the visitor picks between Standard and Premium. */
+export function zoneHasTierChoice(zone: Zone): boolean {
+  return zone.tiers.length > 1
+}
+
+/** Standard where both films are offered; the only film in a single-film zone. */
+export function defaultTierFor(zone: Zone): TierKey {
+  if (zone.tiers.length === 1) return zone.tiers[0]
+  return zone.tiers.includes(defaultTier) ? defaultTier : zone.tiers[0]
+}
+
+export function tierAvailable(zone: Zone, tier: TierKey): boolean {
+  return zone.tiers.includes(tier)
+}
+
+/**
+ * Years included before any upsell. A single-film zone keeps the pre-tier
+ * 5-year cover even when the film itself is the dual-reflective one.
+ * Premium in a two-tier zone includes 10.
+ */
+export function includedGuaranteeYears(zone: Zone, tier: TierKey): number {
+  if (!zoneHasTierChoice(zone)) return tiers.standard.guaranteeYears
+  return tiers[tier].guaranteeYears
+}
+
+/** True only when the chosen Premium film in a two-tier zone already includes 10 years. */
+export function guaranteeIncludedFor(zone: Zone, tier: TierKey): boolean {
+  return zoneHasTierChoice(zone) && tier === "premium"
+}
+
+export interface FilmPresentation {
+  /** "Dual-reflective privacy film", or "Premium — Reflective Privacy 20". */
+  name: string
+  bullets: readonly string[]
+  /** Set for a two-tier choice. Omitted so a single film is not called Premium. */
+  label?: string
+}
+
+export function filmPresentation(zone: Zone, tier: TierKey): FilmPresentation {
+  if (!zoneHasTierChoice(zone) && zone.filmDisplayName) {
+    return { name: zone.filmDisplayName, bullets: zone.filmBullets ?? tiers[tier].bullets }
+  }
+  const film = tiers[tier]
+  return { name: `${film.label} — ${film.film}`, label: film.label, bullets: film.bullets }
+}
+
+/** Lowest residential headline rate in the zone (the "from" price). */
+export function fromPrice(zone: Zone): number {
+  const key = zone.tiers.includes("standard") ? "standard" : zone.tiers[0]
+  const price = zone.pricePerM2[key]
+  if (price === undefined) throw new Error(`No headline rate for ${zone.label}`)
+  return price
+}
+
 /**
  * The calculator £/m² for a project type in a zone. Tiered types read the
- * chosen tier; commercial has one film so the tier is ignored.
+ * chosen tier when the zone offers it, otherwise the zone's only film.
+ * Commercial has one film so the tier is ignored.
  */
 export function rateFor(zone: Zone, type: PropertyRateKey, tier: TierKey): number {
   if (type === "commercial") return zone.rates.commercial
-  return zone.rates[type][tier]
+  const offered = tierAvailable(zone, tier) ? tier : defaultTierFor(zone)
+  const price = zone.rates[type][offered]
+  if (price === undefined) throw new Error(`No ${type} rate for ${offered} in ${zone.label}`)
+  return price
+}
+
+export interface TierStepTransition {
+  tier: TierKey
+  step: number
+}
+
+/**
+ * Re-derives the film and calculator step when the zone changes.
+ * Entering a two-tier zone from a single-film zone inserts the tier step
+ * (Standard selected). Leaving one removes it. The quote is then just
+ * (windows, zone, this tier).
+ */
+export function tierAfterZoneChange(input: {
+  from: Zone
+  to: Zone
+  tier: TierKey
+  /** House and conservatory choose a film; commercial does not. */
+  propertyHasTiers: boolean
+  step: number
+}): TierStepTransition {
+  const fromChoice = input.propertyHasTiers && zoneHasTierChoice(input.from)
+  const toChoice = input.propertyHasTiers && zoneHasTierChoice(input.to)
+  let tier = input.tier
+  if (!fromChoice && toChoice) tier = defaultTierFor(input.to)
+  else if (!tierAvailable(input.to, tier)) tier = defaultTierFor(input.to)
+
+  let step = input.step
+  if (!fromChoice && toChoice && input.step === 4) step = 3
+  if (fromChoice && !toChoice && input.step === 3) step = 4
+  return { tier, step }
 }
 
 // ---------------------------------------------------------------------------
@@ -172,18 +328,27 @@ export function rateFor(zone: Zone, type: PropertyRateKey, tier: TierKey): numbe
 // ---------------------------------------------------------------------------
 
 /**
- * Outward-code letter prefixes (postcode areas) priced at South East rates.
- * Everything else that parses as a UK/IoM postcode is `standard`.
- * Editable: add or remove areas here and nothing else needs to change.
+ * Outward-code letter prefixes. First match wins, so two-letter areas (IM, WA)
+ * are listed alongside one-letter ones and the regex captures the longer area.
+ * Anything that parses but is not listed is the default zone (North West).
  */
 const SE_POSTCODE_AREAS = [
   "SL", "RG", "GU", "KT", "SM", "TW", "HA", "UB", "WD", "AL", "HP", "OX", "RH",
   "CR", "BR", "DA", "EN", "IG", "RM", "SW", "W", "NW", "N", "E", "EC", "WC", "SE",
 ] as const
 
-export const postcodeAreaToZone: Record<string, ZoneKey> = Object.fromEntries(
-  SE_POSTCODE_AREAS.map((area) => [area, "se" as ZoneKey])
-)
+const IOM_POSTCODE_AREAS = ["IM"] as const
+
+/** Greater Manchester, Cheshire, Merseyside, Lancashire, Cumbria, plus Stoke. */
+const NORTH_POSTCODE_AREAS = [
+  "M", "SK", "WA", "WN", "BL", "OL", "L", "CH", "CW", "PR", "BB", "FY", "LA", "ST", "CA",
+] as const
+
+export const postcodeAreaToZone: Record<string, ZoneKey> = {
+  ...Object.fromEntries(SE_POSTCODE_AREAS.map((area) => [area, "se" as ZoneKey])),
+  ...Object.fromEntries(IOM_POSTCODE_AREAS.map((area) => [area, "iom" as ZoneKey])),
+  ...Object.fromEntries(NORTH_POSTCODE_AREAS.map((area) => [area, "north" as ZoneKey])),
+}
 
 /** Loose UK/IoM postcode shape: outward code, optional inward code. */
 const POSTCODE_RE = /^([A-Z]{1,2})\d[A-Z\d]?\s*(\d[A-Z]{2})?$/
@@ -243,33 +408,70 @@ function toNumber(value: number | string | null | undefined): number | null {
   return Number.isFinite(n) ? n : null
 }
 
+/** Towns Vercel reports on the Isle of Man. Country code IM is the primary signal. */
+const IOM_CITIES = new Set(
+  ["douglas", "ramsey", "peel", "castletown", "port erin", "port st mary", "onchan", "laxey"].map((c) => c.toLowerCase())
+)
+
+/** Isle of Man island box, checked before the North West box. */
+const IOM_BOUNDS = { minLat: 54.05, maxLat: 54.42, minLng: -4.85, maxLng: -4.3 }
+
+const NW_CITIES = new Set(
+  [
+    "manchester", "salford", "stockport", "bolton", "wigan", "oldham", "rochdale", "bury",
+    "altrincham", "sale", "cheadle", "stretford", "leigh", "chester", "warrington", "macclesfield",
+    "crewe", "northwich", "runcorn", "widnes", "ellesmere port", "liverpool", "birkenhead",
+    "bootle", "southport", "st helens", "wallasey", "preston", "blackpool", "blackburn",
+    "burnley", "lancaster", "morecambe", "fleetwood", "chorley", "leyland", "carlisle",
+    "kendal", "barrow-in-furness", "barrow in furness", "whitehaven", "workington", "penrith",
+    "stoke-on-trent", "stoke on trent",
+  ].map((c) => c.toLowerCase())
+)
+
 /**
- * Maps Vercel geo data to a zone. Anything outside Great Britain, or with no
- * usable data, falls back to `standard` — a safe default that the customer
- * can change with one tap.
+ * Greater Manchester, Cheshire, Merseyside, Lancashire and Cumbria.
+ * West of the Pennines and north of the SE commuter belt.
+ */
+const NW_BOUNDS = { minLat: 53.15, maxLat: 55.25, minLng: -3.7, maxLng: -2.0 }
+
+function inBox(
+  lat: number | null,
+  lng: number | null,
+  box: { minLat: number; maxLat: number; minLng: number; maxLng: number }
+): boolean {
+  return (
+    lat !== null &&
+    lng !== null &&
+    lat >= box.minLat &&
+    lat <= box.maxLat &&
+    lng >= box.minLng &&
+    lng <= box.maxLng
+  )
+}
+
+/**
+ * Maps Vercel geo data to a zone. Country `IM` is the Isle of Man. Anything
+ * outside the UK, or with no usable data, falls back to North West — a safe
+ * default the customer can change with one tap.
  */
 export function zoneFromGeo(geo: GeoHint): ZoneKey {
   const country = geo.country?.toUpperCase()
+  if (country === "IM") return "iom"
   if (country !== "GB") return defaultZone
 
   const region = geo.region?.toUpperCase()
   if (region && region !== "ENG") return defaultZone
 
   const city = geo.city ? safeDecode(geo.city).toLowerCase() : ""
+  if (city && IOM_CITIES.has(city)) return "iom"
   if (city && SE_CITIES.has(city)) return "se"
+  if (city && NW_CITIES.has(city)) return "north"
 
   const lat = toNumber(geo.latitude)
   const lng = toNumber(geo.longitude)
-  if (
-    lat !== null &&
-    lng !== null &&
-    lat >= SE_BOUNDS.minLat &&
-    lat <= SE_BOUNDS.maxLat &&
-    lng >= SE_BOUNDS.minLng &&
-    lng <= SE_BOUNDS.maxLng
-  ) {
-    return "se"
-  }
+  if (inBox(lat, lng, IOM_BOUNDS)) return "iom"
+  if (inBox(lat, lng, SE_BOUNDS)) return "se"
+  if (inBox(lat, lng, NW_BOUNDS)) return "north"
 
   return defaultZone
 }

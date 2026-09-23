@@ -61,8 +61,12 @@ export interface PropertyLeadInput {
   zone: Zone
   /** "Residential" | "Conservatory" | "Commercial" */
   projectTypeName: string
-  /** The chosen film for tiered jobs; null for commercial (single film) */
+  /** The chosen film for a two-tier job; null for commercial and single-film zones */
   tier: Tier | null
+  /** Customer-facing film name. Single-film zones pass this with `tier` null. */
+  filmName?: string
+  /** Years included before an upsell. Defaults from the tier (5 for Standard). */
+  includedGuaranteeYears?: number
   guaranteeAdded: boolean
   guaranteeIncluded: boolean
   /** The typed postcode did not parse, so pricing is provisional */
@@ -88,7 +92,9 @@ export function buildPropertyLead(input: PropertyLeadInput): BuiltLead {
   const { quote, zone, projectTypeName, tier, guaranteeAdded, guaranteeIncluded, postcodeUnmapped } = input
 
   const finalPrice = gbp(quote.finalTotal)
-  const guaranteeYears = guaranteeAdded || guaranteeIncluded ? guaranteeUpsell.years : (tier ?? tiers.standard).guaranteeYears
+  const baseYears = input.includedGuaranteeYears ?? (tier ?? tiers.standard).guaranteeYears
+  const guaranteeYears = guaranteeAdded || guaranteeIncluded ? guaranteeUpsell.years : baseYears
+  const filmTitle = input.filmName ?? (tier ? `${tier.label} — ${tier.film}` : null)
 
   const guaranteeSuffix = guaranteeAdded
     ? ` + ${guaranteeUpsell.years}-year guarantee ${gbp(quote.guaranteeCost)}`
@@ -108,7 +114,7 @@ export function buildPropertyLead(input: PropertyLeadInput): BuiltLead {
 
   const lines = [
     `Quote: ${quoteLine}. ${windows.length} window(s), ${quote.totalAreaSqM.toFixed(2)}m² @ £${quote.pricePerSqM}/m² (${zone.label})`,
-    tier ? `Film: ${tier.label} — ${tier.film} · ${guaranteeYears}yr guarantee` : `Guarantee: ${guaranteeYears}yr`,
+    filmTitle ? `Film: ${filmTitle} · ${guaranteeYears}yr guarantee` : `Guarantee: ${guaranteeYears}yr`,
     ...windows.map((w) => `${w.label}: ${w.width_cm} x ${w.height_cm} cm = ${w.m2.toFixed(2)} m²`),
   ]
   if (postcodeUnmapped) lines.push(UNMAPPED_POSTCODE_LINE)
@@ -122,7 +128,7 @@ export function buildPropertyLead(input: PropertyLeadInput): BuiltLead {
     window_count: windows.length,
     windows,
   }
-  if (tier) jobDetails.film_tier = `${tier.label} — ${tier.film}`
+  if (filmTitle) jobDetails.film_tier = filmTitle
   const notes = input.customerNotes.trim()
   if (notes) jobDetails.customer_notes = notes
 

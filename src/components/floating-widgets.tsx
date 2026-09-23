@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Phone, MessageCircle, X, Send, ArrowRight, Bot, User } from "lucide-react"
 import { site } from "@/site.config"
 import { guaranteeUpsell } from "@/lib/pricing"
-import type { Zone } from "@/lib/pricing.zones"
+import { filmPresentation, fromPrice, zoneHasTierChoice, type Zone } from "@/lib/pricing.zones"
 import { useZone } from "@/components/zone/zone-provider"
 
 interface Message {
@@ -28,7 +28,9 @@ const knowledgeBase: Array<{ keywords: string[]; response: string | ((zone: Zone
   {
     keywords: ["price", "cost", "how much", "pricing", "expensive", "cheap", "afford", "quote", "estimate"],
     response: (zone) =>
-      `Prices vary by area — these are for ${zone.label}:\n\n🏠 Residential: Standard film from £${zone.pricePerM2.standard}/m², Premium from £${zone.pricePerM2.premium}/m²\n🏢 Commercial: From £${zone.rates.commercial}/m²\n🛡️ Security Film: From £${zone.guide.securityResidential}/m²\n\nYou can change your area next to any price on the site. We offer free, no-obligation quotes! Would you like to request one?`,
+      zoneHasTierChoice(zone)
+        ? `Prices vary by area — these are for ${zone.label}:\n\n🏠 Residential: Standard film from £${zone.pricePerM2.standard}/m², Premium from £${zone.pricePerM2.premium}/m²\n🏢 Commercial: From £${zone.rates.commercial}/m²\n🛡️ Security Film: From £${zone.guide.securityResidential}/m²\n\nYou can change your area next to any price on the site. We offer free, no-obligation quotes! Would you like to request one?`
+        : `On the ${zone.label} we fit one film, ${filmPresentation(zone, zone.tiers[0]).name}, at £${fromPrice(zone)}/m².\n\n🏢 Commercial: From £${zone.rates.commercial}/m²\n🛡️ Security Film: From £${zone.guide.securityResidential}/m²\n\nYou can change your area next to any price on the site. We offer free, no-obligation quotes! Would you like to request one?`,
   },
   {
     // Automotive enquiries — temporarily redirect customers since we've paused the service.
@@ -73,7 +75,9 @@ const knowledgeBase: Array<{ keywords: string[]; response: string | ((zone: Zone
   {
     keywords: ["difference", "standard vs", "premium", "which film", "tier", "silver 20", "reflective privacy"],
     response: (zone) =>
-      `Two films for homes and conservatories:\n\n• Standard (Silver 20) — one-way mirror privacy by day, 5-year guarantee. From £${zone.pricePerM2.standard}/m² in ${zone.label}.\n• Premium (Reflective Privacy 20) — same daytime privacy but a clear, non-reflective view from inside, higher heat rejection and a 10-year guarantee. From £${zone.pricePerM2.premium}/m².\n\nBoth reverse at night with the lights on. Most customers pick Premium for living rooms and Standard for bathrooms, garages and outbuildings.`,
+      zoneHasTierChoice(zone)
+        ? `Two films for homes and conservatories:\n\n• Standard (Silver 20) — one-way mirror privacy by day, 5-year guarantee. From £${zone.pricePerM2.standard}/m² in ${zone.label}.\n• Premium (Reflective Privacy 20) — same daytime privacy but a clear, non-reflective view from inside, higher heat rejection and a 10-year guarantee. From £${zone.pricePerM2.premium}/m².\n\nBoth reverse at night with the lights on. Most customers pick Premium for living rooms and Standard for bathrooms, garages and outbuildings.`
+        : `On the ${zone.label} we fit one film: ${filmPresentation(zone, zone.tiers[0]).name} at £${fromPrice(zone)}/m². One-way privacy by day, a clear view from inside, and a 5-year guarantee. You can extend that to 10 years in the calculator.`,
   },
   {
     keywords: ["payment", "pay", "finance", "installment", "credit"],

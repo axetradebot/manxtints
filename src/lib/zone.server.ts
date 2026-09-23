@@ -4,7 +4,7 @@ import { ZONE_HEADER, ZONE_SOURCE_HEADER, isZoneSource, type ZoneSource } from "
 
 /**
  * Reads the zone proxy.ts resolved for this request. Falls back to
- * `standard` / `default` when proxy did not run (e.g. `next start` without the
+ * North West / `default` when proxy did not run (e.g. `next start` without the
  * matcher hitting, or a unit render).
  */
 export async function getRequestZone(): Promise<{ zone: ZoneKey; source: ZoneSource }> {

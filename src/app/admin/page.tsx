@@ -12,7 +12,7 @@ import {
   type ZoneFilter,
 } from "@/lib/analyticsReport"
 import { clearAllEvents } from "@/lib/eventStore"
-import { tierKeys, tiers, zoneKeys, zones } from "@/lib/pricing.zones"
+import { fromPrice, tierKeys, tiers, zoneHasTierChoice, zoneKeys, zones } from "@/lib/pricing.zones"
 
 export const dynamic = "force-dynamic"
 
@@ -420,7 +420,7 @@ export default async function AdminPage({
           {/* Zones */}
           <Panel
             title="Conversion by pricing area"
-            footnote="Always across every session so the two areas can be compared side by side, whatever the filters below."
+            footnote="Always across every session so the areas can be compared side by side, whatever the filters below. Older sessions tagged standard are counted as North West."
           >
             <Table
               head={[
@@ -438,7 +438,9 @@ export default async function AdminPage({
                   row.label,
                   row.zone === "unknown"
                     ? "—"
-                    : `£${zones[row.zone].pricePerM2.standard} / £${zones[row.zone].pricePerM2.premium}`,
+                    : zoneHasTierChoice(zones[row.zone])
+                      ? `£${zones[row.zone].pricePerM2.standard} / £${zones[row.zone].pricePerM2.premium}`
+                      : `£${fromPrice(zones[row.zone])}`,
                   fmtInt(row.shown),
                   fmtInt(row.submitted),
                   <span key="rate" className="font-semibold">{fmtPct(row.submitRate)}</span>,

@@ -81,7 +81,7 @@ To add new photos to the gallery:
    - `/public/gallery/residential/` - Home tinting photos
    - `/public/gallery/commercial/` - Commercial tinting photos
 
-2. Update the `galleryImages` array in `src/app/gallery/page.tsx`:
+2. Update the `galleryItems` array in `src/app/gallery/gallery-client.tsx`:
 
 ```typescript
 {
@@ -94,6 +94,42 @@ To add new photos to the gallery:
 
 **Supported formats**: JPG, PNG, WebP
 **Recommended size**: 1200x800 or similar aspect ratio
+
+### Instagram feed ("View our latest work on Instagram")
+
+The gallery page ends with the latest posts from
+[@manxtintsltd](https://www.instagram.com/manxtintsltd). Instagram's public
+profile page can't be scraped (it's login-walled and against their terms), so
+the site uses the official **Instagram API with Instagram Login** and caches
+the result for an hour (`revalidate = 3600` in `src/app/gallery/page.tsx`).
+
+Without a token the section still renders as a "Follow @manxtintsltd" card, so
+nothing breaks — you just don't get live thumbnails.
+
+**One-off setup (~10 min):**
+
+1. The Instagram account must be a **Business** or **Creator** account
+   (Instagram → Settings → Account type and tools).
+2. Go to [developers.facebook.com](https://developers.facebook.com) → *Create app*
+   → use case *Other* → type *Business* → add the **Instagram** product →
+   *API setup with Instagram login*.
+3. Under *Generate access tokens*, add @manxtintsltd as an Instagram tester,
+   then accept the invite in Instagram → *Settings → Apps and websites → Tester invites*.
+4. Click *Generate token*, log in as the account, and copy the **long-lived** token.
+5. Set `INSTAGRAM_ACCESS_TOKEN` in `.env.local` (and in Vercel → Project → Settings →
+   Environment Variables) and redeploy.
+
+**Keeping it alive:** long-lived tokens last 60 days. To refresh (any time after
+the token is 24h old), open
+
+```
+https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=<current token>
+```
+
+and replace the env var with the returned token. Set a calendar reminder for
+every ~50 days, or wire the same GET into a Vercel cron that writes to your env.
+Only the account's own posts are shown; captions are used for alt text and
+hover text, and every tile links back to the post on Instagram.
 
 ## 🎨 Customization
 
@@ -126,10 +162,13 @@ fallback at `NEXT_PUBLIC_LEAD_FALLBACK` — see `src/lib/submitLead.ts` and `.en
 Installer rates differ by region, so every price on the site is read from a **pricing zone**
 in `src/lib/pricing.zones.ts` — the single place to edit rates:
 
-| Zone key   | Label                 | Standard £/m² | Premium £/m² | Postcode areas                                                     |
-|------------|-----------------------|---------------|--------------|--------------------------------------------------------------------|
-| `standard` | Isle of Man & North   | £99           | £125         | everything not listed below (incl. IM)                             |
-| `se`       | South East & London   | £135          | £165         | SL RG GU KT SM TW HA UB WD AL HP OX RH CR BR DA EN IG RM SW W NW N E EC WC SE |
+| Zone key | Label               | Films                         | Postcode areas                                      |
+|----------|---------------------|-------------------------------|-----------------------------------------------------|
+| `iom`    | Isle of Man         | One film, £99/m²              | IM. Also Vercel country `IM`                        |
+| `north`  | North West          | Standard £99 / Premium £125   | M SK WA WN BL OL L CH CW PR BB FY LA ST CA, and any other UK postcode |
+| `se`     | South East & London | Standard £135 / Premium £165  | SL RG GU KT SM TW HA UB WD AL HP OX RH CR BR DA EN IG RM SW W NW N E EC WC SE |
+
+`?zone=standard` is a legacy alias for `north`. The Isle of Man film is the dual-reflective privacy film, shown without a Premium label, with a 5-year guarantee and the 10-year upsell. North West and South East keep the tier step.
 
 Conservatory has its own per-tier rates (`rates.conservatory`) and commercial a single rate
 (`rates.commercial`). The calculator maths is zone-independent and lives in `src/lib/pricing.ts`:
@@ -148,8 +187,9 @@ Residential and conservatory jobs choose between two films, defined in `tiers` i
 - **Premium — Reflective Privacy 20.** Clear view from inside, higher heat rejection,
   10-year guarantee included (no upsell). Carries the "Most popular" badge.
 
-The calculator's **film step** sits after the window measurements and before any total is shown
-(commercial skips it). `?tier=premium|standard` pre-selects a card but never skips the step.
+The calculator's **film step** sits after the window measurements and before any total is shown.
+Commercial skips it, and so does the Isle of Man (one film, no comparison). `?tier=premium|standard`
+pre-selects a card in a two-tier zone but never skips the step.
 The same `TierCards` component renders the "Two films. One simple choice." section on
 `/services`, whose CTAs link to `/quote?tier=premium` and `/quote?tier=standard`.
 
@@ -161,11 +201,11 @@ line, e.g. `Quote: £411.64 incl. 10% DIY discount + 10-year guarantee £37.42. 
 
 Implemented once in `src/proxy.ts` (server) + `src/components/zone/zone-provider.tsx` (client, `useZone()`):
 
-1. **URL param** `?zone=se|standard` — wins, and is saved to the 30-day functional cookie `mt_zone`.
+1. **URL param** `?zone=iom|north|se` (`standard` means `north`) — wins, and is saved to the 30-day functional cookie `mt_zone`.
 2. **Stored choice** — the `mt_zone` cookie (set by a param, the zone chip, or the postcode check).
 3. **IP default** — Vercel geo headers (`x-vercel-ip-country/-region/-city/-latitude/-longitude`)
    mapped via `zoneFromGeo()`. Only a default: it is flagged `source: "ip"` and the chip is always shown.
-4. **Fallback** — `standard`.
+4. **Fallback** — `north`.
 
 The **zone chip** ("Prices for {area} · Change") appears wherever a price is displayed: calculator
 header and summary, services cards and price guide, pricing FAQ, and the chat assistant's answers.
@@ -179,14 +219,16 @@ updated." with the old total struck through and the new total shown, and **Book 
 disabled until the new total has rendered**. The corrected zone is persisted. Unmapped/invalid
 postcodes keep the displayed zone and add "We'll confirm your area's pricing with your quote."
 to the lead. Every lead's quote line ends with the zone, e.g.
-`Quote: £412.00 incl. 10% DIY discount. 2 window(s), 4.20m² @ £99/m² (Isle of Man & North)`.
+`Quote: £412.00 incl. 10% DIY discount. 2 window(s), 4.20m² @ £99/m² (North West)`.
 
 ### Ad links per region
 
-Use these as the landing URL for each regional ad set — the zone is applied before first paint:
+Use these as the landing URL for each regional ad set — the zone is applied before first paint.
+The Isle of Man campaign should include `?zone=iom` even though an Isle of Man IP (country `IM`) already resolves there.
 
-- **Slough / South East ad set:** `https://manxtints.com/quote?zone=se`
-- **North West / Isle of Man ad set:** `https://manxtints.com/quote?zone=standard`
+- **Isle of Man:** `https://manxtints.com/quote?zone=iom`
+- **North West:** `https://manxtints.com/quote?zone=north`
+- **South East & London:** `https://manxtints.com/quote?zone=se`
 
 Any page accepts the param (e.g. `/services?zone=se`).
 
@@ -203,7 +245,7 @@ rate" stats.
 ```bash
 # SE default (chip visible, source "ip")
 curl -s -H "x-vercel-ip-country: GB" -H "x-vercel-ip-city: Slough" http://localhost:3000/quote | grep -o 'Prices for [^<]*'
-# Non-SE → standard
+# Non-SE → north (Manchester) or iom (country IM)
 curl -s -H "x-vercel-ip-country: GB" -H "x-vercel-ip-city: Manchester" http://localhost:3000/quote | grep -o 'Prices for [^<]*'
 ```
 

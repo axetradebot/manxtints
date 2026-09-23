@@ -2,10 +2,11 @@
 //
 // Order of operations (do not reorder):
 //   per-window price at the tier's zone rate → £10 per-window floor → sum →
-//   10% DIY discount → voucher (if any) → £100 job floor →
+//   10% DIY discount → voucher (if any) → zone job floor (£100 default) →
 //   10-year guarantee upsell = max(£29, 10% of that post-floor total) → final.
 
-export const MIN_JOB = 100 // £ minimum job size, applied after the DIY discount
+/** Default £ minimum job size, applied after the DIY discount. Zones override via `zone.minJob`. */
+export const MIN_JOB = 100
 export const MIN_WINDOW = 10 // £ minimum contribution per window, applied before summing
 export const DIY_DISCOUNT = 0.1 // 10% off for using the calculator
 
@@ -63,7 +64,9 @@ export interface Quote {
   /** Voucher pounds actually taken off (capped at the discounted total) */
   voucherAmount: number
   jobFloorApplied: boolean
-  /** max(discountedTotal − voucher, MIN_JOB) — before guarantee */
+  /** The £ floor this quote was checked against (zone minimum, or MIN_JOB) */
+  minJob: number
+  /** max(discountedTotal − voucher, minJob) — before guarantee */
   baseTotal: number
   guaranteeCost: number
   /** baseTotal + guaranteeCost — what the customer pays */
@@ -73,6 +76,8 @@ export interface Quote {
 export interface QuoteOptions {
   /** Pounds off, applied after the DIY discount and before the job floor. */
   voucher?: number
+  /** £ minimum job charge for the customer's zone. Defaults to MIN_JOB. */
+  minJob?: number
 }
 
 export function quoteProperty(
@@ -110,6 +115,7 @@ export function quoteVehicle(vehiclePrice: number, extendedGuarantee: boolean): 
     discountedTotal,
     voucherAmount: 0,
     jobFloorApplied,
+    minJob: MIN_JOB,
     baseTotal,
     guaranteeCost,
     finalTotal: baseTotal + guaranteeCost,
@@ -129,8 +135,9 @@ function finishQuote(
   const discountedTotal = subtotal - discountAmount
   const voucherAmount = Math.min(Math.max(options.voucher ?? 0, 0), discountedTotal)
   const afterVoucher = discountedTotal - voucherAmount
-  const jobFloorApplied = hasJob && afterVoucher < MIN_JOB
-  const baseTotal = jobFloorApplied ? MIN_JOB : afterVoucher
+  const minJob = options.minJob ?? MIN_JOB
+  const jobFloorApplied = hasJob && afterVoucher < minJob
+  const baseTotal = jobFloorApplied ? minJob : afterVoucher
   const guaranteeCost = extendedGuarantee && hasJob ? guaranteeUpsellCost(baseTotal) : 0
 
   return {
@@ -142,6 +149,7 @@ function finishQuote(
     discountedTotal,
     voucherAmount,
     jobFloorApplied,
+    minJob,
     baseTotal,
     guaranteeCost,
     finalTotal: baseTotal + guaranteeCost,

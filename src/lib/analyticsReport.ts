@@ -6,13 +6,13 @@ import {
   pruneOldEvents,
   storageBackend,
 } from "./eventStore"
-import { isTierKey, isZoneKey, zoneKeys, zones, type TierKey, type ZoneKey } from "./pricing.zones"
+import { canonicalZone, isTierKey, zoneKeys, zones, type TierKey, type ZoneKey } from "./pricing.zones"
 
 /** Price drop-off filter: a single pricing zone, or every session. */
 export type ZoneFilter = ZoneKey | "all"
 
 export function parseZoneFilter(value: unknown): ZoneFilter {
-  return isZoneKey(value) ? value : "all"
+  return canonicalZone(value) ?? "all"
 }
 
 /** Price drop-off filter: a single film tier, or every session. */
@@ -194,7 +194,7 @@ export async function buildReport(
       total,
       areaSqM: Number.isFinite(areaSqM) ? areaSqM : 0,
       submitted: submits.length > 0,
-      zone: isZoneKey(payload?.zone) ? payload.zone : "unknown",
+      zone: canonicalZone(payload?.zone) ?? "unknown",
       tier: isTierKey(final?.tier) ? final.tier : null,
       guaranteeAdded: final?.guarantee_added === true,
       guaranteeIncluded: final?.guarantee_included === true,

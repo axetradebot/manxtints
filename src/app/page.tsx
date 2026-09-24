@@ -8,7 +8,6 @@ import { FadeIn } from "@/components/motion"
 import { TrustBar } from "@/components/trust/trust-bar"
 import { ClientLogos } from "@/components/trust/client-logos"
 import { HeroProof } from "@/components/trust/hero-proof"
-import { GuaranteePanel } from "@/components/trust/guarantee-panel"
 import { WindowExplainer } from "@/components/explainer/window-explainer"
 import { HowItWorks } from "@/components/sections/how-it-works"
 import { WhyManxTints } from "@/components/sections/why-manxtints"
@@ -196,13 +195,6 @@ export default function Home() {
       <WhyManxTints />
 
       <HowItWorks />
-
-      {/* Guarantee */}
-      <section className="bg-white pb-20 md:pb-28">
-        <div className="container mx-auto px-4">
-          <GuaranteePanel />
-        </div>
-      </section>
 
       <InstallerNetwork />
 

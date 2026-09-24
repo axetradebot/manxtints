@@ -5,7 +5,6 @@ import { motion } from "framer-motion"
 import { ArrowRight, Building2, Eye, EyeOff, Shield, Sun, Thermometer, Wind } from "lucide-react"
 import { FadeIn, Stagger, StaggerItem } from "@/components/motion"
 import { WindowExplainer } from "@/components/explainer/window-explainer"
-import { GuaranteePanel } from "@/components/trust/guarantee-panel"
 import { FaqSection, type Faq } from "@/components/sections/faq-section"
 import { CtaBand } from "@/components/sections/cta-band"
 import { ZoneChip } from "@/components/zone/zone-chip"
@@ -330,12 +329,6 @@ export default function ServicesPage() {
               </ul>
             </div>
           </FadeIn>
-        </div>
-      </section>
-
-      <section className="bg-white py-20 md:py-28">
-        <div className="container mx-auto px-4">
-          <GuaranteePanel />
         </div>
       </section>
 

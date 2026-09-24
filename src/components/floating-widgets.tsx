@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Phone, MessageCircle, X, Send, ArrowRight, Bot, User } from "lucide-react"
 import { site } from "@/site.config"
@@ -167,6 +168,10 @@ const quickReplies = [
 
 export function FloatingWidgets() {
   const [isChatOpen, setIsChatOpen] = useState(false)
+  // On the quote page the bar's "Get Free Quote" button points at the page the
+  // visitor is already on, so it reads as a broken button. Hide the whole bar there.
+  const pathname = usePathname()
+  const hideMobileBar = pathname === "/quote"
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -271,6 +276,7 @@ export function FloatingWidgets() {
       </motion.a>
 
       {/* Mobile Bottom Bar - Get Free Quote + Phone */}
+      {!hideMobileBar && (
       <motion.div
         className="fixed bottom-0 left-0 right-0 z-50 sm:hidden"
         initial={{ y: 100, opacity: 0 }}
@@ -304,6 +310,7 @@ export function FloatingWidgets() {
           </button>
         </div>
       </motion.div>
+      )}
 
       {/* Chat Toggle Button - Desktop (Bottom Right) */}
       <motion.button

@@ -184,7 +184,7 @@ Residential and conservatory jobs choose between two films, defined in `tiers` i
 - **Standard — Silver 20.** Mirror privacy by day, 5-year guarantee included. The 10-year
   guarantee is offered as an add-on on the quote screen, always as a pound figure
   ("Extend your guarantee to 10 years — £37.42").
-- **Premium — Reflective Privacy 20.** Clear view from inside, higher heat rejection,
+- **Premium — Dual Reflective 20.** Subtle exterior look, clear view from inside, higher heat rejection,
   10-year guarantee included (no upsell). Carries the "Most popular" badge.
 
 The calculator's **film step** sits after the window measurements and before any total is shown.

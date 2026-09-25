@@ -53,10 +53,11 @@ export const tiers: Record<TierKey, Tier> = {
   },
   premium: {
     label: "Premium",
-    film: "Reflective Privacy 20",
-    tagline: "Privacy without the mirror look inside.",
+    film: "Dual Reflective 20",
+    tagline: "Subtle from the street. Clear from inside.",
     bullets: [
       "Same one-way privacy by day",
+      "Subtle exterior look — not a bright mirror",
       "Clear, non-reflective view from inside",
       "Higher heat rejection",
       "10-year guarantee included",
@@ -256,7 +257,7 @@ export function guaranteeIncludedFor(zone: Zone, tier: TierKey): boolean {
 }
 
 export interface FilmPresentation {
-  /** "Dual-reflective privacy film", or "Premium — Reflective Privacy 20". */
+  /** "Dual-reflective privacy film", or "Premium — Dual Reflective 20". */
   name: string
   bullets: readonly string[]
   /** Set for a two-tier choice. Omitted so a single film is not called Premium. */

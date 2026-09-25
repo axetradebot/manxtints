@@ -31,7 +31,7 @@ export interface JobDetails {
   property_type?: string
   /** Pricing area label, e.g. "Isle of Man & North" */
   zone?: string
-  /** "Premium — Reflective Privacy 20" (tier label + film name) */
+  /** "Premium — Dual Reflective 20" (tier label + film name) */
   film_tier?: string
   /** Enquiry form only: "Standard" | "Premium" | "Advise me" */
   film_preference?: string
@@ -84,7 +84,7 @@ export interface BuiltLead {
  * Calculator (property) submission. Message layout:
  *
  *   Quote: £412.00 incl. 10% DIY discount. 3 window(s), 4.20m² @ £99/m² (Isle of Man & North)
- *   Film: Premium — Reflective Privacy 20 · 10yr guarantee
+ *   Film: Premium — Dual Reflective 20 · 10yr guarantee
  *   Window 1: 120 x 100 cm = 1.20 m²
  *   Window 2: …
  */

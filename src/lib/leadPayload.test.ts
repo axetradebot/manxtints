@@ -31,7 +31,7 @@ describe("buildPropertyLead — 3-window Premium job", () => {
       measured_by: "customer",
       property_type: "Residential",
       zone: "North West",
-      film_tier: "Premium — Reflective Privacy 20",
+      film_tier: "Premium — Dual Reflective 20",
       guarantee_years: 10,
       total_m2: 4.2,
       window_count: 3,
@@ -55,7 +55,7 @@ describe("buildPropertyLead — 3-window Premium job", () => {
     expect(quoteLine).toBe(
       `Quote: £${quote.finalTotal.toFixed(2)} incl. 10% DIY discount (10-year guarantee included). 3 window(s), 4.20m² @ £125/m² (North West)`
     )
-    expect(filmLine).toBe("Film: Premium — Reflective Privacy 20 · 10yr guarantee")
+    expect(filmLine).toBe("Film: Premium — Dual Reflective 20 · 10yr guarantee")
     expect(w1).toBe("Window 1: 120 x 100 cm = 1.20 m²")
     expect(w2).toBe("Window 2: 200 x 100 cm = 2.00 m²")
     expect(w3).toBe("Window 3: 100 x 100 cm = 1.00 m²")

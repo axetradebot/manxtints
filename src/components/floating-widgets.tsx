@@ -77,7 +77,7 @@ const knowledgeBase: Array<{ keywords: string[]; response: string | ((zone: Zone
     keywords: ["difference", "standard vs", "premium", "which film", "tier", "silver 20", "reflective privacy"],
     response: (zone) =>
       zoneHasTierChoice(zone)
-        ? `Two films for homes and conservatories:\n\n• Standard (Silver 20) — one-way mirror privacy by day, 5-year guarantee. From £${zone.pricePerM2.standard}/m² in ${zone.label}.\n• Premium (Reflective Privacy 20) — same daytime privacy but a clear, non-reflective view from inside, higher heat rejection and a 10-year guarantee. From £${zone.pricePerM2.premium}/m².\n\nBoth reverse at night with the lights on. Most customers pick Premium for living rooms and Standard for bathrooms, garages and outbuildings.`
+        ? `Two films for homes and conservatories:\n\n• Standard (Silver 20) — one-way mirror privacy by day, 5-year guarantee. From £${zone.pricePerM2.standard}/m² in ${zone.label}.\n• Premium (Dual Reflective 20) — same daytime privacy, a subtle look from the street rather than a bright mirror, a clear view from inside, higher heat rejection and a 10-year guarantee. From £${zone.pricePerM2.premium}/m².\n\nBoth reverse at night with the lights on. Most customers pick Premium for living rooms and Standard for bathrooms, garages and outbuildings.`
         : `On the ${zone.label} we fit one film: ${filmPresentation(zone, zone.tiers[0]).name} at £${fromPrice(zone)}/m². One-way privacy by day, a clear view from inside, and a 5-year guarantee. You can extend that to 10 years in the calculator.`,
   },
   {

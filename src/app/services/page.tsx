@@ -144,7 +144,7 @@ export default function ServicesPage() {
   const filmFaq: Faq = twoTiers
     ? {
         question: "What's the difference between Standard and Premium?",
-        answer: `Both give the same one-way privacy by day — the difference is what you see from inside. ${tiers.standard.label} (${tiers.standard.film}) has a slight mirror look from indoors and comes with a ${tiers.standard.guaranteeYears}-year guarantee; ${tiers.premium.label} (${tiers.premium.film}) is clear and non-reflective from inside, rejects more heat and includes a ${tiers.premium.guaranteeYears}-year guarantee.`,
+        answer: `Both give the same one-way privacy by day. ${tiers.standard.label} (${tiers.standard.film}) reads as a mirror from the street and has a slight mirror look from indoors, with a ${tiers.standard.guaranteeYears}-year guarantee. ${tiers.premium.label} (${tiers.premium.film}) has a subtle exterior look, stays clear and non-reflective from inside, rejects more heat and includes a ${tiers.premium.guaranteeYears}-year guarantee.`,
       }
     : {
         question: "Which film do you fit?",

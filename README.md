@@ -164,8 +164,8 @@ in `src/lib/pricing.zones.ts` — the single place to edit rates:
 
 | Zone key | Label               | Films                         | Postcode areas                                      |
 |----------|---------------------|-------------------------------|-----------------------------------------------------|
-| `iom`    | Isle of Man         | One film, £99/m²              | IM. Also Vercel country `IM`                        |
-| `north`  | North West          | Standard £99 / Premium £125   | M SK WA WN BL OL L CH CW PR BB FY LA ST CA, and any other UK postcode |
+| `iom`    | Isle of Man         | One film, £89/m²              | IM. Also Vercel country `IM`                        |
+| `north`  | North West          | Standard £89 / Premium £125   | M SK WA WN BL OL L CH CW PR BB FY LA ST CA, and any other UK postcode |
 | `se`     | South East & London | Standard £135 / Premium £165  | SL RG GU KT SM TW HA UB WD AL HP OX RH CR BR DA EN IG RM SW W NW N E EC WC SE |
 
 `?zone=standard` is a legacy alias for `north`. The Isle of Man film is the dual-reflective privacy film, shown without a Premium label, with a 5-year guarantee and the 10-year upsell. North West and South East keep the tier step.
@@ -195,7 +195,7 @@ The same `TierCards` component renders the "Two films. One simple choice." secti
 
 Leads record the tier in the service (`DIY Calculator — Residential (Premium)`) and the quote
 line, e.g. `Quote: £411.64 incl. 10% DIY discount + 10-year guarantee £37.42. 1 window(s),
-4.20m² @ £99/m² (Isle of Man & North). Film: Standard (Silver 20).`
+4.20m² @ £89/m² (Isle of Man & North). Film: Standard (Silver 20).`
 
 ### How the zone is resolved
 
@@ -219,7 +219,7 @@ updated." with the old total struck through and the new total shown, and **Book 
 disabled until the new total has rendered**. The corrected zone is persisted. Unmapped/invalid
 postcodes keep the displayed zone and add "We'll confirm your area's pricing with your quote."
 to the lead. Every lead's quote line ends with the zone, e.g.
-`Quote: £412.00 incl. 10% DIY discount. 2 window(s), 4.20m² @ £99/m² (North West)`.
+`Quote: £412.00 incl. 10% DIY discount. 2 window(s), 4.20m² @ £89/m² (North West)`.
 
 ### Ad links per region
 

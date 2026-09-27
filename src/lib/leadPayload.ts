@@ -83,7 +83,7 @@ export interface BuiltLead {
 /**
  * Calculator (property) submission. Message layout:
  *
- *   Quote: £412.00 incl. 10% DIY discount. 3 window(s), 4.20m² @ £99/m² (Isle of Man & North)
+ *   Quote: £412.00 incl. 10% DIY discount. 3 window(s), 4.20m² @ £89/m² (Isle of Man & North)
  *   Film: Premium — Dual Reflective 20 · 10yr guarantee
  *   Window 1: 120 x 100 cm = 1.20 m²
  *   Window 2: …

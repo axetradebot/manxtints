@@ -31,10 +31,10 @@ describe("zones config", () => {
     expect(zoneKeys).toEqual(["iom", "north", "se"])
     expect(zones.iom.label).toBe("Isle of Man")
     expect(zones.iom.tiers).toEqual(["premium"])
-    expect(zones.iom.pricePerM2).toEqual({ premium: 99 })
+    expect(zones.iom.pricePerM2).toEqual({ premium: 89 })
     expect(zones.iom.filmDisplayName).toBe("Dual-reflective privacy film")
     expect(zones.north.label).toBe("North West")
-    expect(zones.north.pricePerM2).toEqual({ standard: 99, premium: 125 })
+    expect(zones.north.pricePerM2).toEqual({ standard: 89, premium: 125 })
     expect(zones.se.label).toBe("South East & London")
     expect(zones.se.pricePerM2).toEqual({ standard: 135, premium: 165 })
     expect(defaultZone).toBe("north")
@@ -60,8 +60,8 @@ describe("zones config", () => {
     expect(includedGuaranteeYears(zones.iom, "premium")).toBe(5)
     expect(guaranteeIncludedFor(zones.iom, "premium")).toBe(false)
     expect(guaranteeIncludedFor(zones.north, "premium")).toBe(true)
-    expect(rateFor(zones.iom, "house", "premium")).toBe(99)
-    expect(rateFor(zones.iom, "house", "standard")).toBe(99)
+    expect(rateFor(zones.iom, "house", "premium")).toBe(89)
+    expect(rateFor(zones.iom, "house", "standard")).toBe(89)
   })
 
   it("tiers: Standard 5yr, Premium 10yr with the Most popular badge", () => {
@@ -76,7 +76,7 @@ describe("zones config", () => {
   })
 
   it("rateFor reads the tier for house/conservatory and ignores it for commercial", () => {
-    expect(rateFor(zones.north, "house", "standard")).toBe(99)
+    expect(rateFor(zones.north, "house", "standard")).toBe(89)
     expect(rateFor(zones.north, "house", "premium")).toBe(125)
     expect(rateFor(zones.se, "conservatory", "premium")).toBe(180)
     expect(rateFor(zones.se, "commercial", "premium")).toBe(zones.se.rates.commercial)
@@ -219,7 +219,7 @@ describe("zone rates flow through the calculator unchanged", () => {
     ]
     const std = quoteProperty(windows, zones.north.rates.house.standard!, false)
     const se = quoteProperty(windows, zones.se.rates.house.standard!, false)
-    expect(std.finalTotal).toBeCloseTo(2.4 * 99 * 0.9, 2)
+    expect(std.finalTotal).toBeCloseTo(2.4 * 89 * 0.9, 2)
     expect(se.finalTotal).toBeCloseTo(2.4 * 135 * 0.9, 2)
     expect(se.jobFloorApplied).toBe(false)
     expect(se.discountAmount / se.subtotal).toBeCloseTo(0.1, 6)
@@ -273,7 +273,7 @@ describe("zone minimum job charge", () => {
 describe("tier step across zone changes", () => {
   const windows = [{ name: "Bay", width: 200, height: 100 }]
 
-  it("north premium → iom collapses to the single film at £99 and leaves the tier step", () => {
+  it("north premium → iom collapses to the single film at £89 and leaves the tier step", () => {
     const before = quoteProperty(windows, rateFor(zones.north, "house", "premium"), false)
     expect(before.pricePerSqM).toBe(125)
     const next = tierAfterZoneChange({
@@ -286,8 +286,8 @@ describe("tier step across zone changes", () => {
     expect(next.tier).toBe("premium")
     expect(next.step).toBe(4)
     const after = quoteProperty(windows, rateFor(zones.iom, "house", next.tier), false, { minJob: zones.iom.minJob })
-    expect(after.pricePerSqM).toBe(99)
-    expect(after.finalTotal).toBeCloseTo(2 * 99 * 0.9, 2)
+    expect(after.pricePerSqM).toBe(89)
+    expect(after.finalTotal).toBeCloseTo(2 * 89 * 0.9, 2)
     const lead = buildPropertyLead({
       quote: after,
       zone: zones.iom,
@@ -316,7 +316,7 @@ describe("tier step across zone changes", () => {
     })
     expect(next).toEqual({ tier: "premium", step: 4 })
     const q = quoteProperty(windows, rateFor(zones.iom, "house", next.tier), true, { minJob: zones.iom.minJob })
-    expect(q.pricePerSqM).toBe(99)
+    expect(q.pricePerSqM).toBe(89)
     expect(q.guaranteeCost).toBeGreaterThan(0)
     expect(guaranteeIncludedFor(zones.iom, next.tier)).toBe(false)
   })
@@ -330,7 +330,7 @@ describe("tier step across zone changes", () => {
       step: 4,
     })
     expect(next).toEqual({ tier: "standard", step: 3 })
-    expect(rateFor(zones.north, "house", next.tier)).toBe(99)
+    expect(rateFor(zones.north, "house", next.tier)).toBe(89)
   })
 
   it("se → iom collapses the tier the same way", () => {
@@ -342,7 +342,7 @@ describe("tier step across zone changes", () => {
       step: 4,
     })
     expect(next.tier).toBe("premium")
-    expect(rateFor(zones.iom, "house", next.tier)).toBe(99)
+    expect(rateFor(zones.iom, "house", next.tier)).toBe(89)
     expect(filmPresentation(zones.iom, next.tier).name).not.toContain("Premium")
   })
 

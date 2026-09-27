@@ -11,21 +11,21 @@ import {
 } from "./pricing"
 import { rateFor, zones } from "./pricing.zones"
 
-const RESIDENTIAL_RATE = zones.north.rates.house.standard as number // £99
+const RESIDENTIAL_RATE = zones.north.rates.house.standard as number // £89
 
 describe("per-window £10 floor", () => {
   it("floors a tiny window to £10 before summing", () => {
-    // 30cm x 30cm = 0.09m² @ £99 = £8.91 → floored to £10
+    // 30cm x 30cm = 0.09m² @ £89 = £8.01 → floored to £10
     const q = quoteProperty([{ name: "W1", width: 30, height: 30 }], RESIDENTIAL_RATE, false)
-    expect(q.lines[0].rawPrice).toBeCloseTo(8.91, 2)
+    expect(q.lines[0].rawPrice).toBeCloseTo(8.01, 2)
     expect(q.lines[0].price).toBe(MIN_WINDOW)
     expect(q.lines[0].floorApplied).toBe(true)
   })
 
   it("leaves a normal window at area rate", () => {
-    // 100cm x 60cm = 0.6m² @ £99 = £59.40
+    // 100cm x 60cm = 0.6m² @ £89 = £53.40
     const q = quoteProperty([{ name: "W1", width: 100, height: 60 }], RESIDENTIAL_RATE, false)
-    expect(q.lines[0].price).toBeCloseTo(59.4, 2)
+    expect(q.lines[0].price).toBeCloseTo(53.4, 2)
     expect(q.lines[0].floorApplied).toBe(false)
   })
 })
@@ -56,9 +56,9 @@ describe("£100 job floor", () => {
   })
 
   it("total just under £100 post-discount gets floored", () => {
-    // 1.0m² @ £99 = £99 → discount → £89.10 → floored to £100
+    // 1.0m² @ £89 = £89 → discount → £80.10 → floored to £100
     const q = quoteProperty([{ name: "W1", width: 100, height: 100 }], RESIDENTIAL_RATE, false)
-    expect(q.discountedTotal).toBeCloseTo(89.1, 2)
+    expect(q.discountedTotal).toBeCloseTo(80.1, 2)
     expect(q.jobFloorApplied).toBe(true)
     expect(q.finalTotal).toBe(MIN_JOB)
   })
@@ -66,37 +66,37 @@ describe("£100 job floor", () => {
 
 describe("normal mixed job unchanged vs current maths", () => {
   it("matches subtotal × 0.9 when no floors apply", () => {
-    // 100x60 (0.6m²) + 150x120 (1.8m²) = 2.4m² @ £99 = £237.60 → ×0.9 = £213.84
+    // 100x60 (0.6m²) + 150x120 (1.8m²) = 2.4m² @ £89 = £213.60 → ×0.9 = £192.24
     const windows = [
       { name: "Lounge", width: 100, height: 60 },
       { name: "Patio", width: 150, height: 120 },
     ]
     const q = quoteProperty(windows, RESIDENTIAL_RATE, false)
-    expect(q.subtotal).toBeCloseTo(237.6, 2)
+    expect(q.subtotal).toBeCloseTo(213.6, 2)
     expect(q.lines.every((l) => !l.floorApplied)).toBe(true)
     expect(q.jobFloorApplied).toBe(false)
-    expect(q.finalTotal).toBeCloseTo(237.6 * 0.9, 2)
+    expect(q.finalTotal).toBeCloseTo(213.6 * 0.9, 2)
   })
 })
 
 describe("guarantee upsell = max(£29, 10% of post-floor total)", () => {
   it("is 10% of the total when that beats the £29 floor", () => {
-    // 4.2m² @ £99 = £415.80 → ×0.9 = £374.22 → 10% = £37.42
+    // 4.2m² @ £89 = £373.80 → ×0.9 = £336.42 → 10% = £33.64
     const q = quoteProperty([{ name: "Bay", width: 300, height: 140 }], RESIDENTIAL_RATE, true)
-    expect(q.baseTotal).toBeCloseTo(374.22, 2)
-    expect(q.guaranteeCost).toBeCloseTo(37.42, 2)
-    expect(q.finalTotal).toBeCloseTo(374.22 + 37.42, 2)
+    expect(q.baseTotal).toBeCloseTo(336.42, 2)
+    expect(q.guaranteeCost).toBeCloseTo(33.64, 2)
+    expect(q.finalTotal).toBeCloseTo(336.42 + 33.64, 2)
   })
 
   it("adds the guarantee AFTER discount and job floor (not discounted)", () => {
-    // 2.4m² @ £99 = £237.60 → ×0.9 = £213.84 → 10% = £21.38 → floor £29
+    // 2.4m² @ £89 = £213.60 → ×0.9 = £192.24 → 10% = £19.22 → floor £29
     const windows = [
       { name: "Lounge", width: 100, height: 60 },
       { name: "Patio", width: 150, height: 120 },
     ]
     const q = quoteProperty(windows, RESIDENTIAL_RATE, true)
     expect(q.guaranteeCost).toBe(guaranteeUpsell.minPounds)
-    expect(q.finalTotal).toBeCloseTo(237.6 * 0.9 + 29, 2)
+    expect(q.finalTotal).toBeCloseTo(213.6 * 0.9 + 29, 2)
   })
 
   it("guarantee sits on top of the £100 floor at the £29 minimum", () => {
@@ -123,7 +123,7 @@ describe("guarantee upsell = max(£29, 10% of post-floor total)", () => {
 
 describe("voucher ordering", () => {
   it("applies after the DIY discount and before the job floor, and the upsell follows the floored total", () => {
-    // 2.4m² @ £99 = £237.60 → ×0.9 = £213.84 → −£150 voucher = £63.84 → floor £100 → +£29
+    // 2.4m² @ £89 = £213.60 → ×0.9 = £192.24 → −£150 voucher = £42.24 → floor £100 → +£29
     const windows = [
       { name: "Lounge", width: 100, height: 60 },
       { name: "Patio", width: 150, height: 120 },

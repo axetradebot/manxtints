@@ -9,6 +9,7 @@
 
 import { guaranteeUpsell, type Quote } from "./pricing"
 import { tiers, type Tier, type Zone } from "./pricing.zones"
+import type { PhotoQuotePriceDTO } from "./photoQuote.schema"
 
 export interface JobWindow {
   /** "Window 1", or the name the customer typed */
@@ -43,6 +44,10 @@ export interface JobDetails {
   vehicle?: { type: string; package: string }
   /** The customer's free-text notes, verbatim */
   customer_notes?: string
+  /** Photo quote: the uploaded photos the estimate was made from */
+  photo_urls?: string[]
+  /** Photo quote: the model's caveats for the installer */
+  estimate_notes?: string
 }
 
 /** Line added to the lead when the postcode could not be matched to a pricing area. */
@@ -174,6 +179,67 @@ export function buildVehicleLead(input: VehicleLeadInput): BuiltLead {
   return {
     service: `DIY Calculator — Vehicle (${vehicleLabel})`,
     message: withNotes(input.customerNotes, summary),
+    jobDetails,
+  }
+}
+
+export interface PhotoQuoteLeadInput {
+  price: PhotoQuotePriceDTO
+  /** "Residential" | "Conservatory" | "Commercial" — the model's guess */
+  propertyTypeName: string
+  photoUrls: string[]
+  estimateNotes: string
+  /** The typed postcode did not parse, so pricing is provisional */
+  postcodeUnmapped: boolean
+  customerNotes: string
+}
+
+/**
+ * Photo quote booking. Message layout:
+ *
+ *   ESTIMATE (photo): £312.00 (range £265–£359), 3 panes, 3.5 m² @ Standard North West
+ *   Film: Standard — 5yr guarantee · estimated from photos, re-measure on the day
+ *   Patio door panel 1: 80 x 210 cm = 1.68 m² (confidence 0.7)
+ *   Photos: https://…
+ */
+export function buildPhotoQuoteLead(input: PhotoQuoteLeadInput): BuiltLead {
+  const { price, propertyTypeName, photoUrls, postcodeUnmapped } = input
+
+  const windows: JobWindow[] = price.panes.map((p, i) => ({
+    label: p.label?.trim() || `Window ${i + 1}`,
+    width_cm: p.width_cm,
+    height_cm: p.height_cm,
+    m2: round2(p.m2),
+  }))
+
+  const lines = [
+    `ESTIMATE (photo): ${gbp(price.point)} (range £${price.low}–£${price.high}), ${windows.length} pane(s), ${price.totalM2.toFixed(1)} m² @ Standard ${price.zoneLabel}${price.jobFloorApplied ? " (minimum job charge)" : ""}`,
+    `Film: Standard — ${tiers.standard.guaranteeYears}yr guarantee · estimated from photos, re-measure on the day`,
+    ...price.panes.map((p, i) => `${windows[i].label}: ${p.width_cm} x ${p.height_cm} cm = ${windows[i].m2.toFixed(2)} m² (confidence ${p.confidence.toFixed(1)})`),
+  ]
+  const notes = input.estimateNotes.trim()
+  if (notes) lines.push(`Surveyor notes: ${notes}`)
+  if (photoUrls.length > 0) lines.push(`Photos: ${photoUrls.join(" ")}`)
+  if (postcodeUnmapped) lines.push(UNMAPPED_POSTCODE_LINE)
+
+  const jobDetails: JobDetails = {
+    measured_by: "photo_estimate",
+    property_type: propertyTypeName,
+    zone: price.zoneLabel,
+    film_tier: `Standard — ${tiers.standard.film}`,
+    guarantee_years: tiers.standard.guaranteeYears,
+    total_m2: price.totalM2,
+    window_count: windows.length,
+    windows,
+    photo_urls: photoUrls,
+  }
+  if (notes) jobDetails.estimate_notes = notes
+  const customerNotes = input.customerNotes.trim()
+  if (customerNotes) jobDetails.customer_notes = customerNotes
+
+  return {
+    service: `Photo Quote — ${propertyTypeName}`,
+    message: withNotes(input.customerNotes, lines.join("\n")),
     jobDetails,
   }
 }

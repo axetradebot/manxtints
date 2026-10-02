@@ -39,6 +39,21 @@ export async function putEnquiryPhoto(
   return { id, publicUrl: null }
 }
 
+/**
+ * Removes a stored photo. `url` is the Blob URL when one was issued; the
+ * local fallback only needs the id. Missing files are not an error.
+ */
+export async function deleteEnquiryPhoto(id: string, url: string | null): Promise<void> {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return
+  const token = process.env.BLOB_READ_WRITE_TOKEN
+  if (token && url && /\.public\.blob\.vercel-storage\.com$/i.test(new URL(url).hostname)) {
+    const { del } = await import("@vercel/blob")
+    await del(url, { token })
+    return
+  }
+  await fs.rm(path.join(LOCAL_DIR, `${id}.jpg`), { force: true })
+}
+
 export async function getEnquiryPhoto(
   id: string
 ): Promise<{ bytes: Buffer; contentType: string } | null> {

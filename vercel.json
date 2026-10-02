@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/photo-quote/purge",
+      "schedule": "30 3 * * *"
+    }
+  ]
+}

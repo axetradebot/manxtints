@@ -366,12 +366,13 @@ export default async function AdminPage({
       )}
 
       {/* Headline numbers */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Kpi label="Visitors" value={fmtInt(visitors)} hint="sessions with a page view" />
         <Kpi label="Quote page" value={fmtInt(quotePage)} hint={shareOf(quotePage, visitors, "visitors")} />
         <Kpi label="Prices shown" value={fmtInt(priceShown)} hint={shareOf(priceShown, quotePage, "quote page")} />
         <Kpi label="Calculator leads" value={fmtInt(submitted)} hint={shareOf(submitted, priceShown, "prices shown")} />
         <Kpi label="Enquiry leads" value={fmtInt(report.enquiryFormSubmits)} hint="photo / message form" />
+        <Kpi label="Photo-quote leads" value={fmtInt(report.photoQuote.booked)} hint={shareOf(report.photoQuote.booked, report.photoQuote.priceShown, "prices shown")} />
       </div>
 
       {isEmpty ? (
@@ -511,6 +512,60 @@ export default async function AdminPage({
             <p className="text-xs text-muted-foreground">
               Submitted calculator value in this view: <span className="font-semibold text-foreground">{fmtGBP(report.submittedValue, 0)}</span>
             </p>
+          </Panel>
+
+          {/* Photo quote */}
+          <Panel
+            title="Photo quote"
+            aside={
+              <span className="text-xs text-muted-foreground">
+                AI spend {fmtGBP(report.photoQuote.usage.totalCostGbp, 2)} · {fmtInt(report.photoQuote.usage.calls)} estimates
+              </span>
+            }
+            footnote="Sessions that opened the photo sheet, saw a price, and booked. Cost is the model spend logged in ai_usage for the same window; cache hits cost nothing."
+          >
+            <div className="space-y-2.5">
+              {(() => {
+                const pq = report.photoQuote
+                const steps = [
+                  { label: "Started", n: pq.started },
+                  { label: "Price shown", n: pq.priceShown },
+                  { label: "Booked", n: pq.booked },
+                ]
+                const max = Math.max(1, pq.started)
+                return steps.map((step, i) => (
+                  <div key={step.label} className="grid grid-cols-[7rem_1fr_3.5rem_7rem] items-center gap-3 text-sm">
+                    <div className="truncate">{step.label}</div>
+                    <div className="h-7 overflow-hidden rounded-md bg-background/70">
+                      <div className="h-full rounded-md bg-primary/60" style={{ width: `${Math.max(1.5, (step.n / max) * 100)}%` }} />
+                    </div>
+                    <div className="text-right font-semibold tabular-nums">{fmtInt(step.n)}</div>
+                    <div className="text-right tabular-nums text-muted-foreground">
+                      {i > 0 && steps[i - 1].n > 0 ? fmtPct((step.n / steps[i - 1].n) * 100) : ""}
+                    </div>
+                  </div>
+                ))
+              })()}
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Stat label="Avg cost per estimate" value={fmtGBP(report.photoQuote.usage.avgCostGbp, 3)} hint={`${fmtInt(report.photoQuote.usage.cacheHits)} cache hits`} />
+              <Stat label="Avg estimate shown" value={fmtGBP(report.photoQuote.avgPriceShown, 0)} hint={report.photoQuote.avgPanes !== null ? `${report.photoQuote.avgPanes.toFixed(1)} panes avg` : undefined} />
+              <Stat label="Model errors" value={fmtInt(report.photoQuote.usage.errors)} hint="unparseable or failed calls" />
+              <Stat label="Blocked" value={fmtInt(report.photoQuote.usage.blocked)} hint="rate limit · spend cap · bot check" />
+            </div>
+            {report.photoQuote.failureReasons.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs text-muted-foreground">Why photo quotes failed (sessions)</p>
+                <ul className="divide-y divide-border/60 text-sm">
+                  {report.photoQuote.failureReasons.map((row) => (
+                    <li key={row.reason} className="flex justify-between gap-4 py-1.5">
+                      <span className="font-mono text-xs">{row.reason}</span>
+                      <span className="tabular-nums text-muted-foreground">{fmtInt(row.count)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </Panel>
 
           {/* Daily volume + audience */}

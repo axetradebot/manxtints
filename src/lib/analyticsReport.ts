@@ -7,6 +7,22 @@ import {
   storageBackend,
 } from "./eventStore"
 import { canonicalZone, isTierKey, zoneKeys, zones, type TierKey, type ZoneKey } from "./pricing.zones"
+import { aiUsageSummary, type AiUsageSummary } from "./photoQuote.store"
+
+export interface PhotoQuoteReport {
+  /** Sessions that opened the photo-quote sheet */
+  started: number
+  /** Sessions that saw a price */
+  priceShown: number
+  /** Sessions that booked from the photo quote */
+  booked: number
+  /** Sessions that hit a failure (limits, model, no panes…) */
+  failed: number
+  failureReasons: Array<{ reason: string; count: number }>
+  avgPriceShown: number | null
+  avgPanes: number | null
+  usage: AiUsageSummary
+}
 
 /** Price drop-off filter: a single pricing zone, or every session. */
 export type ZoneFilter = ZoneKey | "all"
@@ -90,6 +106,7 @@ export interface Report {
   enquiryNeeds: Array<{ need: string; count: number }>
   /** Sum of calculator totals that were submitted (respects zone + tier filters) */
   submittedValue: number
+  photoQuote: PhotoQuoteReport
 }
 
 const BUCKET_EDGES: Array<{ label: string; min: number; max: number | null }> = [
@@ -305,6 +322,49 @@ export async function buildReport(
     .map(([need, count]) => ({ need, count }))
     .sort((a, b) => b.count - a.count)
 
+  // Photo quote funnel: started → price shown → booked, plus what it cost.
+  const pqStarted = all.filter((l) => has(l, "photo_quote_started")).length
+  const pqShownSessions = all.filter((l) => has(l, "photo_quote_price_shown"))
+  const pqBooked = all.filter((l) => has(l, "photo_quote_booked")).length
+  const pqFailedSessions = all.filter((l) => has(l, "photo_quote_failed"))
+  const reasonCounts = new Map<string, number>()
+  for (const e of events) {
+    if (e.event !== "photo_quote_failed") continue
+    const reason = (e.payload as { reason?: unknown } | null)?.reason
+    if (typeof reason !== "string") continue
+    reasonCounts.set(reason, (reasonCounts.get(reason) || 0) + 1)
+  }
+  const pqPrices: number[] = []
+  const pqPanes: number[] = []
+  for (const list of pqShownSessions) {
+    const shows = list.filter((e) => e.event === "photo_quote_price_shown")
+    const payload = shows[shows.length - 1]?.payload as { point?: unknown; panes?: unknown } | null
+    const point = Number(payload?.point)
+    const panes = Number(payload?.panes)
+    if (Number.isFinite(point)) pqPrices.push(point)
+    if (Number.isFinite(panes)) pqPanes.push(panes)
+  }
+  const usage = await aiUsageSummary(since).catch<AiUsageSummary>(() => ({
+    calls: 0,
+    cacheHits: 0,
+    errors: 0,
+    blocked: 0,
+    totalCostGbp: 0,
+    avgCostGbp: null,
+  }))
+  const photoQuote: PhotoQuoteReport = {
+    started: pqStarted,
+    priceShown: pqShownSessions.length,
+    booked: pqBooked,
+    failed: pqFailedSessions.length,
+    failureReasons: [...reasonCounts.entries()]
+      .map(([reason, count]) => ({ reason, count }))
+      .sort((a, b) => b.count - a.count),
+    avgPriceShown: mean(pqPrices),
+    avgPanes: mean(pqPanes),
+    usage,
+  }
+
   return {
     days,
     backend: storageBackend(),
@@ -324,5 +384,6 @@ export async function buildReport(
     enquiryFormSubmits,
     enquiryNeeds,
     submittedValue,
+    photoQuote,
   }
 }

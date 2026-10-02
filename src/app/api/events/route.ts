@@ -10,6 +10,11 @@ const ALLOWED_EVENTS = new Set([
   "tier_selected",
   "calc_submitted",
   "enquiry_submitted",
+  "photo_quote_started",
+  "photo_quote_photos_added",
+  "photo_quote_price_shown",
+  "photo_quote_failed",
+  "photo_quote_booked",
 ])
 
 // Fire-and-forget collector: always answers 204 so a storage hiccup can

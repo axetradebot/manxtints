@@ -78,6 +78,12 @@ export interface QuoteOptions {
   voucher?: number
   /** £ minimum job charge for the customer's zone. Defaults to MIN_JOB. */
   minJob?: number
+  /**
+   * Apply the 10% DIY calculator discount (default true). The photo quote
+   * prices the same way but without the discount — that is reserved for
+   * customers who measure up themselves.
+   */
+  diyDiscount?: boolean
 }
 
 export function quoteProperty(
@@ -131,7 +137,7 @@ function finishQuote(
   options: QuoteOptions,
   hasJob: boolean
 ): Quote {
-  const discountAmount = subtotal * DIY_DISCOUNT
+  const discountAmount = options.diyDiscount === false ? 0 : subtotal * DIY_DISCOUNT
   const discountedTotal = subtotal - discountAmount
   const voucherAmount = Math.min(Math.max(options.voucher ?? 0, 0), discountedTotal)
   const afterVoucher = discountedTotal - voucherAmount

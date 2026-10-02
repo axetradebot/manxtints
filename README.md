@@ -249,6 +249,40 @@ curl -s -H "x-vercel-ip-country: GB" -H "x-vercel-ip-city: Slough" http://localh
 curl -s -H "x-vercel-ip-country: GB" -H "x-vercel-ip-city: Manchester" http://localhost:3000/quote | grep -o 'Prices for [^<]*'
 ```
 
+## 📸 Photo quote (AI estimate on /quote)
+
+The big "Snap your windows for an instant quote" button on `/quote` opens a sheet: add a photo of
+each window → Claude Vision estimates the glass area of every pane → the Standard-film price for the
+visitor's zone is shown on screen → book. The DIY calculator and Quote Enquiry tabs are unchanged;
+the calculator stays the "measure yourself and save 10%" route (the photo estimate carries **no**
+DIY discount).
+
+**Setup** — add to Vercel (or `.env.local`):
+
+| Variable | Purpose |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Server-only. The feature is off (button shows a fallback to the calculator) until set. |
+| `PHOTO_QUOTE_MODEL` | Optional, default `claude-haiku-4-5`. |
+| `PHOTO_QUOTE_DAILY_CAP_GBP` | Optional, default `10`. Global daily spend cap; past it visitors see "High demand right now" and are sent to the calculator. |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile. Enforced on every estimate when the secret is set; skipped (with a server warning) when unset. |
+| `CRON_SECRET` | Authorises the daily purge cron (`vercel.json` → `/api/photo-quote/purge`). |
+| `DATABASE_URL`, `BLOB_READ_WRITE_TOKEN`, `PHOTO_SIGNING_SECRET` | Shared with analytics / enquiry photos. Postgres holds `ai_usage`, the 24h result cache and the photo registry; without it the dev file/memory fallback is used. |
+
+**Flow and routes**
+
+- `POST /api/photo-quote/session` — short-lived HMAC session token issued when the sheet opens.
+- `POST /api/photo-quote/upload` — one JPEG per call (client resizes to 1280px, strips EXIF, flags blurry/dark shots). Max 8 photos, 4 MB each.
+- `POST /api/photo-quote` — the estimate. Order of checks: session → Turnstile → 3/hour and 10/day per IP (counted from `ai_usage`) → daily £ cap → images fetched **server-side from our own storage only** → 24h cache by image-set hash → model call → Zod validation, pane clamp 0.1–8 m², server-side pricing (`src/lib/photoQuote.pricing.ts`: Standard rate × m² → £10/pane floor → zone job floor, ±15% range).
+- `POST /api/photo-quote/price` — server recompute after pane edits / postcode reconfirmation, before the lead is sent via the normal `submitLead()`.
+- `POST /api/photo-quote/booked` — marks the photos as attached to a lead so the purge keeps them.
+- `GET /api/photo-quote/purge` — cron: deletes unbooked photos older than 30 days.
+
+Every attempt is logged to `ai_usage` (model, tokens, £ cost, zone, panes, outcome). `/admin` shows the
+photo-quote funnel (started → price shown → booked), average cost per estimate, cache hits, errors and
+blocks. Analytics events: `photo_quote_started`, `photo_quote_photos_added`, `photo_quote_price_shown`,
+`photo_quote_failed`, `photo_quote_booked`. The lead arrives with `service: "Photo Quote — Residential"`,
+an `ESTIMATE (photo): £…` first line and `job_details.measured_by = "photo_estimate"` plus `photo_urls`.
+
 ## 🌐 Deployment to Vercel
 
 ### Option 1: One-Click Deploy

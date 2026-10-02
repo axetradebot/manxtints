@@ -62,6 +62,12 @@ import { useZone } from "@/components/zone/zone-provider"
 import { ZoneChip, ZoneNotice } from "@/components/zone/zone-chip"
 import { TierCards } from "@/components/tiers/tier-cards"
 import { QuoteEnquiryForm } from "@/components/quote-enquiry-form"
+import { PhotoQuoteEntry } from "@/components/photo-quote/photo-quote-entry"
+
+/** window event: photo quote → calculator, detail = number of panes to prefill. */
+const PREFILL_PANES_EVENT = "mt:prefill-panes"
+/** Also honoured as `/quote?panes=N` for deep links. */
+const PANES_PARAM = "panes"
 
 // Vehicle packages — prices come from the pricing zone (see lib/pricing.zones.ts)
 const vehiclePackages = {
@@ -157,6 +163,18 @@ export default function QuotePage() {
   useEffect(() => {
     trackViewContent({ contentName: "quote_page", contentCategory: "quote" })
   }, [])
+
+  // From the photo quote: open the calculator and, when a pane count is
+  // known, start it with that many blank windows ready to measure.
+  const switchToCalculator = (paneCount: number) => {
+    setActiveTab("calculator")
+    if (paneCount > 0) {
+      window.dispatchEvent(new CustomEvent<number>(PREFILL_PANES_EVENT, { detail: paneCount }))
+    }
+    requestAnimationFrame(() => {
+      document.getElementById("quote-tabs")?.scrollIntoView({ behavior: "smooth", block: "start" })
+    })
+  }
   
   return (
     <div className="relative">
@@ -184,44 +202,11 @@ export default function QuotePage() {
                 <span className="text-gradient block">Free Quote</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-8">
-                Two ways to get your personalized quote — but here&apos;s the smart move...
+                Photograph your windows and see a price in seconds — or measure up for the exact figure.
               </p>
 
-              {/* 10% Off DIY Calculator Promo */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="relative inline-block max-w-2xl pt-4"
-              >
-                {/* Floating SAVE 10% badge */}
-                <motion.div
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute top-0 right-4 sm:right-6 z-10"
-                >
-                  <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 text-sm px-3 py-1.5 shadow-lg">
-                    <Sparkles className="h-3.5 w-3.5 mr-1" />
-                    SAVE 10%
-                  </Badge>
-                </motion.div>
-
-                <div className="relative rounded-2xl border-2 border-green-500 bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-teal-400/10 p-6">
-                  <div className="flex items-center gap-4 text-left">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
-                      <Calculator className="h-7 w-7 text-white" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-lg mb-1">
-                        Use our DIY Calculator and get <span className="text-green-600 dark:text-green-400">10% off automatically!</span>
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Skip the wait — instant quote, instant discount. Takes 2 minutes.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
+              {/* Photo quote — the primary way in. The calculator is the "measure yourself" alternative. */}
+              <PhotoQuoteEntry onUseCalculator={switchToCalculator} className="pt-2" />
             </div>
           </FadeIn>
         </div>
@@ -232,7 +217,7 @@ export default function QuotePage() {
         <div className="container mx-auto px-4">
           <Tabs value={activeTab} className="space-y-12" onValueChange={setActiveTab}>
             <FadeIn immediate>
-              <TabsList className="grid grid-cols-2 max-w-2xl mx-auto h-auto p-2 bg-card/50">
+              <TabsList id="quote-tabs" className="grid grid-cols-2 max-w-2xl mx-auto h-auto p-2 bg-card/50 scroll-mt-24">
                 <TabsTrigger 
                   value="calculator" 
                   className="relative py-4 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-500 data-[state=active]:text-white gap-2"
@@ -375,6 +360,37 @@ function DIYCalculator() {
       }
     } catch { /* storage full/unavailable — non-critical */ }
   }, [windows])
+
+  // Photo quote hand-off (window event) and `?panes=N` deep link: start on the
+  // measurements step with that many blank windows. Never removes windows
+  // already typed — only tops the list up to the pane count.
+  useEffect(() => {
+    const prefill = (count: number) => {
+      if (!Number.isInteger(count) || count < 1 || count > 24) return
+      setCategory("property")
+      setSelectedType((current) => current ?? "house")
+      setWindows((current) => {
+        if (current.length >= count) return current
+        const extra = Array.from({ length: count - current.length }, (_, i) => ({
+          id: crypto.randomUUID(),
+          name: `Window ${current.length + i + 1}`,
+          width: 0,
+          height: 0,
+        }))
+        return [...current, ...extra]
+      })
+      setStep(2)
+    }
+    const onEvent = (event: Event) => prefill(Number((event as CustomEvent<number>).detail))
+    window.addEventListener(PREFILL_PANES_EVENT, onEvent)
+    const param = Number(new URLSearchParams(window.location.search).get(PANES_PARAM))
+    let frame = 0
+    if (param > 0) frame = requestAnimationFrame(() => prefill(param))
+    return () => {
+      window.removeEventListener(PREFILL_PANES_EVENT, onEvent)
+      cancelAnimationFrame(frame)
+    }
+  }, [])
 
   const addWindow = () => {
     track('calc_windows_added', { count: windows.length + 1 })

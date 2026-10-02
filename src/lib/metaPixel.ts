@@ -42,7 +42,7 @@ declare global {
   }
 }
 
-export type LeadContentName = "diy_calculator" | "quote_enquiry"
+export type LeadContentName = "diy_calculator" | "quote_enquiry" | "photo_quote"
 
 export interface TrackLeadParams {
   contentName: LeadContentName

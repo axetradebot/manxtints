@@ -1132,12 +1132,14 @@ function ContactStep({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="pq-name">Full name *</Label>
-          <Input id="pq-name" name="name" required autoComplete="name" placeholder="John Smith" className="bg-background" />
+          <Label htmlFor="pq-name">First name *</Label>
+          <Input id="pq-name" name="name" required autoComplete="given-name" placeholder="John" className="bg-background" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="pq-phone">Phone *</Label>
-          <Input id="pq-phone" name="phone" type="tel" required autoComplete="tel" placeholder="+44 7624 000 000" className="bg-background" />
+          <Label htmlFor="pq-phone">
+            Phone <span className="font-normal text-muted-foreground">(optional)</span>
+          </Label>
+          <Input id="pq-phone" name="phone" type="tel" autoComplete="tel" placeholder="+44 7624 000 000" className="bg-background" />
         </div>
       </div>
       <div className="space-y-1.5">

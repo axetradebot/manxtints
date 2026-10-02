@@ -1767,22 +1767,25 @@ function DIYCalculator() {
                     
                     <div className="grid sm:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label htmlFor="calcName">Full Name *</Label>
+                        <Label htmlFor="calcName">First name *</Label>
                         <Input
                           id="calcName"
                           name="name"
                           required
-                          placeholder="John Smith"
+                          autoComplete="given-name"
+                          placeholder="John"
                           className="bg-background/50"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="calcPhone">Phone Number *</Label>
+                        <Label htmlFor="calcPhone">
+                          Phone number <span className="text-muted-foreground font-normal">(optional)</span>
+                        </Label>
                         <Input
                           id="calcPhone"
                           name="phone"
                           type="tel"
-                          required
+                          autoComplete="tel"
                           placeholder="+44 7624 000 000"
                           className="bg-background/50"
                         />

@@ -403,9 +403,9 @@ export function QuoteEnquiryForm({ onSwitchToCalculator }: { onSwitchToCalculato
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="name">
-                      Full name <span className="text-muted-foreground font-normal">(optional)</span>
+                      First name <span className="text-muted-foreground font-normal">(optional)</span>
                     </Label>
-                    <Input id="name" name="name" placeholder="John Smith" className="bg-background/50" />
+                    <Input id="name" name="name" autoComplete="given-name" placeholder="John" className="bg-background/50" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">

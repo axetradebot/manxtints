@@ -262,6 +262,7 @@ DIY discount).
 | Variable | Purpose |
 | --- | --- |
 | `ANTHROPIC_API_KEY` | Server-only. The feature is off (button shows a fallback to the calculator) until set. |
+| `ANTHROPIC_WORKSPACE_ID` | Only with a user-scoped key (`sk-ant-usr-…`), which Anthropic rejects unless a workspace is named. Workspace-scoped keys (`sk-ant-api03-…`) don't need it. |
 | `PHOTO_QUOTE_MODEL` | Optional, default `claude-haiku-4-5`. |
 | `PHOTO_QUOTE_DAILY_CAP_GBP` | Optional, default `10`. Global daily spend cap; past it visitors see "High demand right now" and are sent to the calculator. |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile. Enforced on every estimate when the secret is set; skipped (with a server warning) when unset. |

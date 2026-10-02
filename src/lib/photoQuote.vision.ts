@@ -210,7 +210,14 @@ function mockVision(images: LoadedImage[]): VisionCallResult {
 export async function callVision(images: LoadedImage[], anchorWidthCm: number | undefined): Promise<VisionCallResult> {
   if (photoQuoteMocked()) return mockVision(images)
   const model = photoQuoteModel()
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: 25_000, maxRetries: 1 })
+  // User-scoped keys (sk-ant-usr-…) are rejected unless the request names a workspace.
+  const workspaceId = (process.env.ANTHROPIC_WORKSPACE_ID || "").trim()
+  const client = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+    timeout: 25_000,
+    maxRetries: 1,
+    defaultHeaders: workspaceId ? { "anthropic-workspace-id": workspaceId } : undefined,
+  })
 
   const content: Anthropic.Messages.ContentBlockParam[] = [
     ...images.map<Anthropic.Messages.ImageBlockParam>((img) => ({

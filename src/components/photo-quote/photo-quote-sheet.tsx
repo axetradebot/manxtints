@@ -174,7 +174,6 @@ export function PhotoQuoteSheet({ open, onOpenChange, onUseCalculator }: PhotoQu
   const [session, setSession] = useState<string | null>(null)
   const [featureEnabled, setFeatureEnabled] = useState(true)
   const [photos, setPhotos] = useState<PhotoItem[]>([])
-  const [anchorWidth, setAnchorWidth] = useState("")
   const [error, setError] = useState<ErrorCode | null>(null)
   const [estimate, setEstimate] = useState<EstimateResponse | null>(null)
   const [panes, setPanes] = useState<ClientPane[]>([])
@@ -201,7 +200,6 @@ export function PhotoQuoteSheet({ open, onOpenChange, onUseCalculator }: PhotoQu
     setEstimate(null)
     setPanes([])
     setEditingId(null)
-    setAnchorWidth("")
     if (!startedRef.current) {
       startedRef.current = true
       track("photo_quote_started", { zone: zoneKey })
@@ -309,7 +307,6 @@ export function PhotoQuoteSheet({ open, onOpenChange, onUseCalculator }: PhotoQu
     if (!session || readyPhotos.length === 0) return
     setError(null)
     setStep("estimating")
-    const anchor = Number(anchorWidth)
     try {
       const response = await fetch("/api/photo-quote", {
         method: "POST",
@@ -318,7 +315,6 @@ export function PhotoQuoteSheet({ open, onOpenChange, onUseCalculator }: PhotoQu
           session,
           turnstile: turnstileToken.current ?? undefined,
           photos: readyPhotos.map((p) => p.url),
-          anchorWidthCm: Number.isFinite(anchor) && anchor >= 20 ? anchor : undefined,
           zone: zoneKey,
         }),
       })
@@ -586,27 +582,6 @@ export function PhotoQuoteSheet({ open, onOpenChange, onUseCalculator }: PhotoQu
                       </div>
                     </div>
                   )}
-
-                  {/* Optional scale anchor */}
-                  <div className="rounded-xl border border-border/60 bg-card/50 p-4">
-                    <Label htmlFor="pq-anchor" className="text-sm">
-                      Know one window&apos;s width? <span className="font-normal text-muted-foreground">(optional)</span>
-                    </Label>
-                    <div className="mt-2 flex items-center gap-2">
-                      <Input
-                        id="pq-anchor"
-                        type="number"
-                        inputMode="numeric"
-                        min={20}
-                        max={600}
-                        placeholder="e.g. 120"
-                        value={anchorWidth}
-                        onChange={(e) => setAnchorWidth(e.target.value)}
-                        className="max-w-[9rem] bg-background"
-                      />
-                      <span className="text-sm text-muted-foreground">cm wide — helps us scale the rest</span>
-                    </div>
-                  </div>
 
                   <Turnstile
                     ref={turnstileRef}

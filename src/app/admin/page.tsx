@@ -82,6 +82,20 @@ function shortDate(iso: string): string {
   return `${Number(d)}/${Number(m)}`
 }
 
+function fmtWhen(ts: number): string {
+  return new Date(ts).toLocaleString("en-GB", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/London",
+  })
+}
+
+function sharePct(part: number, whole: number): string {
+  return whole > 0 ? `${((part / whole) * 100).toFixed(0)}%` : "—"
+}
+
 // ---------------------------------------------------------------------------
 // Building blocks
 // ---------------------------------------------------------------------------
@@ -522,7 +536,7 @@ export default async function AdminPage({
                 AI spend {fmtGBP(report.photoQuote.usage.totalCostGbp, 2)} · {fmtInt(report.photoQuote.usage.calls)} estimates
               </span>
             }
-            footnote="Sessions that opened the photo sheet, saw a price, and booked. Cost is the model spend logged in ai_usage for the same window; cache hits cost nothing."
+            footnote="Sessions that opened the photo sheet, saw a price, and booked. Route share is of quote-page sessions and a visitor can take more than one route. Source is the referrer of the session's first hit. Cost is the model spend logged in ai_usage for the same window; cache hits cost nothing."
           >
             <div className="space-y-2.5">
               {(() => {
@@ -566,6 +580,140 @@ export default async function AdminPage({
                 </ul>
               </div>
             )}
+
+            {/* Who uses it */}
+            <div className="grid gap-5 border-t border-border/60 pt-5 lg:grid-cols-3">
+              <div>
+                <p className="mb-2 text-xs text-muted-foreground">Route taken on the quote page ({fmtInt(report.photoQuote.routes.quotePage)} sessions)</p>
+                {(() => {
+                  const r = report.photoQuote.routes
+                  const rows = [
+                    { label: "Photo quote", n: r.photo, color: "bg-primary/70" },
+                    { label: "Calculator", n: r.calculator, color: "bg-green-500/60" },
+                    { label: "Enquiry form", n: r.enquiry, color: "bg-amber-500/60" },
+                    { label: "Photo → calculator", n: r.photoThenCalculator, color: "bg-muted-foreground/40" },
+                  ]
+                  const max = Math.max(1, r.quotePage)
+                  return (
+                    <div className="space-y-2 text-sm">
+                      {rows.map((row) => (
+                        <div key={row.label} className="grid grid-cols-[8.5rem_1fr_5.5rem] items-center gap-3">
+                          <div className="truncate">{row.label}</div>
+                          <div className="h-2.5 overflow-hidden rounded-full bg-background/70">
+                            <div className={`h-full rounded-full ${row.color}`} style={{ width: `${Math.max(1, (row.n / max) * 100)}%` }} />
+                          </div>
+                          <div className="text-right tabular-nums text-muted-foreground">
+                            <span className="font-semibold text-foreground">{fmtInt(row.n)}</span> · {sharePct(row.n, r.quotePage)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs text-muted-foreground">Photo-quote users by device</p>
+                {(() => {
+                  const { mobile, desktop } = report.photoQuote.deviceSplit
+                  const total = Math.max(1, mobile + desktop)
+                  return (
+                    <div className="space-y-1.5">
+                      <div className="flex h-2.5 overflow-hidden rounded-full bg-background/70">
+                        <div className="bg-primary/70" style={{ width: `${(mobile / total) * 100}%` }} />
+                        <div className="bg-muted-foreground/40" style={{ width: `${(desktop / total) * 100}%` }} />
+                      </div>
+                      <div className="flex justify-between text-xs text-muted-foreground tabular-nums">
+                        <span>Mobile {fmtInt(mobile)} · {sharePct(mobile, mobile + desktop)}</span>
+                        <span>Desktop {fmtInt(desktop)} · {sharePct(desktop, mobile + desktop)}</span>
+                      </div>
+                    </div>
+                  )
+                })()}
+                <p className="mb-2 mt-5 text-xs text-muted-foreground">Where they came from</p>
+                {report.photoQuote.sources.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No photo-quote sessions yet.</p>
+                ) : (
+                  <ul className="divide-y divide-border/60 text-sm">
+                    {report.photoQuote.sources.slice(0, 6).map((row) => (
+                      <li key={row.source} className="flex justify-between gap-4 py-1.5">
+                        <span className="truncate">{row.source}</span>
+                        <span className="tabular-nums text-muted-foreground">{fmtInt(row.count)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs text-muted-foreground">By pricing area</p>
+                <Table
+                  head={[
+                    { label: "Area" },
+                    { label: "Started", align: "right" },
+                    { label: "Priced", align: "right" },
+                    { label: "Booked", align: "right" },
+                  ]}
+                  rows={report.photoQuote.byZone.map((row) => ({
+                    key: row.zone,
+                    muted: row.started === 0,
+                    cells: [row.label, fmtInt(row.started), fmtInt(row.priceShown), <span key="b" className="font-semibold">{fmtInt(row.booked)}</span>],
+                  }))}
+                  empty="No photo-quote sessions yet."
+                />
+              </div>
+            </div>
+
+            {/* Recent sessions */}
+            <div className="border-t border-border/60 pt-5">
+              <p className="mb-2 text-xs text-muted-foreground">
+                Recent photo-quote sessions (latest {fmtInt(Math.min(report.photoQuote.recent.length, 25))})
+              </p>
+              <Table
+                head={[
+                  { label: "When" },
+                  { label: "Device" },
+                  { label: "Area" },
+                  { label: "Source" },
+                  { label: "Photos", align: "right" },
+                  { label: "Panes", align: "right" },
+                  { label: "Estimate", align: "right" },
+                  { label: "Outcome" },
+                ]}
+                rows={report.photoQuote.recent.map((s) => {
+                  const outcome =
+                    s.outcome === "booked" ? (
+                      <span className="rounded-full bg-green-500/15 px-2 py-0.5 text-xs font-semibold text-green-700">Booked</span>
+                    ) : s.outcome === "price_shown" ? (
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">Price shown</span>
+                    ) : s.outcome === "failed" ? (
+                      <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-xs font-semibold text-red-700">
+                        Failed{s.reason ? ` · ${s.reason}` : ""}
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">Opened only</span>
+                    )
+                  return {
+                    key: `${s.id}-${s.ts}`,
+                    muted: s.outcome === "started",
+                    cells: [
+                      <span key="when" title={`session ${s.id}`}>{fmtWhen(s.ts)}</span>,
+                      s.device === "mobile" ? "Mobile" : "Desktop",
+                      s.zoneLabel,
+                      s.source,
+                      s.photos > 0 ? fmtInt(s.photos) : "—",
+                      s.panes !== null ? fmtInt(s.panes) : "—",
+                      s.price !== null ? fmtGBP(s.price, 0) : "—",
+                      <span key="o" className="inline-flex flex-wrap items-center gap-1.5">
+                        {outcome}
+                        {s.wentToCalculator && <span className="text-xs text-muted-foreground">→ calculator</span>}
+                      </span>,
+                    ],
+                  }
+                })}
+                empty="Nobody has opened the photo quote in this window yet."
+              />
+            </div>
           </Panel>
 
           {/* Daily volume + audience */}

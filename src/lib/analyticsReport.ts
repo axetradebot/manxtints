@@ -9,6 +9,31 @@ import {
 import { canonicalZone, isTierKey, zoneKeys, zones, type TierKey, type ZoneKey } from "./pricing.zones"
 import { aiUsageSummary, type AiUsageSummary } from "./photoQuote.store"
 
+export type PhotoQuoteOutcome = "booked" | "price_shown" | "failed" | "started"
+
+/** One visitor's pass through the photo quote, newest first in the report. */
+export interface PhotoQuoteSession {
+  /** Short, non-identifying session handle for eyeballing repeats */
+  id: string
+  /** When the sheet was first opened */
+  ts: number
+  device: "mobile" | "desktop"
+  zone: ZoneKey | null
+  zoneLabel: string
+  /** Where the session arrived from (referrer host), "Direct" when none */
+  source: string
+  /** Photos that uploaded successfully */
+  photos: number
+  panes: number | null
+  /** Last estimate shown (the booked figure when they booked) */
+  price: number | null
+  outcome: PhotoQuoteOutcome
+  /** Last failure code when the outcome is "failed" */
+  reason: string | null
+  /** Opened the calculator in the same session after the photo quote */
+  wentToCalculator: boolean
+}
+
 export interface PhotoQuoteReport {
   /** Sessions that opened the photo-quote sheet */
   started: number
@@ -22,6 +47,43 @@ export interface PhotoQuoteReport {
   avgPriceShown: number | null
   avgPanes: number | null
   usage: AiUsageSummary
+  /** Which route quote-page visitors took; a session can count in more than one */
+  routes: {
+    quotePage: number
+    photo: number
+    calculator: number
+    enquiry: number
+    /** Opened the photo sheet and then the calculator */
+    photoThenCalculator: number
+  }
+  /** Device of sessions that opened the photo sheet */
+  deviceSplit: { mobile: number; desktop: number }
+  byZone: Array<{ zone: ZoneKey | "unknown"; label: string; started: number; priceShown: number; booked: number }>
+  /** Referrer hosts of sessions that opened the photo sheet */
+  sources: Array<{ source: string; count: number }>
+  recent: PhotoQuoteSession[]
+}
+
+const RECENT_PHOTO_SESSIONS = 25
+
+/** Referrer → something a human recognises. Same-site and empty referrers are "Direct". */
+function sourceLabel(referrer: string | null): string {
+  if (!referrer) return "Direct"
+  let host: string
+  try {
+    host = new URL(referrer).hostname.replace(/^www\./, "").toLowerCase()
+  } catch {
+    return "Direct"
+  }
+  if (!host || host.includes("manxtints") || host === "localhost") return "Direct"
+  if (host.includes("facebook") || host === "fb.com" || host === "l.facebook.com" || host === "lm.facebook.com") return "Facebook"
+  if (host.includes("instagram")) return "Instagram"
+  if (host.includes("google")) return "Google"
+  if (host.includes("bing")) return "Bing"
+  if (host === "t.co" || host.includes("twitter") || host === "x.com") return "X"
+  if (host.includes("tiktok")) return "TikTok"
+  if (host.includes("linkedin")) return "LinkedIn"
+  return host
 }
 
 /** Price drop-off filter: a single pricing zone, or every session. */
@@ -352,6 +414,74 @@ export async function buildReport(
     totalCostGbp: 0,
     avgCostGbp: null,
   }))
+  // Who uses the photo quote: route taken on the quote page, device, area,
+  // where they came from, and a per-session trail for the most recent ones.
+  const pqSessions = all.filter((l) => has(l, "photo_quote_started"))
+  const quotePageSessions = all.filter(
+    (l) =>
+      has(l, "quote_page_view") ||
+      l.some((e) => e.event === "page_view" && e.path === "/quote") ||
+      has(l, "photo_quote_started") ||
+      has(l, "calc_started") ||
+      has(l, "enquiry_submitted")
+  )
+  const num = (value: unknown): number | null => {
+    const n = Number(value)
+    return Number.isFinite(n) ? n : null
+  }
+  const recent: PhotoQuoteSession[] = []
+  let pqMobile = 0
+  let pqDesktop = 0
+  let photoThenCalculator = 0
+  const zoneCounts = new Map<ZoneKey | "unknown", { started: number; priceShown: number; booked: number }>()
+  const sourceCounts = new Map<string, number>()
+  for (const list of pqSessions) {
+    const sorted = [...list].sort((a, b) => a.ts - b.ts)
+    const first = sorted[0]
+    const startedAt = sorted.find((e) => e.event === "photo_quote_started")!
+    const shows = sorted.filter((e) => e.event === "photo_quote_price_shown")
+    const booking = sorted.filter((e) => e.event === "photo_quote_booked").pop() ?? null
+    const lastShow = shows[shows.length - 1] ?? null
+    const lastFail = sorted.filter((e) => e.event === "photo_quote_failed").pop() ?? null
+    const photos = sorted
+      .filter((e) => e.event === "photo_quote_photos_added")
+      .reduce((max, e) => Math.max(max, num((e.payload as { count?: unknown } | null)?.count) ?? 0), 0)
+    const pricePayload = (booking?.payload ?? lastShow?.payload ?? null) as { point?: unknown; panes?: unknown; zone?: unknown } | null
+    const startPayload = startedAt.payload as { zone?: unknown } | null
+    const zone = canonicalZone(pricePayload?.zone) ?? canonicalZone(startPayload?.zone) ?? null
+    const device: "mobile" | "desktop" = first?.device === "mobile" ? "mobile" : "desktop"
+    const source = sourceLabel(first?.referrer ?? null)
+    const wentToCalculator = sorted.some((e) => e.event === "calc_started" && e.ts > startedAt.ts)
+    const outcome: PhotoQuoteOutcome = booking ? "booked" : lastShow ? "price_shown" : lastFail ? "failed" : "started"
+
+    if (device === "mobile") pqMobile++
+    else pqDesktop++
+    if (wentToCalculator) photoThenCalculator++
+    sourceCounts.set(source, (sourceCounts.get(source) || 0) + 1)
+    const zoneKey = zone ?? "unknown"
+    const zc = zoneCounts.get(zoneKey) ?? { started: 0, priceShown: 0, booked: 0 }
+    zc.started++
+    if (lastShow) zc.priceShown++
+    if (booking) zc.booked++
+    zoneCounts.set(zoneKey, zc)
+
+    recent.push({
+      id: startedAt.session.slice(0, 8),
+      ts: startedAt.ts,
+      device,
+      zone,
+      zoneLabel: zone ? zones[zone].label : "Unknown area",
+      source,
+      photos,
+      panes: num(pricePayload?.panes),
+      price: num(pricePayload?.point),
+      outcome,
+      reason: outcome === "failed" ? ((lastFail?.payload as { reason?: unknown } | null)?.reason?.toString() ?? null) : null,
+      wentToCalculator,
+    })
+  }
+  recent.sort((a, b) => b.ts - a.ts)
+
   const photoQuote: PhotoQuoteReport = {
     started: pqStarted,
     priceShown: pqShownSessions.length,
@@ -363,6 +493,25 @@ export async function buildReport(
     avgPriceShown: mean(pqPrices),
     avgPanes: mean(pqPanes),
     usage,
+    routes: {
+      quotePage: quotePageSessions.length,
+      photo: pqSessions.length,
+      calculator: quotePageSessions.filter((l) => has(l, "calc_started")).length,
+      enquiry: quotePageSessions.filter((l) => has(l, "enquiry_submitted")).length,
+      photoThenCalculator,
+    },
+    deviceSplit: { mobile: pqMobile, desktop: pqDesktop },
+    byZone: [...zoneKeys, "unknown" as const]
+      .map((key) => ({
+        zone: key,
+        label: key === "unknown" ? "Unknown area" : zones[key].label,
+        ...(zoneCounts.get(key) ?? { started: 0, priceShown: 0, booked: 0 }),
+      }))
+      .filter((row) => row.zone !== "unknown" || row.started > 0),
+    sources: [...sourceCounts.entries()]
+      .map(([source, count]) => ({ source, count }))
+      .sort((a, b) => b.count - a.count),
+    recent: recent.slice(0, RECENT_PHOTO_SESSIONS),
   }
 
   return {

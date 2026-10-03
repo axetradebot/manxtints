@@ -813,7 +813,10 @@ function PriceStep({
           <ZoneChip size="sm" />
         </div>
         {price.jobFloorApplied && (
-          <p className="mt-2 text-xs text-muted-foreground">Minimum job charge for {price.zoneLabel} is £{price.minJob}.</p>
+          <p className="mx-auto mt-3 max-w-sm text-sm text-muted-foreground" data-photo-quote-min-job>
+            Your {price.panes.length === 1 ? "window comes" : "windows come"} to £{price.subtotal.toFixed(2)} — the minimum charge to
+            book in {price.zoneLabel} is £{price.minJob}.
+          </p>
         )}
       </div>
 
@@ -1109,26 +1112,86 @@ function ContactStep({
     >
       <input type="text" name="_gotcha" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
 
-      <div className="rounded-xl border border-border/60 bg-card/50 p-4 text-center">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">Your estimate</p>
-        <p className="mt-1 text-3xl font-bold tabular-nums">£{shownPrice.point.toFixed(0)}</p>
-        <p className="text-xs text-muted-foreground">
-          Likely £{shownPrice.low}–£{shownPrice.high} · Standard film · {shownPrice.zoneLabel}
-        </p>
-        <AnimatePresence>
-          {repriced && (
-            <motion.p
-              initial={reduceMotion ? false : { opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={reduceMotion ? undefined : { opacity: 0, height: 0 }}
-              className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900"
-              data-photo-quote-repriced
-            >
-              Your postcode is in the {zones[postcodeZone as ZoneKey].label} area — price updated from £{price.point.toFixed(0)}.
-            </motion.p>
+      <motion.div
+        initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: "spring", bounce: 0.35, duration: 0.6 }}
+        className="relative overflow-hidden rounded-3xl border-2 border-green-500 bg-gradient-to-br from-green-500/10 via-emerald-500/10 to-teal-400/10 shadow-xl shadow-green-500/10"
+        data-photo-quote-summary
+      >
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400" />
+
+        <div className="absolute top-0 right-0">
+          <div className="flex items-center gap-1.5 rounded-bl-2xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-1.5 text-xs font-bold text-white shadow-lg">
+            <Camera className="h-3.5 w-3.5" />
+            PHOTO ESTIMATE
+          </div>
+        </div>
+
+        <div className="p-6 pt-11 text-center sm:p-8 sm:pt-12">
+          <p className="mb-2 text-sm font-medium text-muted-foreground">Your estimate</p>
+
+          <AnimatePresence>
+            {repriced && (
+              <motion.div
+                initial={reduceMotion ? false : { opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduceMotion ? undefined : { opacity: 0 }}
+                role="status"
+                aria-live="polite"
+                className="mx-auto mb-4 max-w-md rounded-xl border border-amber-400/60 bg-amber-50 px-4 py-3 text-left text-sm text-amber-900"
+                data-photo-quote-repriced
+              >
+                <p className="font-semibold">Your postcode is in the {zones[postcodeZone as ZoneKey].label} area — price updated.</p>
+                <p className="mt-1 text-amber-800">
+                  <span className="line-through">£{price.point.toFixed(2)}</span>
+                  <span aria-hidden> → </span>
+                  <span className="sr-only">now</span>
+                  <span className="font-semibold">£{shownPrice.point.toFixed(2)}</span>
+                  <span className="ml-1 text-xs">(area rate and minimum reapplied)</span>
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <motion.div
+            key={shownPrice.point}
+            initial={reduceMotion ? false : { opacity: 0, scale: 0.7 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.15, type: "spring", bounce: 0.5 }}
+            className="mb-3 flex flex-col items-center justify-center"
+          >
+            <span className="text-6xl font-bold leading-none text-gradient sm:text-7xl">£{shownPrice.point.toFixed(2)}</span>
+            <span className="mt-3 text-sm font-medium tracking-wide text-muted-foreground">All prices include VAT</span>
+          </motion.div>
+
+          <p className="text-sm font-medium">
+            Likely <span className="font-semibold">£{shownPrice.low}</span> to <span className="font-semibold">£{shownPrice.high}</span>
+          </p>
+
+          {shownPrice.jobFloorApplied && (
+            <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground" data-photo-quote-min-job>
+              Your {shownPrice.panes.length === 1 ? "window comes" : "windows come"} to £{shownPrice.subtotal.toFixed(2)} — the minimum
+              charge to book in {shownPrice.zoneLabel} is £{shownPrice.minJob}.
+            </p>
           )}
-        </AnimatePresence>
-      </div>
+
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground sm:gap-6">
+            <span className="flex items-center gap-1.5">
+              <Check className="h-4 w-4 text-green-500" />
+              Standard film · {shownPrice.zoneLabel}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Check className="h-4 w-4 text-green-500" />
+              No hidden fees
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Check className="h-4 w-4 text-green-500" />
+              Re-measured on the day
+            </span>
+          </div>
+        </div>
+      </motion.div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">

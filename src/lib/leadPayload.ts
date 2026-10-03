@@ -213,7 +213,7 @@ export function buildPhotoQuoteLead(input: PhotoQuoteLeadInput): BuiltLead {
   }))
 
   const lines = [
-    `ESTIMATE (photo): ${gbp(price.point)} (range £${price.low}–£${price.high}), ${windows.length} pane(s), ${price.totalM2.toFixed(1)} m² @ Standard ${price.zoneLabel}${price.jobFloorApplied ? " (minimum job charge)" : ""}`,
+    `ESTIMATE (photo): ${gbp(price.point)} (range £${price.low}–£${price.high}), ${windows.length} pane(s), ${price.totalM2.toFixed(1)} m² @ Standard ${price.zoneLabel}${price.jobFloorApplied ? ` (windows ${gbp(price.subtotal)}, minimum job charge £${price.minJob})` : ""}`,
     `Film: Standard — ${tiers.standard.guaranteeYears}yr guarantee · estimated from photos, re-measure on the day`,
     ...price.panes.map((p, i) => `${windows[i].label}: ${p.width_cm} x ${p.height_cm} cm = ${windows[i].m2.toFixed(2)} m² (confidence ${p.confidence.toFixed(1)})`),
   ]

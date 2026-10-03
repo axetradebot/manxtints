@@ -198,4 +198,20 @@ describe("buildPhotoQuoteLead", () => {
     expect(lead.jobDetails.windows).toHaveLength(2)
     expect(JSON.stringify(lead.jobDetails)).not.toMatch(/£|point|low|high/)
   })
+
+  it("spells out the window total and the zone minimum when the job floor applies", () => {
+    const price = pricePhotoQuote(normalisePanes([pane(60, 80)], 1), "iom")
+    expect(price.jobFloorApplied).toBe(true)
+    expect(price.point).toBe(zones.iom.minJob)
+    expect(price.subtotal).toBeLessThan(price.point)
+    const lead = buildPhotoQuoteLead({
+      price,
+      propertyTypeName: "Residential",
+      photoUrls: [],
+      estimateNotes: "",
+      postcodeUnmapped: false,
+      customerNotes: "",
+    })
+    expect(lead.message.split("\n")[0]).toContain(`(windows £${price.subtotal.toFixed(2)}, minimum job charge £${zones.iom.minJob})`)
+  })
 })

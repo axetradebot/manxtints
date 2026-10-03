@@ -232,13 +232,13 @@ describe("zone minimum job charge", () => {
     { name: "Patio", width: 150, height: 120 },
   ]
 
-  it("SE floors to £350, north and the Isle of Man stay at £100", () => {
+  it("SE floors to £350, the North West to £250 and the Isle of Man stays at £100", () => {
     expect(zones.se.minJob).toBe(350)
-    expect(zones.north.minJob).toBe(100)
+    expect(zones.north.minJob).toBe(250)
     expect(zones.iom.minJob).toBe(100)
   })
 
-  it("a £291.60 SE job is floored to £350; the same job in the North is not", () => {
+  it("a £291.60 SE job is floored to £350; the same job in the North is floored to £250", () => {
     // 2.4m² @ £135 = £324 → ×0.9 = £291.60 → below the £350 SE floor
     const se = quoteProperty(windows, zones.se.rates.house.standard!, false, { minJob: zones.se.minJob })
     expect(se.discountedTotal).toBeCloseTo(291.6, 2)
@@ -247,9 +247,17 @@ describe("zone minimum job charge", () => {
     expect(se.baseTotal).toBe(350)
     expect(se.finalTotal).toBe(350)
 
+    // 2.4m² @ £89 = £213.60 → ×0.9 = £192.24 → below the £250 North West floor
     const std = quoteProperty(windows, zones.north.rates.house.standard!, false, { minJob: zones.north.minJob })
-    expect(std.jobFloorApplied).toBe(false)
-    expect(std.minJob).toBe(100)
+    expect(std.discountedTotal).toBeCloseTo(192.24, 2)
+    expect(std.jobFloorApplied).toBe(true)
+    expect(std.minJob).toBe(250)
+    expect(std.finalTotal).toBe(250)
+
+    // The same job on the Isle of Man clears its £100 floor
+    const iom = quoteProperty(windows, zones.iom.rates.house.premium!, false, { minJob: zones.iom.minJob })
+    expect(iom.jobFloorApplied).toBe(false)
+    expect(iom.minJob).toBe(100)
   })
 
   it("SE job above £350 is not floored and the guarantee upsell follows the real total", () => {

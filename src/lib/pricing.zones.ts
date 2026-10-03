@@ -166,7 +166,7 @@ export const zones: Record<ZoneKey, Zone> = {
   },
   north: {
     label: "North West",
-    minJob: 100,
+    minJob: 250,
     tiers: ["standard", "premium"],
     pricePerM2: { standard: 89, premium: 125 },
     rates: {

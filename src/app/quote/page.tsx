@@ -845,7 +845,12 @@ function DIYCalculator() {
                           type="button"
                           whileHover={{ scale: isSelected ? 1.02 : 1.04, y: -2 }}
                           whileTap={{ scale: 0.98 }}
-                          onClick={() => setSelectedType(type.id)}
+                          onClick={() => {
+                            setSelectedType(type.id)
+                            if (windows.length === 0) addWindow()
+                            // Short beat so the tick animates before the step slides away.
+                            window.setTimeout(() => setStep(2), 220)
+                          }}
                           className={`relative p-6 sm:p-8 rounded-2xl border-2 transition-all text-center ${
                             isSelected
                               ? "border-primary bg-primary/10 shadow-xl shadow-primary/20"
@@ -1101,22 +1106,6 @@ function DIYCalculator() {
                     </motion.div>
                   )}
                   {/* end of Vehicle category block */}
-
-                  <div className="flex justify-end">
-                    <Button
-                      variant="electric"
-                      size="lg"
-                      onClick={() => {
-                        if (windows.length === 0) addWindow()
-                        setStep(2)
-                      }}
-                      disabled={!selectedType}
-                      className="gap-2"
-                    >
-                      Continue
-                      <ArrowRight className="h-5 w-5" />
-                    </Button>
-                  </div>
                 </motion.div>
               )}
 

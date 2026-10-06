@@ -41,6 +41,8 @@ export interface Tier {
   bullets: readonly string[]
   guaranteeYears: number
   badge?: string
+  /** Real install of this film, cropped 16:10 to the windows (public path + alt). */
+  photo: { src: string; alt: string }
 }
 
 export const tiers: Record<TierKey, Tier> = {
@@ -50,11 +52,19 @@ export const tiers: Record<TierKey, Tier> = {
     tagline: "Mirror privacy by day. Great value.",
     bullets: ["One-way mirror effect in daylight", "Reflects heat & glare", "5-year guarantee included"],
     guaranteeYears: 5,
+    photo: {
+      src: "/images/films/standard-silver-20.jpg",
+      alt: "White house with Silver 20 Standard film fitted — windows show a bright mirror finish from outside",
+    },
   },
   premium: {
     label: "Premium",
     film: "Dual Reflective 20",
     tagline: "Subtle from the street. Clear from inside.",
+    photo: {
+      src: "/images/films/premium-dual-reflective-20.jpg",
+      alt: "Pebble-dash house with Dual Reflective 20 Premium film fitted — windows have a subtle, low-reflection look",
+    },
     bullets: [
       "Same one-way privacy by day",
       "Subtle exterior look — not a bright mirror",
@@ -112,6 +122,8 @@ export interface Zone {
   filmDisplayName?: string
   /** Bullets for a single-film zone. Two-tier zones use `tiers[key].bullets`. */
   filmBullets?: readonly string[]
+  /** Short silent clip of the single film on real glass (4:5), with a poster frame for first paint. */
+  filmVideo?: { src: string; poster: string; alt: string }
   /** Residential £/m² per film offered, VAT inclusive. */
   pricePerM2: Partial<Record<TierKey, number>>
   /** Calculator rates per project type, VAT inclusive. Tiered types are per offered tier. */
@@ -142,6 +154,11 @@ export const zones: Record<ZoneKey, Zone> = {
     tiers: ["premium"],
     filmDisplayName: "Dual-reflective privacy film",
     filmBullets: IOM_FILM_BULLETS,
+    filmVideo: {
+      src: "/videos/films/iom-dual-reflective.mp4",
+      poster: "/images/films/iom-dual-reflective-poster.jpg",
+      alt: "Bifold doors with dual-reflective film: mirrored from the garden, then a clear view out from inside",
+    },
     pricePerM2: { premium: 89 },
     rates: {
       house: { premium: 89 },

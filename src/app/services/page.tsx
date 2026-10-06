@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { ArrowRight, Building2, Eye, EyeOff, Shield, Sun, Thermometer, Wind } from "lucide-react"
@@ -10,6 +11,7 @@ import { CtaBand } from "@/components/sections/cta-band"
 import { ZoneChip } from "@/components/zone/zone-chip"
 import { useZone } from "@/components/zone/zone-provider"
 import { TierCards, TierComparison } from "@/components/tiers/tier-cards"
+import { FilmVideo } from "@/components/tiers/film-video"
 import { guaranteeUpsell } from "@/lib/pricing"
 import { filmPresentation, tiers, zoneHasTierChoice, type GuideRateKey } from "@/lib/pricing.zones"
 import { hasStat, site } from "@/site.config"
@@ -29,6 +31,10 @@ const products: Array<{
   rate?: GuideRateKey
   note?: string
   quoteHref?: string
+  /** Short silent clip of the film on real glass (4:3), with a poster for first paint. */
+  video?: { src: string; poster: string; alt: string }
+  /** Still of a real install (4:3), used when there is no clip. */
+  photo?: { src: string; alt: string }
 }> = [
   {
     id: "privacy",
@@ -38,6 +44,11 @@ const products: Array<{
     bestFor: "Street-facing lounges, bedrooms, bathrooms and ground-floor offices.",
     rate: "privacy",
     note: "Reverses at night with lights on — ask about frosted film for all-hours privacy.",
+    video: {
+      src: "/videos/films/privacy-one-way.mp4",
+      poster: "/images/films/privacy-one-way-poster.jpg",
+      alt: "Bungalow windows with one-way mirror film: a mirror from the garden, a clear view from the sofa inside",
+    },
   },
   {
     id: "solar",
@@ -46,6 +57,11 @@ const products: Array<{
     benefit: `Rejects heat and glare${hasStat(site.filmSpec.heatRejectionPercent) ? ` — up to ${site.filmSpec.heatRejectionPercent}% of solar heat` : ""} — so rooms stay usable in summer.`,
     bestFor: "South- and west-facing rooms, home offices, big glazed extensions.",
     rate: "solar",
+    video: {
+      src: "/videos/films/solar-heat-control.mp4",
+      poster: "/images/films/solar-heat-control-poster.jpg",
+      alt: "Patio doors with solar film: a reflective finish from the garden, then a bright clear view from the dining room",
+    },
   },
   {
     id: "frosted",
@@ -54,6 +70,11 @@ const products: Array<{
     benefit: "Soft, even light with full privacy — day and night, lights on or off.",
     bestFor: "Bathrooms, front doors, meeting rooms, glass partitions.",
     rate: "frosted",
+    video: {
+      src: "/videos/films/frosted-privacy.mp4",
+      poster: "/images/films/frosted-privacy-poster.jpg",
+      alt: "Frosted film on an office partition wall: the glass stays bright and the room beyond stays private",
+    },
   },
   {
     id: "safety",
@@ -62,6 +83,10 @@ const products: Array<{
     benefit: "Holds broken glass together so it stays in the frame instead of falling in.",
     bestFor: "Doors, low-level glazing, shopfronts and anywhere children play.",
     rate: "securityResidential",
+    photo: {
+      src: "/images/films/safety-security.jpg",
+      alt: "A ManxTints installer fitting film to a large window above a stream",
+    },
   },
   {
     id: "conservatory",
@@ -70,6 +95,11 @@ const products: Array<{
     benefit: "Turns a greenhouse back into a room by reflecting heat and glare from the roof.",
     bestFor: "Glass and polycarbonate conservatory roofs, roof lanterns, skylights.",
     rate: "conservatory",
+    video: {
+      src: "/videos/films/conservatory-roof.mp4",
+      poster: "/images/films/conservatory-roof-poster.jpg",
+      alt: "Looking up through a conservatory roof: the glass stays bright with the film fitted",
+    },
   },
   {
     id: "commercial",
@@ -78,6 +108,10 @@ const products: Array<{
     benefit: "Cooler, glare-free workspaces and discreet privacy for offices and shopfronts.",
     bestFor: "Offices, retail, clinics, schools and public buildings.",
     rate: "commercialPrivacy",
+    photo: {
+      src: "/images/films/commercial-offices.jpg",
+      alt: "A corner office building with film fitted to its arched windows",
+    },
     note: "Installed around your opening hours with minimal disruption.",
   },
   {
@@ -261,6 +295,34 @@ export default function ServicesPage() {
                       className="absolute inset-0 z-10 rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                       aria-label={`Get a quote — ${product.title}`}
                     />
+                    {product.video ? (
+                      // Bleeds to the card edges: cancels p-7 and sits inside the 1px border.
+                      <FilmVideo
+                        src={product.video.src}
+                        poster={product.video.poster}
+                        alt={product.video.alt}
+                        label="Real install"
+                        sizes="(min-width: 1024px) 400px, (min-width: 768px) 50vw, 100vw"
+                        className="-mx-7 -mt-7 mb-6 aspect-[4/3] rounded-t-[23px]"
+                      />
+                    ) : (
+                      product.photo && (
+                        <div className="relative -mx-7 -mt-7 mb-6 aspect-[4/3] overflow-hidden rounded-t-[23px] bg-slate-100">
+                          <Image
+                            src={product.photo.src}
+                            alt={product.photo.alt}
+                            fill
+                            sizes="(min-width: 1024px) 400px, (min-width: 768px) 50vw, 100vw"
+                            quality={80}
+                            className="object-cover"
+                          />
+                          <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/55 to-transparent" />
+                          <span className="pointer-events-none absolute bottom-2.5 left-3 rounded-full bg-black/45 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+                            Real install
+                          </span>
+                        </div>
+                      )
+                    )}
                     <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-primary">
                       <product.icon className="h-6 w-6" />
                     </div>

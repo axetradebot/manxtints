@@ -43,7 +43,7 @@ const products: Array<{
     benefit: "Daytime privacy without curtains — a mirror from outside, a clear view from inside.",
     bestFor: "Street-facing lounges, bedrooms, bathrooms and ground-floor offices.",
     rate: "privacy",
-    note: "Reverses at night with lights on — ask about frosted film for all-hours privacy.",
+    note: "Privacy stops at night with the lights on. For privacy around the clock, choose frosted film.",
     video: {
       src: "/videos/films/privacy-one-way.mp4",
       poster: "/images/films/privacy-one-way-poster.jpg",
@@ -149,7 +149,7 @@ const sharedFaqs: Faq[] = [
   {
     question: "Does one-way mirror film work at night?",
     answer:
-      "Not in the same way. The mirror effect follows the light: by day outside is brighter so people see a reflection; at night with your lights on, the inside is brighter and people can see in. For privacy at all hours choose frosted film.",
+      "Not in the same way. By day, people outside see a mirror. At night with your lights on, the privacy stops working and people can see in. For privacy around the clock, choose frosted film.",
   },
   {
     question: "How long does installation take?",

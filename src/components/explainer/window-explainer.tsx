@@ -28,7 +28,7 @@ const CAPTIONS: Record<Benefit, string> = {
 }
 
 const NIGHT_CAPTION =
-  "At night with lights on, the effect reverses — for all-hours privacy, choose frosted film."
+  "At night with the lights on, the privacy stops working. For privacy around the clock, choose frosted film."
 
 const ease = [0.21, 0.47, 0.32, 0.98] as const
 
@@ -186,7 +186,7 @@ export function WindowExplainer({
               </AnimatePresence>
               {active === "privacy" && !night && (
                 <p className="mt-2 text-sm text-slate-500">
-                  Reverses at night with the lights on — tap <span className="font-medium text-slate-700">Night</span> to see.
+                  Privacy stops at night with the lights on — tap <span className="font-medium text-slate-700">Night</span> to see.
                 </p>
               )}
             </div>

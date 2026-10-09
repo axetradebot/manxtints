@@ -84,8 +84,11 @@ export function isTierKey(value: unknown): value is TierKey {
   return typeof value === "string" && Object.prototype.hasOwnProperty.call(tiers, value)
 }
 
-/** Both films are honest about night-time — shown on every tier card. */
-export const NIGHT_TIME_NOTE = "Daytime privacy — reverses at night with the lights on."
+/** Silver 20 only: the mirror really does flip after dark. */
+export const STANDARD_NIGHT_NOTE = "Daytime privacy — reverses at night with the lights on."
+
+/** Every other film: daytime privacy, and it stops once the lights are on. */
+export const NIGHT_TIME_NOTE = "Privacy stops at night with the lights on."
 
 /** Project types that offer a choice of film tier. */
 export const TIERED_TYPES: readonly PropertyRateKey[] = ["house", "conservatory"]
@@ -168,7 +171,7 @@ export const zones: Record<ZoneKey, Zone> = {
     guide: {
       privacy: 89,
       frosted: 89,
-      solar: 89,
+      solar: 200,
       conservatory: 120,
       commercialPrivacy: 98,
       uvBlocking: 119,
@@ -194,7 +197,7 @@ export const zones: Record<ZoneKey, Zone> = {
     guide: {
       privacy: 89,
       frosted: 89,
-      solar: 89,
+      solar: 200,
       conservatory: 120,
       commercialPrivacy: 98,
       uvBlocking: 119,
@@ -220,7 +223,7 @@ export const zones: Record<ZoneKey, Zone> = {
     guide: {
       privacy: 135,
       frosted: 135,
-      solar: 135,
+      solar: 200,
       conservatory: 150,
       commercialPrivacy: 124,
       uvBlocking: 150,

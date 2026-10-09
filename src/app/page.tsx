@@ -30,7 +30,7 @@ const buildFaqs = (zone: Zone): Faq[] => [
   {
     question: "Does one-way mirror film work at night?",
     answer:
-      "Honestly: not in the same way. One-way mirror film reflects whichever side is brighter. By day that's outside, so passers-by see a mirror. At night with your lights on, the inside is brighter and the effect reverses — people can see in. If you need privacy around the clock, we'll recommend a frosted film or a combination instead.",
+      "Honestly: not in the same way. By day the outside is brighter, so passers-by see a mirror and you see out. At night with your lights on, the privacy stops working and people can see in. If you need privacy around the clock, we'll recommend a frosted film or a combination instead.",
   },
   DOUBLE_GLAZING_FAQ,
   {

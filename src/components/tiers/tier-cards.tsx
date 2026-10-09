@@ -6,6 +6,7 @@ import { Camera, Check, Moon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   NIGHT_TIME_NOTE,
+  STANDARD_NIGHT_NOTE,
   filmPresentation,
   rateFor,
   tiers,
@@ -143,7 +144,7 @@ export function TierCards({
                 </ul>
                 <p className="mt-4 flex items-start gap-2 border-t border-border/60 pt-3 text-xs text-muted-foreground">
                   <Moon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                  {NIGHT_TIME_NOTE}
+                  {choice && key === "standard" ? STANDARD_NIGHT_NOTE : NIGHT_TIME_NOTE}
                 </p>
                 {linkToCalculator && (
                   <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">

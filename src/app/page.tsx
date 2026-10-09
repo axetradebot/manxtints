@@ -166,9 +166,9 @@ export default function Home() {
                     <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </Button>
                 </Link>
-                <Link href="#how-it-works">
+                <Link href="/services">
                   <Button size="xl" variant="outline" className="w-full border-white/40 bg-white/10 text-white backdrop-blur hover:border-white hover:bg-white/20 hover:text-white sm:w-auto">
-                    How it works
+                    Our Services
                   </Button>
                 </Link>
               </div>

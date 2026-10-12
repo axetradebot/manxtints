@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { pricePhotoQuote } from "@/lib/photoQuote.pricing"
-import { estimateRequestSchema, normalisePanes, type EstimateResponse } from "@/lib/photoQuote.schema"
+import { estimateRequestSchema, normalisePanes, scaleVisionEstimate, type EstimateResponse } from "@/lib/photoQuote.schema"
 import {
   countRecentEstimates,
   dailySpendGbp,
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "model_error" }, { status: 502 })
     }
     vision = call.result
-    const panes = normalisePanes(vision.panes, images.length)
+    const panes = normalisePanes(scaleVisionEstimate(vision.panes), images.length)
     if (panes.length === 0) {
       await log("no_panes", usage)
       return NextResponse.json(
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
     await log("cached", { model, imageHash, panes: vision.panes.length })
   }
 
-  const panes = normalisePanes(vision.panes, images.length)
+  const panes = normalisePanes(scaleVisionEstimate(vision.panes), images.length)
   if (panes.length === 0) {
     return NextResponse.json(
       { error: "no_panes", unusablePhotos: vision.unusable_photos, notes: vision.notes },

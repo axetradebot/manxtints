@@ -17,6 +17,13 @@ export const PANE_MAX_M2 = 8
 /** Range shown around the point estimate. */
 export const PHOTO_QUOTE_RANGE_LOW = 0.85
 export const PHOTO_QUOTE_RANGE_HIGH = 1.15
+/**
+ * Photos make glass look bigger than it is, and the model follows that.
+ * Scale each guessed side by this before pricing: 0.7 × 0.7 is about half
+ * the area. Applied only to the model's first reading, never to a size the
+ * customer typed themselves.
+ */
+export const PHOTO_QUOTE_ESTIMATE_SCALE = 0.7
 
 export const PANE_TYPES = ["patio_door", "casement", "sash", "bifold", "fixed", "skylight", "other"] as const
 export type PaneType = (typeof PANE_TYPES)[number]
@@ -71,6 +78,15 @@ export interface EstimatePane {
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100
+
+/** Shrink a model reading before it is normalised and priced. */
+export function scaleVisionEstimate<T extends { width_cm: number; height_cm: number }>(panes: T[]): T[] {
+  return panes.map((p) => ({
+    ...p,
+    width_cm: p.width_cm * PHOTO_QUOTE_ESTIMATE_SCALE,
+    height_cm: p.height_cm * PHOTO_QUOTE_ESTIMATE_SCALE,
+  }))
+}
 
 /**
  * Normalises what the model returned into priced panes: dimensions become

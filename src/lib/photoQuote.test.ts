@@ -5,7 +5,9 @@ import {
   estimateRequestSchema,
   normalisePanes,
   panesFromClient,
+  PHOTO_QUOTE_ESTIMATE_SCALE,
   roundTotalM2,
+  scaleVisionEstimate,
   visionResultSchema,
 } from "./photoQuote.schema"
 import { photoQuoteRate, pricePhotoQuote } from "./photoQuote.pricing"
@@ -69,6 +71,15 @@ describe("normalisePanes", () => {
 
   it("rounds the total to 0.1 m²", () => {
     expect(roundTotalM2([{ m2: 1.32 }, { m2: 0.91 }])).toBe(2.2)
+  })
+
+  it("shrinks a model reading to about half the area and leaves typed sizes alone", () => {
+    const [shrunk] = normalisePanes(scaleVisionEstimate([pane(100, 100)]), 1)
+    expect(shrunk.width_cm).toBe(Math.round(100 * PHOTO_QUOTE_ESTIMATE_SCALE))
+    expect(shrunk.m2).toBeCloseTo(0.49, 2)
+    const typed = panesFromClient([{ id: "pane-1", label: "Lounge", type: "casement", width_cm: 100, height_cm: 100 }])
+    expect(typed[0].width_cm).toBe(100)
+    expect(typed[0].m2).toBe(1)
   })
 })
 

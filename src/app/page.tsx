@@ -25,12 +25,19 @@ import { DOUBLE_GLAZING_FAQ } from "@/content/film-quality"
 
 const years = site.guarantee.workmanshipYears
 const extended = site.guarantee.extendedYears
+const heat = site.filmSpec.heatRejectionPercent
 
 const buildFaqs = (zone: Zone): Faq[] => [
   {
     question: "Does one-way mirror film work at night?",
     answer:
       "Honestly: not in the same way. By day the outside is brighter, so passers-by see a mirror and you see out. At night with your lights on, the privacy stops working and people can see in. If you need privacy around the clock, we'll recommend a frosted film or a combination instead.",
+  },
+  {
+    question: "Will it really keep rooms cooler?",
+    answer: `Yes. Our solar films reflect${
+      hasStat(heat) ? ` up to ${heat}% of` : ""
+    } solar heat and cut glare, so south-facing rooms and conservatories stay comfortable in summer, screens are easier to see and furniture fades more slowly. You keep your daylight and your view.`,
   },
   DOUBLE_GLAZING_FAQ,
   {
@@ -45,17 +52,17 @@ const buildFaqs = (zone: Zone): Faq[] => [
       hasStat(years)
         ? `Our ${years}-year guarantee covers peeling, bubbling, discolouration and delamination under normal use. `
         : ""
-    }Premium film includes a ${extended}-year guarantee, and on Standard film you can extend to ${extended} years as an add-on in the calculator. It's issued and honoured by ManxTints, whichever installer fitted your film. Full terms are on the Terms & Conditions page.`,
+    }Premium film includes a ${extended}-year guarantee, and on Standard film you can extend to ${extended} years as an add-on in the calculator. It's issued and honoured by ManxTints. Full terms are on the Terms & Conditions page.`,
   },
   {
     question: "What happens on install day?",
     answer:
-      "Your local ManxTints installer arrives at the agreed time, re-measures every pane and confirms the film with you before starting. If anything differs from the quote, it's agreed with you first. Glass is cleaned, film is cut and fitted, edges are finished and the room is left as it was found — most homes take a few hours. Photos of the finished job are added to your booking.",
+      "We arrive at the agreed time, re-measure every pane and confirm the film with you before starting. If anything differs from the quote, it's agreed with you first. Glass is cleaned, film is cut and fitted, edges are finished cleanly and the room is left as it was found — most homes take a few hours. Photos of the finished job are added to your booking.",
   },
   {
-    question: "Who actually fits the film?",
+    question: "What will the finish look like?",
     answer:
-      "An insured installer from the ManxTints network, checked by us and working to our written installation standard. ManxTints handles your quote, booking, deposit, guarantee and customer care — so you always have one company to talk to.",
+      "Smooth and edge to edge, with no bubbles, creases or peeling. Mirror and dual-reflective films give every pane the same sleek, uniform look from the street, so the house looks sharper as well as more private. From inside, the view stays clear. Frosted film gives a clean etched-glass effect.",
   },
   {
     question: "How do deposits and cancellations work?",
@@ -63,7 +70,7 @@ const buildFaqs = (zone: Zone): Faq[] => [
   },
   {
     question: "Which areas do you cover?",
-    answer: `ManxTints installers cover the ${site.areasServed}. Enter your postcode on the quote page and we'll confirm availability and dates for your area.`,
+    answer: `We fit across the ${site.areasServed}. Enter your postcode on the quote page and we'll confirm availability and dates for your area.`,
   },
   {
     question: "How much does window film cost?",
@@ -154,8 +161,8 @@ export default function Home() {
             </FadeIn>
             <FadeIn immediate delay={0.3}>
               <p className="mt-3 max-w-lg text-[0.95rem] leading-relaxed text-slate-200 [@media(max-width:639px)_and_(max-height:700px)]:hidden sm:mt-5 sm:text-lg lg:mt-6 lg:max-w-2xl lg:text-xl">
-                One company quotes, books and guarantees your window film. An experienced installer near you
-                fits it — across the {site.areasServed}.
+                Premium window film with a clean, flawless finish. Keep prying eyes out, cut heat and glare,
+                and give your windows a sleek, uniform look — across the {site.areasServed}.
               </p>
             </FadeIn>
             <FadeIn immediate delay={0.4}>
@@ -205,7 +212,7 @@ export default function Home() {
       <FaqSection
         faqs={faqs}
         className="bg-slate-50"
-        intro="Straight answers on privacy, guarantees and what happens on the day."
+        intro="Straight answers on privacy, heat, guarantees and what happens on the day."
         aside={<ZoneChip />}
       />
 

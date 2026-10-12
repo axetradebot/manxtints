@@ -14,7 +14,7 @@ export function ProjectsGrid() {
         <FadeIn>
           <div className="mx-auto mb-12 max-w-2xl text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-primary">Recent projects</p>
-            <h2 className="font-display text-3xl font-bold text-slate-900 md:text-5xl">Fitted by our installers</h2>
+            <h2 className="font-display text-3xl font-bold text-slate-900 md:text-5xl">See the finish for yourself</h2>
           </div>
         </FadeIn>
         <Stagger className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

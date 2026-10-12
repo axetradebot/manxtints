@@ -18,10 +18,10 @@ const steps = [
   },
   {
     icon: InstallerIcon,
-    title: "Your local ManxTints installer fits it, guaranteed",
+    title: "A flawless finish, guaranteed",
     text: hasStat(site.guarantee.workmanshipYears)
-      ? `Your installer re-measures on the day, fits the agreed film and leaves the room spotless — all backed by our ${site.guarantee.workmanshipYears}-year workmanship warranty.`
-      : "Your installer re-measures on the day, fits the agreed film and leaves the room spotless — all backed by our workmanship guarantee.",
+      ? `We re-measure on the day, fit the agreed film edge to edge and leave the room spotless — all backed by our ${site.guarantee.workmanshipYears}-year workmanship warranty.`
+      : "We re-measure on the day, fit the agreed film edge to edge and leave the room spotless — all backed by our workmanship guarantee.",
   },
 ]
 
@@ -33,7 +33,7 @@ export function HowItWorks({ id = "how-it-works" }: { id?: string }) {
           <div className="mx-auto mb-12 max-w-2xl text-center md:mb-16">
             <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-primary">How it works</p>
             <h2 className="font-display text-3xl font-bold text-slate-900 md:text-5xl">
-              Quoted online. Fitted locally. Guaranteed by us.
+              Quoted online. Fitted properly. Guaranteed.
             </h2>
           </div>
         </FadeIn>

@@ -42,8 +42,8 @@ export function Footer() {
           <div className="space-y-6">
             <Wordmark tone="dark" size="sm" />
             <p className="text-slate-400 text-sm leading-relaxed">
-              Window film for homes and businesses across the {site.areasServed}. Quoted online, booked
-              with a protected deposit and fitted by a ManxTints-approved installer near you
+              Premium window film for homes and businesses across the {site.areasServed}. Privacy by day,
+              cooler rooms and a cleaner look for your glass, quoted online and fitted with a flawless finish
               {hasStat(guarantee.workmanshipYears) ? ` — with a ${guarantee.workmanshipYears}-year workmanship warranty.` : "."}
             </p>
             <div className="flex gap-3">
@@ -133,7 +133,7 @@ export function Footer() {
                 <span>
                   {site.registeredLocation}
                   <br />
-                  Installers across the {site.areasServed}
+                  Fitting across the {site.areasServed}
                 </span>
               </li>
               <li className="flex items-start gap-3 text-slate-400">

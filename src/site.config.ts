@@ -57,16 +57,16 @@ export const site = {
       "If you're not happy with the finish, we'll put it right — free.",
     /** Must stay consistent with /terms (no deposit at or below £500; 24h notice, no cancellation fee). */
     depositLine:
-      "Most jobs need no deposit at all. Where one applies, it's held by ManxTints — never the installer — and refunded in full if we can't fit your job.",
+      "Most jobs need no deposit at all. Where one applies, it's refunded in full if we can't fit your job.",
     cancellationLine: "Cancel or reschedule with 24 hours' notice at no charge.",
   },
 
   /** Only true ones; editable. Rendered by BadgeRow as icon + text. */
   badges: [
-    "Fully insured installers",
+    "Fully insured",
     "5-year workmanship warranty",
     "Deposit-protected booking",
-    "Experienced local installers",
+    "Premium films only",
   ] as string[],
 
   /** Real film-brand logos if permitted, else empty (nothing renders). */
@@ -108,7 +108,7 @@ export const site = {
   hero: {
     image: "/images/hero.jpg",
     alt: "Lounge windows fitted with ManxTints privacy film in daylight",
-    headline: "Cooler rooms. Private homes. Fitted by trusted local installers.",
+    headline: "Privacy by day. Cooler rooms. A better-looking home.",
   },
 
   social: {

@@ -135,7 +135,7 @@ export function WhyManxTints({ id = "why-manxtints" }: { id?: string }) {
         <FadeIn delay={0.05}>
           <div className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm md:mt-14">
             <table className="w-full table-fixed border-collapse text-left text-[13px] leading-snug sm:text-sm">
-              <caption className="sr-only">How ManxTints compares with a typical installer</caption>
+              <caption className="sr-only">How ManxTints compares with a budget fit</caption>
               <colgroup>
                 <col className="w-[30%] sm:w-[34%]" />
                 <col className="w-[35%] sm:w-[33%]" />
@@ -147,7 +147,7 @@ export function WhyManxTints({ id = "why-manxtints" }: { id?: string }) {
                     <span className="sr-only">Feature</span>
                   </th>
                   <th scope="col" className="px-2.5 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 sm:px-4 sm:text-xs">
-                    Typical installer
+                    Budget fit
                   </th>
                   <th scope="col" className="bg-trust-soft/70 px-2.5 py-3 text-[11px] font-semibold uppercase tracking-wider text-trust sm:px-4 sm:text-xs">
                     ManxTints

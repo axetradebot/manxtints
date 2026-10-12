@@ -2,31 +2,25 @@
 
 import { FadeIn } from "@/components/motion"
 import { BadgeRow } from "@/components/trust/badge-row"
-import { MapPinIcon, VettedIcon } from "@/components/trust/trust-icons"
-import { hasStat, site } from "@/site.config"
+import { MapPinIcon } from "@/components/trust/trust-icons"
+import { site } from "@/site.config"
 
 export function InstallerNetwork() {
-  const installers = site.stats.installersInNetwork
   return (
     <section className="bg-slate-50 py-20 md:py-28">
       <div className="container mx-auto px-4">
         <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
           <FadeIn>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-primary">Our installer network</p>
+            <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-primary">Where we fit</p>
             <h2 className="font-display text-3xl font-bold text-slate-900 md:text-5xl">
-              Local hands. One standard.
+              The same finish, wherever you are.
             </h2>
             <p className="mt-6 text-lg leading-relaxed text-slate-600">
-              Every ManxTints installer is vetted, insured and works to our written standard. Your booking,
-              deposit and guarantee are always with ManxTints.
+              Premium privacy, solar and frosted films for homes across the Isle of Man, the North West and the
+              South East. Every job gets the same low-absorption film, the same clean edge-to-edge finish and the
+              same written guarantee.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              {hasStat(installers) && (
-                <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm ring-1 ring-slate-200">
-                  <VettedIcon className="h-4 w-4 text-trust" />
-                  {installers} installers in the network
-                </span>
-              )}
               <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm ring-1 ring-slate-200">
                 <MapPinIcon className="h-4 w-4 text-primary" />
                 Covering the {site.areasServed}
@@ -194,7 +188,7 @@ function CoverageGraphic() {
         <rect width={MAP_W} height="44" fill="url(#in-fade)" />
       </svg>
       <div className="absolute bottom-3 left-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-700 shadow ring-1 ring-slate-200 backdrop-blur">
-        Installers across the {site.areasServed}
+        Fitting across the {site.areasServed}
       </div>
     </div>
   )

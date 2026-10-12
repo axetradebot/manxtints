@@ -34,7 +34,7 @@ const geistMono = Geist_Mono({
 });
 
 const defaultTitle = `${site.name} | ${site.tagline} · ${site.areasServed}`;
-const defaultDescription = `Window film for homes and businesses across the ${site.areasServed}. Instant online quotes, deposit-protected booking and installation by vetted local ManxTints installers — privacy, heat and UV control, guaranteed.`;
+const defaultDescription = `Premium window film for homes and businesses across the ${site.areasServed}. Privacy by day, cooler rooms and a cleaner look for your glass — fitted with a flawless finish and guaranteed. Instant online quotes.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),

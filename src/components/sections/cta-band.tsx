@@ -17,7 +17,7 @@ export function CtaBand({
 }: CtaBandProps) {
   const body =
     text ??
-    `Get an instant price online, pick your date, and let your local ManxTints installer do the rest${
+    `Get an instant price online, pick your date, and we'll fit premium film with a clean, lasting finish${
       hasStat(site.guarantee.workmanshipYears) ? ` — guaranteed for ${site.guarantee.workmanshipYears} years.` : "."
     }`
   return (

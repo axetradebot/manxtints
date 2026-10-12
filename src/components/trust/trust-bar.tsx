@@ -1,6 +1,7 @@
 "use client"
 
-import { BoltIcon, CalendarTickIcon, FilmIcon, SmileIcon } from "./trust-icons"
+import { Thermometer } from "lucide-react"
+import { BoltIcon, FilmIcon, ShieldTickIcon } from "./trust-icons"
 import { FadeIn } from "@/components/motion"
 
 interface Highlight {
@@ -10,15 +11,15 @@ interface Highlight {
 }
 
 /**
- * Four quick reasons to choose ManxTints. Deliberately distinct from the
+ * Four quick results of choosing ManxTints. Deliberately distinct from the
  * guarantee / insurance proof in the hero and guarantee panel so the strip
  * adds information rather than repeating it.
  */
 const highlights: Highlight[] = [
-  { icon: FilmIcon, title: "Premium films", detail: "Top-grade, made to last" },
+  { icon: FilmIcon, title: "Premium films", detail: "Low-absorption, made to last" },
+  { icon: ShieldTickIcon, title: "Flawless finish", detail: "Clean edges, no bubbles" },
+  { icon: Thermometer, title: "Cooler, private rooms", detail: "Less heat, glare and fading" },
   { icon: BoltIcon, title: "Instant quotes", detail: "Priced online in 60 seconds" },
-  { icon: CalendarTickIcon, title: "Hassle-free booking", detail: "Pick a date, we do the rest" },
-  { icon: SmileIcon, title: "Friendly local team", detail: "Real people, quick replies" },
 ]
 
 export function TrustBar() {

@@ -116,11 +116,11 @@ export function ClientLogos({ className }: { className?: string }) {
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Commercial clients</p>
             <h2 id="client-logos-heading" className="mt-2 font-display text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
-              Trusted by businesses you already know
+              Chosen by businesses you&apos;ll recognise
             </h2>
             <p className="mt-2 text-sm text-slate-600 sm:text-base">
-              From banks and law firms to homebuilders and the Isle of Man Government — the same film, the same
-              installers, the same guarantee as your home.
+              Banks, law firms, homebuilders and the Isle of Man Government have the same premium film and finish
+              on their glass as we fit in homes.
             </p>
           </div>
         </FadeIn>

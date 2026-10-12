@@ -51,6 +51,6 @@ export function buildComparisonRows(guarantee: { workmanshipYears: number; exten
     { label: "Glass compatibility check", typical: "Rarely", manx: "Every job" },
     { label: "Night-time view from inside", typical: "Mirrored", manx: "Clear (Premium tier)" },
     { label: "Guarantee", typical: "Varies", manx: guaranteeLine },
-    { label: "Installers", typical: "Unvetted", manx: "Vetted, insured" },
+    { label: "Finish", typical: "Hit and miss", manx: "Clean, edge to edge" },
   ]
 }

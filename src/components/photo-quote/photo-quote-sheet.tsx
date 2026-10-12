@@ -792,6 +792,21 @@ function PriceStep({
       exit={reduceMotion ? undefined : { opacity: 0, x: -16 }}
       className="space-y-5"
     >
+      <div className="rounded-2xl border-2 border-amber-400 bg-amber-50 px-4 py-4 text-amber-950" data-photo-quote-estimate-note>
+        <p className="text-base font-bold leading-snug">This estimate can run high</p>
+        <p className="mt-1 text-sm leading-relaxed">
+          It&apos;s worked out from your photos by AI, so it isn&apos;t exact. If the price looks too high, double-check it in the DIY calculator for an exact quote.
+        </p>
+        <button
+          type="button"
+          onClick={onCalculator}
+          className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-amber-950 underline decoration-amber-400 underline-offset-4 hover:decoration-amber-950"
+        >
+          <Calculator className="h-4 w-4" />
+          Check it in the calculator
+        </button>
+      </div>
+
       {/* Headline */}
       <div className="text-center" data-photo-quote-price>
         <motion.div
